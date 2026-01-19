@@ -1,0 +1,199 @@
+╭━─━─━─≪✠≫─━─━─━╮
+--- File: claude_parser.py ---
+╰━─━─━─≪✠≫─━─━─━╯
+
+import json
+import os
+import re
+import sys
+import time
+from datetime import datetime
+from pathlib import Path
+
+# --- CONFIGURATION ---
+INPUT_FILE = "conversations.json"
+OUTPUT_DIR = "claude_chats_md"
+
+def clean_filename(name):
+    """
+    Sanitizes string: Alphanumeric only, dots instead of spaces.
+    Example: "My Cool Project!" -> "My.Cool.Project"
+    """
+    if not name:
+        name = "Untitled"
+    # Replace spaces/tabs/newlines with dots
+    cleaned = re.sub(r'[\s]+', '.', name)
+    # Remove anything that is NOT a letter, number, dot, or hyphen
+    cleaned = re.sub(r'[^a-zA-Z0-9.-]', '', cleaned)
+    # Remove consecutive dots
+    cleaned = re.sub(r'\.+', '.', cleaned)
+    # Strip leading/trailing dots
+    return cleaned.strip('.')
+
+def format_timestamp(iso_str):
+    try:
+        dt = datetime.fromisoformat(iso_str.replace("Z", "+00:00"))
+        return dt.strftime("%Y-%m-%d %H:%M:%S")
+    except:
+        return iso_str
+
+def get_date_prefix(iso_str):
+    try:
+        dt = datetime.fromisoformat(iso_str.replace("Z", "+00:00"))
+        return dt.strftime("%Y%m%d")
+    except:
+        return "00000000"
+
+def print_progress(current, total, filename, width=40):
+    """
+    Renders a dynamic progress bar in the terminal.
+    """
+    percent = float(current) / total
+    filled = int(width * percent)
+    bar = '█' * filled + '-' * (width - filled)
+    
+    # Truncate filename if it's too long for the display
+    display_name = (filename[:25] + '..') if len(filename) > 25 else filename
+    
+    sys.stdout.write(f"\r[{bar}] {int(percent * 100)}% | {current}/{total} | {display_name}")
+    sys.stdout.flush()
+
+def format_message(sender, index, text, timestamp):
+    """
+    Applies the specific visual doctrine requested by the user.
+    """
+    formatted = []
+    
+    if sender.lower() == 'human':
+        formatted.append("=" * 60)
+        formatted.append(f"[USER ENTRY #{str(index).zfill(3)}] - {timestamp}")
+        formatted.append("=" * 60)
+        formatted.append("")
+        formatted.append(text)
+        formatted.append("")
+        formatted.append("")
+    else:
+        # Lighter visual weight for Claude
+        formatted.append("-" * 60)
+        formatted.append(f"[CLAUDE RESPONSE #{str(index).zfill(3)}] - {timestamp}")
+        formatted.append("-" * 60)
+        formatted.append("")
+        formatted.append(text)
+        formatted.append("")
+        formatted.append("")
+        
+    return "\n".join(formatted)
+
+def extract_text(message):
+    """
+    Extracts text content safely from the message object.
+    """
+    # 1. Direct text field (older exports)
+    if "text" in message and message["text"]:
+        return message["text"]
+        
+    # 2. Content array (newer exports)
+    text_parts = []
+    if "content" in message:
+        for block in message["content"]:
+            if block.get("type") == "text":
+                text_parts.append(block.get("text", ""))
+                
+    return "".join(text_parts)
+
+def main():
+    print(f"\n--- CLAUDE CONVERSATION PARSER v1.0 ---\n")
+
+    # 1. Check for Input File
+    if not os.path.exists(INPUT_FILE):
+        print(f"ERROR: '{INPUT_FILE}' not found in this folder.")
+        print("Please place your conversations.json file next to this script.")
+        return
+
+    # 2. Load JSON
+    print(">>> Loading JSON data (this might take a moment)...")
+    try:
+        with open(INPUT_FILE, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+    except json.JSONDecodeError:
+        print("ERROR: Invalid JSON format.")
+        return
+
+    total_chats = len(data)
+    print(f">>> Found {total_chats} conversations. Processing...\n")
+
+    # 3. Create Output Directory
+    Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
+
+    # 4. Process Loop
+    processed_count = 0
+    
+    for chat in data:
+        processed_count += 1
+        
+        # --- Metadata extraction ---
+        chat_name = chat.get('name', 'Untitled')
+        created_at = chat.get('created_at', '')
+        
+        date_prefix = get_date_prefix(created_at)
+        safe_name = clean_filename(chat_name)
+        
+        filename = f"{date_prefix}.{safe_name}.md"
+        
+        # Handle duplicates (rare, but possible if same name on same day)
+        file_path = os.path.join(OUTPUT_DIR, filename)
+        counter = 1
+        while os.path.exists(file_path):
+            filename = f"{date_prefix}.{safe_name}_{counter}.md"
+            file_path = os.path.join(OUTPUT_DIR, filename)
+            counter += 1
+
+        # --- Update Progress Bar ---
+        print_progress(processed_count, total_chats, filename)
+
+        # --- Content Generation ---
+        content_buffer = []
+        content_buffer.append(f"# {chat_name}\n")
+        content_buffer.append(f"**Date:** {format_timestamp(created_at)}\n")
+        content_buffer.append(f"**UUID:** {chat.get('uuid', 'N/A')}\n\n")
+        
+        messages = chat.get('chat_messages', [])
+        
+        # Counters for entry IDs
+        user_idx = 1
+        claude_idx = 1
+        
+        for msg in messages:
+            sender = msg.get('sender', 'unknown')
+            ts = format_timestamp(msg.get('created_at', ''))
+            raw_text = extract_text(msg)
+            
+            if not raw_text.strip():
+                continue
+
+            current_idx = user_idx if sender == 'human' else claude_idx
+            
+            formatted_block = format_message(sender, current_idx, raw_text, ts)
+            content_buffer.append(formatted_block)
+            
+            # Increment specific counter
+            if sender == 'human':
+                user_idx += 1
+            else:
+                claude_idx += 1
+
+        # --- Write File ---
+        try:
+            with open(file_path, 'w', encoding='utf-8') as f:
+                f.write("".join(content_buffer))
+        except Exception as e:
+            # If a write fails, just print a newline so we don't mess up the bar
+            sys.stdout.write(f"\n[!] Error writing {filename}: {e}\n")
+
+    # 5. Finish
+    sys.stdout.write("\n\n") # Clear progress bar line
+    print(f"SUCCESS: Processed {processed_count} chats.")
+    print(f"FILES SAVED TO: ./{OUTPUT_DIR}/")
+
+if __name__ == "__main__":
+    main()

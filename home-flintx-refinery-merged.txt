@@ -1,0 +1,348 @@
+╭━─━─━─≪✠≫─━─━─━╮
+--- File: README.md ---
+╰━─━─━─≪✠≫─━─━─━╯
+
+# ⚡ REFINERY v12.4
+**The Executioner / Log Calibration System**
+
+## 💀 THE MISSION
+A dedicated workbench for "cleaning" raw AI interactions and forging high-precision prompts ("Golden Prompts"). It ingests raw JSON logs, strips out noise, and allows the Architect to manually refine the context before firing a "Kinetic Strike" back at the model.
+
+## 🏗️ ARCHITECTURE
+*   **Framework:** Python (PyQt6) Desktop Application.
+*   **Database:** SQLite (`refinery_vault.db`) for session management.
+*   **Integration:** Connects to `peacock-engine` for inference.
+
+## 🚀 PROTOCOLS
+### 1. Launch Application
+`python3 refinery.py`
+
+## 🛠️ FEATURES
+*   **Ingest:** Drag-and-drop JSON chat logs.
+*   **Sanitize:** Auto-strips markdown, code blocks, or conversational fluff.
+*   **Persona Calibration:** Dedicated editor for System Instructions.
+*   **Kinetic Strike:** One-button re-execution of the refined prompt.
+
+
+┎━─━─━─━─━─━─━─━─━┒
+--- File: refinery.py ---
+┖━─━─━─━─━─━─━─━─━┚
+
+import sys
+import os
+import json
+import sqlite3
+import re
+import subprocess
+import requests
+import threading
+import glob
+from datetime import datetime
+from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
+                             QHBoxLayout, QPushButton, QTextEdit, QListWidget, 
+                             QComboBox, QCheckBox, QLabel, QFileDialog, QMessageBox, 
+                             QRadioButton, QFrame, QGroupBox, QAbstractItemView, QInputDialog)
+from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QObject
+
+# --- ARCHITECTURAL CONFIGURATION ---
+PROMPTS_DIR = "/home/flintx/refinery/nexus.prompts"
+DB_PATH = "refinery_vault.db"
+OUTPUT_DIR = "/home/flintx/refined_outputs"
+PEACOCK_INBOX = "/home/flintx/peacock/start"
+NEXUS_READY_DIR = "/home/flintx/refinery/nexus.ready"
+HANDLER_URL = "http://127.0.0.1:8888"
+PEACOCK_MARKER = "[[PEACOCK_APPROVED]]"
+DATA_MARKER = "[[CHAT_DATA]]"
+
+class StrikeWorker(QObject):
+    finished = pyqtSignal(dict)
+    progress = pyqtSignal(str)
+
+    def run(self, model_id, payload):
+        try:
+            self.progress.emit("[🛰️] Establishing Uplink...")
+            resp = requests.post(f"{HANDLER_URL}/v1/strike", 
+                                 json={"modelId": model_id, "prompt": payload, "temp": 0.7}, 
+                                 timeout=600)
+            if resp.status_code == 200:
+                self.progress.emit("[✔️] Strike Confirmed.")
+                self.finished.emit({"status": "success", "content": resp.json().get('content', '')})
+            else:
+                self.finished.emit({"status": "error", "message": resp.text})
+        except Exception as e:
+            self.finished.emit({"status": "error", "message": str(e)})
+
+class DatabaseManager:
+    def __init__(self):
+        for d in [OUTPUT_DIR, PEACOCK_INBOX, NEXUS_READY_DIR]:
+            if not os.path.exists(d): os.makedirs(d)
+        self.conn = sqlite3.connect(DB_PATH); self.cursor = self.conn.cursor()
+        self.setup_tables()
+
+    def setup_tables(self):
+        self.cursor.execute("PRAGMA table_info(chat_sessions)")
+        cols = [i[1] for i in self.cursor.fetchall()]
+        if cols and "sanitized_name" not in cols:
+            self.cursor.execute("DROP TABLE IF EXISTS messages"); self.cursor.execute("DROP TABLE IF EXISTS chat_sessions")
+        self.cursor.execute('''CREATE TABLE IF NOT EXISTS chat_sessions (id INTEGER PRIMARY KEY AUTOINCREMENT, original_name TEXT, sanitized_name TEXT UNIQUE, file_mod_date TIMESTAMP, import_date TIMESTAMP)''')
+        self.cursor.execute('''CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY AUTOINCREMENT, session_id INTEGER, role TEXT, content TEXT, is_thought BOOLEAN, sequence_order INTEGER, FOREIGN KEY(session_id) REFERENCES chat_sessions(id))''')
+        self.conn.commit()
+
+    def ingest_data(self, path):
+        base_filename = os.path.splitext(os.path.basename(path))[0]
+        ext = os.path.splitext(path)[1].lower()
+        if ext == ".json":
+            mtime = os.path.getmtime(path); dt = datetime.fromtimestamp(mtime); date_pre = dt.strftime("%m.%d.%y")
+            san = f"{date_pre}.{re.sub(r'[^a-z0-9]+', '.', base_filename.lower()).strip('.')}"
+        else:
+            dt = datetime.fromtimestamp(os.path.getmtime(path))
+            san = base_filename 
+
+        try:
+            with open(path, 'r', encoding='utf-8') as f: raw_content = f.read()
+            self.cursor.execute('INSERT OR REPLACE INTO chat_sessions (original_name, sanitized_name, file_mod_date, import_date) VALUES (?, ?, ?, ?)', (os.path.basename(path), san, dt, datetime.now()))
+            self.cursor.execute("SELECT id FROM chat_sessions WHERE sanitized_name = ?", (san,)); s_id = self.cursor.fetchone()[0]
+            self.cursor.execute("DELETE FROM messages WHERE session_id = ?", (s_id,))
+            try:
+                data = json.loads(raw_content)
+                chunks = data if isinstance(data, list) else (data.get('chunkedPrompt', {}).get('chunks', []) or data.get('messages', []) or data.get('conversations', []))
+                extracted = []
+                def push(r, t, it):
+                    if not t: return
+                    if extracted and extracted[-1]['role'] == r and extracted[-1]['is_t'] == it: extracted[-1]['text'] += "\n" + t
+                    else: extracted.append({'role': r, 'text': t, 'is_t': it})
+                for c in chunks:
+                    role = c.get('role') or ('user' if c.get('author') == 'user' else 'model')
+                    norm = 'user' if role == 'user' else 'model'
+                    if 'parts' in c:
+                        for p in c['parts']:
+                            if 'text' in p: push(norm, p['text'], p.get('thought', False))
+                    elif 'text' in c or 'content' in c:
+                        push(norm, c.get('text') or c.get('content'), c.get('is_thought', False))
+                for i, m in enumerate(extracted):
+                    self.cursor.execute('INSERT INTO messages (session_id, role, content, is_thought, sequence_order) VALUES (?, ?, ?, ?, ?)', (s_id, m['role'], m['text'], m['is_t'], i))
+            except:
+                self.cursor.execute('INSERT INTO messages (session_id, role, content, is_thought, sequence_order) VALUES (?, ?, ?, ?, ?)', (s_id, 'model', raw_content, False, 0))
+            self.conn.commit(); return san
+        except: return None
+
+class RegistryList(QListWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent); self.setAcceptDrops(True); self.app = parent
+        self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+    def dragEnterEvent(self, e): e.accept() if e.mimeData().hasUrls() else e.ignore()
+    def dragMoveEvent(self, e): e.accept() if e.mimeData().hasUrls() else e.ignore()
+    def dropEvent(self, e):
+        last_san = None
+        for url in e.mimeData().urls():
+            f = url.toLocalFile()
+            if os.path.isfile(f): last_san = self.app.db.ingest_data(f)
+        self.app.refresh_sessions()
+        if last_san:
+            items = self.findItems(last_san, Qt.MatchFlag.MatchExactly)
+            if items: self.setCurrentItem(items[0]); self.app.log_selected(items[0])
+
+class RefineryApp(QMainWindow):
+    def __init__(self):
+        super().__init__(); self.db = DatabaseManager(); self.active_payload = ""; self.active_log = ""
+        self.is_peacock_cleared = False
+        self.init_ui(); self.refresh_prompts(); self.refresh_sessions()
+        self.timer = QTimer(); self.timer.timeout.connect(self.sync_handler); self.timer.start(3000)
+
+    def init_ui(self):
+        self.setWindowTitle("⚡ THE EXECUTIONER: REFINERY V12.4 ⚡")
+        self.setGeometry(100, 100, 1450, 950); self.setStyleSheet("background-color: #050505; color: #00FF41; font-family: 'Monospace';")
+        central = QWidget(); self.setCentralWidget(central); main_layout = QHBoxLayout(central)
+
+        # --- LEFT: REGISTRY ---
+        left_col = QVBoxLayout()
+        self.log_box = QGroupBox("STAGE 01: LOG REGISTRY")
+        log_v = QVBoxLayout(self.log_box)
+        self.list = RegistryList(self); self.list.itemSelectionChanged.connect(self.selection_changed)
+        log_v.addWidget(self.list)
+        btn_lo = QHBoxLayout(); btn_in = QPushButton("📥 INGEST"); btn_in.clicked.connect(self.manual_ingest); btn_lo.addWidget(btn_in)
+        self.btn_purge = QPushButton("💀 PURGE"); self.btn_purge.setStyleSheet("background-color: #300; color: #f00;"); self.btn_purge.clicked.connect(self.death_warrant_purge)
+        btn_lo.addWidget(self.btn_purge); log_v.addLayout(btn_lo); left_col.addWidget(self.log_box, 3)
+        
+        self.audit_box = QGroupBox("FORENSIC AUDIT")
+        audit_v = QVBoxLayout(self.audit_box); self.audit_list = QListWidget(); self.audit_list.itemDoubleClicked.connect(self.open_audit_file)
+        audit_v.addWidget(self.audit_list); left_col.addWidget(self.audit_box, 2)
+
+        # --- CENTER: PREPARATION ---
+        center_col = QVBoxLayout()
+        self.fork_box = QGroupBox("STAGE 02: THE FORK")
+        self.fork_box.setEnabled(False); fork_v = QVBoxLayout(self.fork_box)
+        self.btn_archive = QPushButton("📄 HUMANIZE ONLY (ARCHIVE)"); self.btn_wrap = QPushButton("🎭 PREPARE FOR STRIKE (WRAP)")
+        self.btn_archive.clicked.connect(self.archive_only); self.btn_wrap.clicked.connect(self.start_persona)
+        fork_v.addWidget(self.btn_archive); fork_v.addWidget(self.btn_wrap); center_col.addWidget(self.fork_box)
+
+        self.pers_box = QGroupBox("STAGE 03: PERSONA CALIBRATION")
+        self.pers_box.setEnabled(False); pers_v = QVBoxLayout(self.pers_box)
+        self.p_list = QComboBox(); self.p_list.currentIndexChanged.connect(self.load_prompt)
+        self.p_edit = QTextEdit()
+        
+        pers_btn_lo = QHBoxLayout()
+        self.btn_p_marker = QPushButton("📍 MARKER"); self.btn_p_marker.clicked.connect(lambda: self.p_edit.insertPlainText(DATA_MARKER))
+        self.btn_p_save = QPushButton("💾 SAVE PERSONA"); self.btn_p_save.clicked.connect(self.save_persona_to_disk)
+        self.btn_p_commit = QPushButton("✅ COMMIT & COMPILE"); self.btn_p_commit.clicked.connect(self.compile_strike)
+        for b in [self.btn_p_marker, self.btn_p_save, self.btn_p_commit]: pers_btn_lo.addWidget(b)
+        pers_v.addWidget(self.p_list); pers_v.addWidget(self.p_edit); pers_v.addLayout(pers_btn_lo)
+        center_col.addWidget(self.pers_box)
+
+        filt_f = QGroupBox("FILTERS"); filt_v = QVBoxLayout(filt_f)
+        self.chk_u = QCheckBox("User"); self.chk_g = QCheckBox("Gemini"); self.chk_c = QCheckBox("Code"); self.chk_t = QCheckBox("Thoughts")
+        for c in [self.chk_u, self.chk_g, self.chk_c]: c.setChecked(True); c.setEnabled(False); filt_v.addWidget(c)
+        self.chk_t.setChecked(False); self.chk_t.setEnabled(False); filt_v.addWidget(self.chk_t)
+        center_col.addWidget(filt_f)
+
+        # --- RIGHT: EXECUTION ---
+        right_col = QVBoxLayout()
+        self.strike_box = QGroupBox("STAGE 04: EXECUTION")
+        self.strike_box.setEnabled(False); strike_v = QVBoxLayout(self.strike_box)
+        self.m_list = QComboBox(); self.btn_strike = QPushButton("⚡ FIRE KINETIC STRIKE ⚡")
+        self.btn_strike.setFixedHeight(100); self.btn_strike.clicked.connect(self.fire_strike)
+        self.btn_ship = QPushButton("🚀 AUTHORIZE PEACOCK HANDOFF"); self.btn_ship.setEnabled(False); self.btn_ship.setFixedHeight(60); self.btn_ship.setStyleSheet("background-color: #222; color: #444;")
+        self.btn_ship.clicked.connect(self.ship_json); strike_v.addWidget(QLabel("TARGET GEMINI:")); strike_v.addWidget(self.m_list); strike_v.addWidget(self.btn_strike); strike_v.addWidget(self.btn_ship)
+        right_col.addWidget(self.strike_box)
+
+        self.console = QTextEdit(); self.console.setReadOnly(True); self.console.setStyleSheet("background-color: #000; color: #00FF41; font-size: 11px;")
+        right_col.addWidget(self.console); main_layout.addLayout(left_col, 1); main_layout.addLayout(center_col, 2); main_layout.addLayout(right_col, 2)
+
+    def selection_changed(self):
+        items = self.list.selectedItems()
+        if items: self.log_selected(items[0])
+
+    def log_selected(self, item):
+        self.active_log = item.text(); self.console.append(f"[📡] Target: {self.active_log}")
+        self.fork_box.setEnabled(True); self.pers_box.setEnabled(False); self.strike_box.setEnabled(False); self.btn_ship.setEnabled(False)
+        self.btn_archive.setStyleSheet("background-color: #002200; color: #00FF41;"); self.btn_wrap.setStyleSheet("background-color: #002200; color: #00FF41;")
+        self.update_audit()
+
+    def update_audit(self):
+        self.audit_list.clear()
+        if not self.active_log: return
+        matches = glob.glob(os.path.join(OUTPUT_DIR, f"*{self.active_log}*")) + glob.glob(os.path.join(PEACOCK_INBOX, f"*{self.active_log}*"))
+        for f in sorted(matches, key=os.path.getmtime, reverse=True):
+            status = "[INBOX]" if "peacock_inbox" in f else "[LOCAL]"
+            self.audit_list.addItem(status + " " + os.path.basename(f))
+        if not matches: self.audit_list.addItem("(No Assets Detected)")
+
+    def open_audit_file(self, item):
+        it_txt = item.text()
+        if " " not in it_txt: return
+        fn = it_txt.split(' ', 1)[1]
+        path = os.path.join(PEACOCK_INBOX, fn) if "[INBOX]" in it_txt else os.path.join(OUTPUT_DIR, fn)
+        if os.path.exists(path): subprocess.Popen(["subl", path])
+
+    def save_persona_to_disk(self):
+        n = self.p_list.currentText()
+        if n == "None (Clean Log)": return
+        content = self.p_edit.toPlainText()
+        try:
+            with open(os.path.join(PROMPTS_DIR, n), 'w', encoding='utf-8') as f: f.write(content)
+            self.console.append(f"[💾] Persona Refinements Saved: {n}")
+        except Exception as e: QMessageBox.critical(self, "Error", f"Failed to save: {e}")
+
+    def archive_only(self): self.compile_logic(is_strike=False); self.reset_flow()
+    def start_persona(self): self.pers_box.setEnabled(True); self.btn_p_commit.setStyleSheet("background-color: #004400; color: #fff;")
+
+    def compile_strike(self): 
+        pt = self.p_edit.toPlainText()
+        self.is_peacock_cleared = PEACOCK_MARKER in pt
+        self.console.append("[🔓] CLEARANCE OK" if self.is_peacock_cleared else "[🔒] INTERNAL ONLY")
+        self.compile_logic(is_strike=True)
+        self.pers_box.setEnabled(False); self.strike_box.setEnabled(True); self.btn_strike.setStyleSheet("background-color: #660000; color: #fff;")
+
+    def compile_logic(self, is_strike):
+        self.db.cursor.execute("SELECT role, content, is_thought FROM messages WHERE session_id = (SELECT id FROM chat_sessions WHERE sanitized_name = ?) ORDER BY sequence_order", (self.active_log,))
+        rows = self.db.cursor.fetchall()
+        refined, payload_list = ["█▒▒▒▒▒▒▒█  " + self.active_log + "  █▒▒▒▒▒▒▒█", "▰▱▰▱▰▱▰▱▰▱▰▱▰▱▰▱▰▱▰▱▰▱▰▱▰▱▰▱"], []
+        for r, c, ist in rows:
+            cl = c.strip()
+            if not self.chk_c.isChecked(): cl = re.sub(r'```.*?```', '[STRIPPED]', cl, flags=re.DOTALL)
+            if r == 'user' and self.chk_u.isChecked(): refined.append(f"\n● USER ●\n{cl}"); payload_list.append(f"USER: {cl}")
+            elif r == 'model':
+                if ist and self.chk_t.isChecked(): refined.append(f"\n▄ THOUGHTS ▄\n{cl}"); payload_list.append(f"THOUGHT: {cl}")
+                elif not ist and self.chk_g.isChecked(): refined.append(f"\n▃ GEMINI ▃\n{cl}"); payload_list.append(f"GEMINI: {cl}")
+        
+        pr = self.p_edit.toPlainText().strip(); chat_dump = "\n\n".join(payload_list)
+        self.active_payload = pr.replace(DATA_MARKER, chat_dump) if DATA_MARKER in pr else (f"{pr}\n\n[CONTEXT]:\n" + chat_dump if pr else chat_dump)
+        file_body = pr.replace(DATA_MARKER, "\n".join(refined)) if DATA_MARKER in pr else (pr + "\n\n" + "\n".join(refined) if pr else "\n".join(refined))
+        
+        path = os.path.join(OUTPUT_DIR, f"{self.active_log}-refined.md")
+        with open(path, 'w') as f: f.write(file_body)
+        subprocess.Popen(["subl", path]); self.update_audit()
+
+    def fire_strike(self):
+        mid = self.m_list.currentText()
+        if mid == "OFFLINE": return
+        self.btn_strike.setText("🚀 STRIKING..."); self.btn_strike.setEnabled(False)
+        self.thread = threading.Thread(target=self.run_strike_logic, args=(mid, self.active_payload)); self.thread.start()
+
+    def run_strike_logic(self, mid, payload):
+        worker = StrikeWorker(); worker.progress.connect(lambda m: self.console.append(m))
+        worker.finished.connect(self.strike_complete); worker.run(mid, payload)
+
+    def strike_complete(self, res):
+        if res['status'] == 'success':
+            self.last_strike_content = res['content']; fn = f"STRIKE.{self.active_log}.{datetime.now().strftime('%H.%M.%S')}.md"
+            with open(os.path.join(OUTPUT_DIR, fn), 'w') as f: f.write(self.last_strike_content)
+            subprocess.Popen(["subl", os.path.join(OUTPUT_DIR, fn)]); self.btn_ship.setEnabled(self.is_peacock_cleared)
+            if self.is_peacock_cleared: self.btn_ship.setStyleSheet("background-color: #000044; color: #00BFFF; font-weight: bold;")
+            self.console.append(f"[🏆] Strike Done."); self.update_audit()
+        else: self.console.append(f"[❌] Error: {res['message']}")
+        self.btn_strike.setText("⚡ FIRE KINETIC STRIKE ⚡"); self.btn_strike.setEnabled(True)
+
+    def ship_json(self):
+        payload = {"source": self.active_log, "timestamp": datetime.now().isoformat(), "payload": self.last_strike_content}
+        fn = f"{self.active_log}.peacock.json"; path = os.path.join(PEACOCK_INBOX, fn)
+        with open(path, 'w') as f: json.dump(payload, f, indent=2)
+        self.console.append(f"[🚀] SHIPPED: {fn}"); self.update_audit()
+
+    def death_warrant_purge(self):
+        items = self.list.selectedItems()
+        if not items: return
+        text, ok = QInputDialog.getText(self, "PURGE", f"Confirm Purge of {len(items)} logs.\nType 'I WANT TO PURGE!':")
+        if ok and text == "I WANT TO PURGE!":
+            for i in items:
+                n = i.text()
+                self.db.cursor.execute("DELETE FROM messages WHERE session_id = (SELECT id FROM chat_sessions WHERE sanitized_name = ?)", (n,))
+                self.db.cursor.execute("DELETE FROM chat_sessions WHERE sanitized_name = ?", (n,))
+            self.db.conn.commit(); self.refresh_sessions(); self.console.append("[💀] DELETED.")
+
+    def manual_ingest(self):
+        files, _ = QFileDialog.getOpenFileNames(self, "Ingest", NEXUS_READY_DIR, "All Files (*)")
+        san = None
+        for f in files: san = self.db.ingest_data(f)
+        self.refresh_sessions()
+        if san:
+            items = self.list.findItems(san, Qt.MatchFlag.MatchExactly)
+            if items: self.list.setCurrentItem(items[0]); self.log_selected(items[0])
+
+    def sync_handler(self):
+        try:
+            r = requests.get(f"{HANDLER_URL}/v1/models", timeout=1)
+            if r.status_code == 200:
+                m = [x['id'] for x in r.json() if x['gateway'] == 'google']; cur = self.m_list.currentText()
+                self.m_list.clear(); self.m_list.addItems(m)
+                if cur in m: self.m_list.setCurrentText(cur)
+        except: self.m_list.clear(); self.m_list.addItem("OFFLINE")
+
+    def refresh_sessions(self):
+        self.list.clear(); self.db.cursor.execute("SELECT sanitized_name FROM chat_sessions ORDER BY file_mod_date DESC")
+        for r in self.db.cursor.fetchall(): self.list.addItem(r[0])
+
+    def refresh_prompts(self):
+        self.p_list.clear(); self.p_list.addItem("None (Clean Log)")
+        if os.path.exists(PROMPTS_DIR): self.p_list.addItems([f for f in os.listdir(PROMPTS_DIR)])
+
+    def load_prompt(self):
+        n = self.p_list.currentText()
+        if n != "None (Clean Log)":
+            with open(os.path.join(PROMPTS_DIR, n), 'r', encoding='utf-8') as f: self.p_edit.setPlainText(f.read())
+        else: self.p_edit.clear()
+
+    def reset_flow(self): self.fork_box.setEnabled(False); self.pers_box.setEnabled(False); self.strike_box.setEnabled(False)
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv); win = RefineryApp(); win.show(); sys.exit(app.exec())

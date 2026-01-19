@@ -1,0 +1,1472 @@
+╭━─━─━─≪✠≫─━─━─━╮
+--- File: package.json ---
+╰━─━─━─≪✠≫─━─━─━╯
+
+{
+  "name": "copy-of-copy-of-chat-log-verbatim-extractor",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.0"
+  }
+}
+
+
+┎━─━─━─━─━─━─━─━─━┒
+--- File: README.md ---
+┖━─━─━─━─━─━─━─━─━┚
+
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+</div>
+
+# Run and deploy your AI Studio app
+
+This contains everything you need to run your app locally.
+
+View your app in AI Studio: https://ai.studio/apps/drive/1abFouLIuu0GSen887SrcPFCbglJU9UDJ
+
+## Run Locally
+
+**Prerequisites:**  Node.js
+
+
+1. Install dependencies:
+   `npm install`
+2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+3. Run the app:
+   `npm run dev`
+
+
+┍──━──━──┙◆┕──━──━──┑
+--- File: vite.config.ts ---
+┕──━──━──┑◆┍──━──━──┙
+
+import path from 'path';
+import { defineConfig, loadEnv } from 'vite';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig(({ mode }) => {
+    const env = loadEnv(mode, '.', '');
+    return {
+      server: {
+        port: 3000,
+        host: '0.0.0.0',
+      },
+      plugins: [react()],
+      define: {
+        'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
+      },
+      resolve: {
+        alias: {
+          '@': path.resolve(__dirname, '.'),
+        }
+      }
+    };
+});
+
+
+╔═══━━━─── • ───━━━═══╗
+--- File: index.html ---
+╚═══━━━─── • ───━━━═══╝
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Godfather Extractor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body class="bg-slate-900 text-slate-200">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+</body>
+</html>
+
+
+╔══════════•⊱✦⊰•══════════╗
+--- File: metadata.json ---
+╚══════════•⊱✦⊰•══════════╝
+
+{
+  "name": "Copy of Copy of Chat Log Verbatim Extractor",
+  "description": "A web application to upload a JSON chat log file and extract only the user and chatbot messages, displaying them verbatim in a clean, formatted view.",
+  "requestFramePermissions": []
+}
+
+╭━─━─━─≪✠≫─━─━─━╮
+--- File: index.tsx ---
+╰━─━─━─≪✠≫─━─━─━╯
+
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+
+const rootElement = document.getElementById('root');
+if (!rootElement) {
+  throw new Error("Could not find root element to mount to");
+}
+
+const root = ReactDOM.createRoot(rootElement);
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+
+
+┎━─━─━─━─━─━─━─━─━┒
+--- File: types.ts ---
+┖━─━─━─━─━─━─━─━─━┚
+
+
+export interface Message {
+  role: 'user' | 'model';
+  text: string;
+  isThought?: boolean;
+}
+
+export interface Chunk {
+  text?: string;
+  role: 'user' | 'model';
+  isThought?: boolean;
+  parts?: { text: string; thought?: boolean }[];
+}
+
+export interface JsonData {
+  chunkedPrompt?: {
+    chunks?: Chunk[];
+  };
+}
+
+export interface CommandArtifact {
+  id: number;
+  type: 'eof' | 'sed';
+  filename: string;
+  command: string;
+  sourceMessageIndex: number;
+}
+
+export interface FileGroup {
+  filename: string;
+  commands: CommandArtifact[];
+}
+
+export interface Prompt {
+  id: string;
+  name: string;
+  content: string;
+}
+
+export interface BatchItem {
+  id: string;
+  originalName: string;
+  sanitizedName: string;
+  status: 'pending' | 'processing' | 'completed' | 'error';
+  messages?: Message[];
+  error?: string;
+}
+
+export interface UnifiedArchive {
+  metadata: {
+    exportDate: string;
+    personaUsed: string | null;
+    totalFiles: number;
+  };
+  files: Record<string, Message[]>;
+}
+
+
+┍──━──━──┙◆┕──━──━──┑
+--- File: App.tsx ---
+┕──━──━──┑◆┍──━──━──┙
+
+
+import React, { useState, useCallback } from 'react';
+import { FileUpload } from './components/FileUpload';
+import { ConversationDisplay } from './components/ConversationDisplay';
+import { ArtifactsDisplay } from './components/ArtifactsDisplay';
+import { PromptManager } from './components/PromptManager';
+import { Message, JsonData, Chunk, Prompt, BatchItem } from './types';
+import { parseCommands } from './utils/commandParser';
+import { formatMessageContent, ExportFormat } from './utils/exportUtils';
+
+// External Global Access for JSZip
+declare var JSZip: any;
+
+const App: React.FC = () => {
+  const [batchItems, setBatchItems] = useState<BatchItem[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [activeFileIndex, setActiveFileIndex] = useState<number | null>(null);
+  const [viewMode, setViewMode] = useState<'chat' | 'artifacts'>('chat');
+  const [selectedPrompt, setSelectedPrompt] = useState<Prompt | null>(null);
+  
+  // Global Export Settings
+  const [includeCode, setIncludeCode] = useState(true);
+  const [includeThoughts, setIncludeThoughts] = useState(false);
+
+  const sanitizeFileName = (name: string): string => {
+    let clean = name.toLowerCase().replace(/\.[^/.]+$/, "");
+    clean = clean.replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_').replace(/^_+|_+$/g, '');
+    return clean;
+  };
+
+  const processFileContent = (content: string): Message[] => {
+    const data: JsonData = JSON.parse(content);
+    let chunks = data?.chunkedPrompt?.chunks;
+    if (!chunks || !Array.isArray(chunks)) throw new Error("Invalid structure.");
+
+    const extracted: Message[] = [];
+    chunks.forEach(chunk => {
+      if (chunk.role !== 'user' && chunk.role !== 'model') return;
+      const pushOrMerge = (text: string, isThought: boolean) => {
+        if (!text) return;
+        const last = extracted[extracted.length - 1];
+        if (last && last.role === chunk.role && !!last.isThought === isThought) {
+          last.text += text;
+        } else {
+          extracted.push({ role: chunk.role, text, isThought });
+        }
+      };
+      if (chunk.isThought && chunk.text) pushOrMerge(chunk.text, true);
+      else if (!chunk.isThought && chunk.text) pushOrMerge(chunk.text, false);
+      if (chunk.parts) {
+        chunk.parts.forEach(p => { if (p.text) pushOrMerge(p.text, p.thought || false); });
+      }
+    });
+    return extracted;
+  };
+
+  const handleFilesSelect = (files: File[]) => {
+    const newItems: BatchItem[] = files.map(f => ({
+      id: Math.random().toString(36).substr(2, 9),
+      originalName: f.name,
+      sanitizedName: sanitizeFileName(f.name),
+      status: 'pending'
+    }));
+    setBatchItems(newItems);
+    startBatch(files, newItems);
+  };
+
+  const startBatch = async (files: File[], items: BatchItem[]) => {
+    setIsProcessing(true);
+    for (let i = 0; i < files.length; i++) {
+      setBatchItems(prev => prev.map((item, idx) => idx === i ? { ...item, status: 'processing' } : item));
+      try {
+        const content = await files[i].text();
+        const messages = processFileContent(content);
+        setBatchItems(prev => prev.map((item, idx) => idx === i ? { ...item, status: 'completed', messages } : item));
+      } catch (err) {
+        setBatchItems(prev => prev.map((item, idx) => idx === i ? { ...item, status: 'error', error: 'Failed' } : item));
+      }
+    }
+    setIsProcessing(false);
+  };
+
+  const handleBatchDownload = async (format: ExportFormat) => {
+    const completed = batchItems.filter(b => b.status === 'completed' && b.messages);
+    if (completed.length === 0) return;
+
+    const zip = new JSZip();
+    completed.forEach(item => {
+      const content = formatMessageContent(item.messages!, format, {
+        includeCode,
+        includeThoughts,
+        exportTitle: item.sanitizedName,
+        selectedPrompt
+      });
+      zip.file(`${item.sanitizedName}.${format}`, content);
+    });
+
+    const blob = await zip.generateAsync({ type: "blob" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `godfather_vault_${format}_${new Date().toISOString().split('T')[0]}.zip`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleClear = () => {
+    setBatchItems([]);
+    setIsProcessing(false);
+    setActiveFileIndex(null);
+  };
+
+  const activeItem = activeFileIndex !== null ? batchItems[activeFileIndex] : null;
+
+  return (
+    <div className="min-h-screen bg-slate-900 text-slate-200 flex flex-col p-4 md:p-8">
+      <div className="text-center mb-10">
+        <h1 className="text-4xl md:text-6xl font-bold text-sky-400 tracking-tighter uppercase mb-2">The Godfather Extractor</h1>
+        <p className="text-slate-500 font-mono text-sm tracking-[0.2em] uppercase">Scaleable Verbatim Sanitization Engine</p>
+      </div>
+      
+      <PromptManager selectedPromptId={selectedPrompt?.id || null} onSelect={setSelectedPrompt} />
+      <FileUpload onFilesSelect={handleFilesSelect} onClear={handleClear} isProcessing={isProcessing} hasFiles={batchItems.length > 0} />
+
+      {batchItems.length > 0 && (
+        <div className="w-full max-w-4xl mx-auto mb-8 bg-slate-800/40 border border-slate-700 rounded-2xl overflow-hidden shadow-2xl">
+          <div className="p-4 bg-slate-800 border-b border-slate-700 flex flex-col md:flex-row justify-between items-center gap-4">
+            <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+              Queue: {batchItems.length} Logs
+            </h2>
+            
+            <div className="flex items-center gap-4">
+              {/* Batch Toggles */}
+              <div className="flex items-center gap-2 bg-slate-900/50 px-3 py-1.5 rounded-lg border border-slate-700">
+                <input type="checkbox" checked={includeThoughts} onChange={(e) => setIncludeThoughts(e.target.checked)} id="bt-thought" className="w-3 h-3 text-sky-600 rounded bg-slate-800 border-slate-600" />
+                <label htmlFor="bt-thought" className="text-[10px] font-bold text-slate-400 uppercase cursor-pointer">Thoughts</label>
+                <div className="w-px h-3 bg-slate-700 mx-1"></div>
+                <input type="checkbox" checked={includeCode} onChange={(e) => setIncludeCode(e.target.checked)} id="bt-code" className="w-3 h-3 text-sky-600 rounded bg-slate-800 border-slate-600" />
+                <label htmlFor="bt-code" className="text-[10px] font-bold text-slate-400 uppercase cursor-pointer">Code</label>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-1">
+                {(['json', 'md', 'txt', 'html'] as ExportFormat[]).map(fmt => (
+                  <button 
+                    key={fmt}
+                    onClick={() => handleBatchDownload(fmt)}
+                    disabled={isProcessing || !batchItems.some(i => i.status === 'completed')}
+                    className="px-3 py-1.5 bg-sky-600 hover:bg-sky-500 disabled:opacity-30 text-white rounded-lg font-bold text-[10px] tracking-widest transition-all uppercase"
+                  >
+                    .{fmt}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          
+          <div className="max-h-60 overflow-y-auto divide-y divide-slate-700/50">
+            {batchItems.map((item, idx) => (
+              <div 
+                key={item.id} 
+                onClick={() => !isProcessing && item.status === 'completed' && setActiveFileIndex(idx)}
+                className={`flex items-center justify-between p-3 hover:bg-slate-700/30 transition-colors cursor-pointer ${activeFileIndex === idx ? 'bg-sky-900/20' : ''}`}
+              >
+                <div className="flex items-center space-x-3 truncate">
+                  <span className={`w-2 h-2 rounded-full ${item.status === 'completed' ? 'bg-green-500' : item.status === 'error' ? 'bg-red-500' : item.status === 'processing' ? 'bg-sky-500 animate-pulse' : 'bg-slate-600'}`} />
+                  <p className="font-mono text-xs text-slate-400 truncate">{item.sanitizedName}</p>
+                </div>
+                {item.status === 'completed' && <span className="text-[10px] font-bold text-green-400 uppercase">Verbatim Ready</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {activeItem?.messages && (
+        <div className="space-y-6">
+          <div className="w-full max-w-4xl mx-auto flex justify-center space-x-3">
+              <button onClick={() => setViewMode('chat')} className={`px-8 py-2 rounded-xl font-bold border ${viewMode === 'chat' ? 'bg-sky-600 text-white' : 'bg-slate-800 text-slate-400'}`}>Inspect</button>
+              <button onClick={() => setViewMode('artifacts')} className={`px-8 py-2 rounded-xl font-bold border ${viewMode === 'artifacts' ? 'bg-sky-600 text-white' : 'bg-slate-800 text-slate-400'}`}>Artifacts</button>
+          </div>
+          <div className={viewMode === 'chat' ? 'block' : 'hidden'}>
+              <ConversationDisplay 
+                messages={activeItem.messages!} 
+                fileName={activeItem.sanitizedName} 
+                selectedPrompt={selectedPrompt}
+                globalOptions={{ includeCode, includeThoughts }}
+              />
+          </div>
+          <div className={viewMode === 'artifacts' ? 'block' : 'hidden'}>
+              <ArtifactsDisplay fileGroups={parseCommands(activeItem.messages!)} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default App;
+
+
+╔═══━━━─── • ───━━━═══╗
+--- File: tsconfig.json ---
+╚═══━━━─── • ───━━━═══╝
+
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "experimentalDecorators": true,
+    "useDefineForClassFields": false,
+    "module": "ESNext",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "skipLibCheck": true,
+    "types": [
+      "node"
+    ],
+    "moduleResolution": "bundler",
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "allowJs": true,
+    "jsx": "react-jsx",
+    "paths": {
+      "@/*": [
+        "./*"
+      ]
+    },
+    "allowImportingTsExtensions": true,
+    "noEmit": true
+  }
+}
+
+╔══════════•⊱✦⊰•══════════╗
+--- File: components/PromptManager.tsx ---
+╚══════════•⊱✦⊰•══════════╝
+
+
+import React, { useState, useEffect, useRef } from 'react';
+import { Prompt } from '../types';
+
+const DEFAULT_PROMPTS: Prompt[] = [
+  {
+    "id": "1710234567890",
+    "name": "Senior Systems Architect - Technical Debt Analysis",
+    "content": "You are a senior systems architect. Analyze the provided logs for technical debt..."
+  },
+  {
+    "id": "1710234567891",
+    "name": "Code Autopsy - Root Cause Analysis",
+    "content": "Perform a root-cause analysis on the logic within these chat logs..."
+  },
+  {
+    "id": "1710234567892",
+    "name": "Mermaid Mindmap Converter",
+    "content": "Convert the following text into a Mermaid.js **Mindmap**.\n**Rules:**\n1. Start with `mindmap`.\n2. Create a root node based on the main topic.\n3. Strict Indentation: Use exactly 2 spaces for each level of indentation based on the hierarchy of the text.\n4. **Clean the text:** Remove all leading hyphens (`-`), asterisks (`*`), or numbers. Just keep the keywords.\n5. Do not add connecting arrows or shapes unless necessary, keep it clean.\n Please strip out all special characters (like : or -) from the node IDs and check the indentation."
+  },
+  {
+    "id": "1710234567893",
+    "name": "Mermaid Flowchart Converter",
+    "content": "Convert the following text into a Mermaid.js **Flowchart** (`graph TD`).\n**Rules:**\n1. Use square brackets `[]` for processes and diamonds `{}` for decisions/questions.\n2. Ensure the logic flows from top to bottom.\n3. If the text mentions specific modules (like 'Client' vs 'Server'), group them using `subgraph`.\n4. Keep labels on the arrows short.\n Please strip out all special characters (like : or -) from the node IDs and check the indentation."
+  },
+  {
+    "id": "1710234567894",
+    "name": "Mermaid Sequence Diagram Converter",
+    "content": "Convert the following text into a Mermaid.js **Sequence Diagram**.\n**Rules:**\n 1. Identify the participants (e.g., User, Browser, Server, Database).\n2. Use `->>` for requests and `-->>` for responses.\n 3. Create a valid timeline of events based on the text.\n 4. Add notes (`Note over...`) if there is context that doesn't fit in a message arrow.\n Please strip out all special characters (like : or -) from the node IDs and check the indentation."
+  },
+  {
+    "id": "1710234567895",
+    "name": "DevOps Mermaid Diagram Generator",
+    "content": "Act as a Senior DevOps and Documentation Engineer. I am going to provide you with a dump of text, documentation, or code.\nYour goal is to convert this information into a high-quality Mermaid.js diagram and wrap it in a \"One-Click\" Bash script that renders the diagram into SVG, PNG, and PDF formats.\n### PHASE 1: ANALYSIS & STRUCTURE\n1. Analyze the input text to determine the BEST structure...\n### PHASE 2: MERMAID CODING STANDARDS\n...\n### PHASE 3: THE OUTPUT FORMAT (CRITICAL)\nYou must output a SINGLE code block containing a Bash script..."
+  },
+  {
+    "id": "1710234567896",
+    "name": "Principal Architect - Final Blueprint Mindmap",
+    "content": "Act as a Principal Software Architect and Technical Lead.\nI am going to paste a long, chaotic conversation log containing code iterations, brainstorming, and debugging.\n**YOUR GOAL:**\nExtract the \"Final Perfect State\" of the application described in the chat and convert it into a highly detailed **Mermaid.js Mindmap**...\n### PHASE 1: NOISE FILTERING\n...\n### PHASE 2: BLUEPRINT STRUCTURE (The Mindmap)\n...\n### PHASE 3: THE OUTPUT (Bash Script Wrapper)\n..."
+  },
+  {
+    "id": "1710234567897",
+    "name": "Principal Architect - Final State Extraction",
+    "content": "Act as a Principal Software Architect.\nI am providing a chaotic chat log where we built an application.\nYOUR GOAL: Extract the \"Final Perfect State\" and create a Mermaid.js Mindmap Blueprint.\nRULES:\n1. Ignore failed attempts, reverted code, and casual conversation...\nOUTPUT:\nWrap the Mermaid code in a self-executing Bash script (`generate_blueprint.sh`)..."
+  },
+  {
+    "id": "1710234567898",
+    "name": "SRE Root Cause Flowchart",
+    "content": "Act as a Senior Site Reliability Engineer (SRE).\nI am providing a chat log of a difficult debugging session.\nYOUR GOAL: Create a \"Root Cause Analysis\" Flowchart using Mermaid.js.\nRULES:\n1. Identify the SYMPTOM...\nOUTPUT:\nWrap the Mermaid code in a self-executing Bash script (`generate_autopsy.sh`)..."
+  },
+  {
+    "id": "1710234567899",
+    "name": "Product Manager Vision Mindmap",
+    "content": "Act as a Product Manager and Visionary.\nI am providing a chat log of a brainstorming session.\nYOUR GOAL: Crystalize these scattered ideas into a Mermaid.js Mindmap.\nRULES:\n1. Extract the Core Concept...\nOUTPUT:\nWrap the Mermaid code in a self-executing Bash script (`generate_manifesto.sh`)..."
+  },
+  {
+    "id": "1710234567900",
+    "name": "Technical Educator Diagram",
+    "content": "Act as a Technical Educator.\nI am providing a chat log where I learned about a specific technology.\nYOUR GOAL: Create an Educational Diagram (Flowchart or Sequence) that visually explains the concept.\nRULES:\n1. If it's a process, use Sequence...\nOUTPUT:\nWrap the Mermaid code in a self-executing Bash script (`generate_grimoire.sh`)..."
+  },
+  {
+    "id": "1710234567901",
+    "name": "Data Archivist Auto Diagram",
+    "content": "Act as a Data Archivist.\nI am providing a chat log.\nYOUR GOAL: Analyze the content and generate the MOST APPROPRIATE Mermaid.js diagram.\nRULES:\n1. Analyze the text. Is it Code? Debugging? Ideas?...\nOUTPUT:\nWrap the Mermaid code in a self-executing Bash script (`generate_summary.sh`)..."
+  },
+  {
+    "id": "1710234567902",
+    "name": "Security Engineer Refactor Review",
+    "content": "Act as a Senior Security Engineer and Lead Dev.\nI am providing a chat log containing code iterations.\nYOUR GOAL: Create a text-based \"Refactoring Plan\" and a Mermaid Flowchart showing the security/logic gaps.\nRULES:\n1. Identify security vulnerabilities...\nOUTPUT:\nProvide the critique in Markdown and the Mermaid code wrapped in a bash script (`generate_review.sh`)."
+  },
+  {
+    "id": "1710234567903",
+    "name": "Executive Assistant High-Level Summary",
+    "content": "Act as a C-Level Executive Assistant.\nI am providing a technical chat log.\nYOUR GOAL: Create a high-level visual summary for non-technical stakeholders.\nRULES:\n1. Remove all code snippets and jargon...\nOUTPUT:\nWrap the Mermaid code in a self-executing Bash script (`generate_exec_summary.sh`)."
+  }
+];
+
+interface PromptManagerProps {
+  onSelect: (prompt: Prompt | null) => void;
+  selectedPromptId: string | null;
+}
+
+type ModalMode = 'none' | 'create' | 'edit';
+
+export const PromptManager: React.FC<PromptManagerProps> = ({ onSelect, selectedPromptId }) => {
+  const [prompts, setPrompts] = useState<Prompt[]>([]);
+  const [modalMode, setModalMode] = useState<ModalMode>('none');
+  const [nameInput, setNameInput] = useState('');
+  const [contentInput, setContentInput] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Load prompts from LocalStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('ai_prompts_vault');
+    if (saved) {
+      try {
+        setPrompts(JSON.parse(saved));
+      } catch (e) {
+        setPrompts(DEFAULT_PROMPTS);
+      }
+    } else {
+      // Seed with hardcoded defaults if empty
+      saveToDisk(DEFAULT_PROMPTS);
+    }
+  }, []);
+
+  const saveToDisk = (updated: Prompt[]) => {
+    setPrompts(updated);
+    localStorage.setItem('ai_prompts_vault', JSON.stringify(updated));
+  };
+
+  const openCreateModal = () => {
+    setNameInput('');
+    setContentInput('');
+    setModalMode('create');
+  };
+
+  const openEditModal = () => {
+    const current = prompts.find(p => p.id === selectedPromptId);
+    if (current) {
+      setNameInput(current.name);
+      setContentInput(current.content);
+      setModalMode('edit');
+    }
+  };
+
+  const handleSave = () => {
+    if (!nameInput.trim() || !contentInput.trim()) return;
+
+    let updated: Prompt[];
+    if (modalMode === 'edit' && selectedPromptId) {
+      updated = prompts.map(p => 
+        p.id === selectedPromptId 
+          ? { ...p, name: nameInput.trim(), content: contentInput.trim() } 
+          : p
+      );
+      const updatedPrompt = updated.find(p => p.id === selectedPromptId);
+      onSelect(updatedPrompt || null);
+    } else {
+      const newPrompt: Prompt = {
+        id: Date.now().toString(),
+        name: nameInput.trim(),
+        content: contentInput.trim()
+      };
+      updated = [...prompts, newPrompt];
+      onSelect(newPrompt);
+    }
+
+    saveToDisk(updated);
+    setNameInput('');
+    setContentInput('');
+    setModalMode('none');
+  };
+
+  const handleDelete = () => {
+    if (!selectedPromptId) return;
+    if (!window.confirm("Delete this persona from your library?")) return;
+    const updated = prompts.filter(p => p.id !== selectedPromptId);
+    saveToDisk(updated);
+    onSelect(null);
+  };
+
+  const handleExportVault = () => {
+    const dataStr = JSON.stringify(prompts, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `persona_vault_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportVault = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const imported = JSON.parse(event.target?.result as string);
+        if (Array.isArray(imported)) {
+          if (window.confirm(`Import ${imported.length} personas? This will overwrite your current library.`)) {
+            saveToDisk(imported);
+            onSelect(null);
+          }
+        }
+      } catch (err) {
+        alert("Invalid file format.");
+      }
+    };
+    reader.readAsText(file);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  return (
+    <div className="w-full max-w-4xl mx-auto mb-6 bg-slate-800/80 p-4 rounded-xl border border-slate-700 shadow-xl">
+      <div className="flex flex-col sm:flex-row items-end gap-3">
+        <div className="flex-grow w-full">
+          <div className="flex justify-between items-center mb-1">
+            <label className="text-xs text-sky-400 font-bold uppercase tracking-widest">Active System Persona</label>
+            <div className="flex gap-3">
+               <button onClick={handleExportVault} className="text-[10px] font-bold text-slate-500 hover:text-sky-400 transition-colors uppercase">Export Vault</button>
+               <button onClick={() => fileInputRef.current?.click()} className="text-[10px] font-bold text-slate-500 hover:text-sky-400 transition-colors uppercase">Import Vault</button>
+               <input type="file" ref={fileInputRef} onChange={handleImportVault} accept=".json" className="hidden" />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <select 
+              className="flex-grow bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-sky-500 font-mono text-sm"
+              value={selectedPromptId || ''}
+              onChange={(e) => {
+                const p = prompts.find(p => p.id === e.target.value);
+                onSelect(p || null);
+              }}
+            >
+              <option value="">Clean Log (No Injected Persona)</option>
+              {prompts.map(p => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+            
+            <button 
+              onClick={openCreateModal}
+              className="px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-lg font-bold text-xs transition-all shadow-lg shadow-sky-900/40"
+            >
+              [+] NEW
+            </button>
+
+            {selectedPromptId && (
+              <>
+                <button 
+                  onClick={openEditModal}
+                  className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-sky-300 rounded-lg border border-slate-600 font-bold text-xs"
+                >
+                  [e] EDIT
+                </button>
+                <button 
+                  onClick={handleDelete}
+                  className="px-3 py-2 bg-red-900/30 hover:bg-red-600 text-red-400 hover:text-white rounded-lg border border-red-900/50 font-bold text-xs"
+                >
+                  [x]
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {modalMode !== 'none' && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
+          <div className="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden">
+            <div className="p-6 border-b border-slate-700 flex justify-between items-center">
+              <h3 className="text-xl font-bold text-sky-400 tracking-tight">
+                {modalMode === 'create' ? 'Create New Blueprint' : 'Refine System Persona'}
+              </h3>
+              <button onClick={() => setModalMode('none')} className="text-slate-400 hover:text-white transition-colors">
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="p-6 space-y-5">
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-2 tracking-widest">Persona Name</label>
+                <input 
+                  type="text" 
+                  value={nameInput}
+                  onChange={(e) => setNameInput(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-sky-500 font-medium"
+                  placeholder="e.g., Code Autopsy, Blueprint..."
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-2 tracking-widest">Instructional Logic</label>
+                <textarea 
+                  value={contentInput}
+                  onChange={(e) => setContentInput(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-4 text-slate-300 focus:outline-none focus:border-sky-500 h-96 font-mono text-sm leading-relaxed"
+                  placeholder="Define the behavior, constraints, and output goals..."
+                />
+              </div>
+            </div>
+            <div className="p-6 bg-slate-900/50 border-t border-slate-700 flex justify-end gap-3">
+              <button 
+                onClick={() => setModalMode('none')}
+                className="px-6 py-2 text-slate-400 hover:text-white font-bold transition-colors"
+              >
+                Discard
+              </button>
+              <button 
+                onClick={handleSave}
+                disabled={!nameInput.trim() || !contentInput.trim()}
+                className="px-8 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-xl font-bold shadow-xl shadow-sky-900/50 disabled:opacity-50 transition-all"
+              >
+                {modalMode === 'create' ? 'Save Persona' : 'Commit Changes'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+
+╭━─━─━─≪✠≫─━─━─━╮
+--- File: components/ArtifactsDisplay.tsx ---
+╰━─━─━─≪✠≫─━─━─━╯
+
+import React, { useState } from 'react';
+import { FileGroup, CommandArtifact } from '../types';
+
+interface ArtifactsDisplayProps {
+  fileGroups: FileGroup[];
+}
+
+export const ArtifactsDisplay: React.FC<ArtifactsDisplayProps> = ({ fileGroups }) => {
+  // Track selected command IDs
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  
+  // Track expanded file groups
+  const [expandedFiles, setExpandedFiles] = useState<Set<string>>(new Set());
+
+  // Track temporary 'Just Copied' state for the toast effect
+  const [justCopiedId, setJustCopiedId] = useState<number | null>(null);
+  
+  // Track persistent 'Has Been Copied' history
+  const [historyCopiedIds, setHistoryCopiedIds] = useState<Set<number>>(new Set());
+
+  // Track Starred/Favorite IDs
+  const [starredIds, setStarredIds] = useState<Set<number>>(new Set());
+
+  // Toggle single command selection
+  const toggleSelection = (id: number) => {
+    const newSet = new Set(selectedIds);
+    if (newSet.has(id)) {
+      newSet.delete(id);
+    } else {
+      newSet.add(id);
+    }
+    setSelectedIds(newSet);
+  };
+
+  // Toggle Star
+  const toggleStar = (id: number) => {
+    const newSet = new Set(starredIds);
+    if (newSet.has(id)) {
+      newSet.delete(id);
+    } else {
+      newSet.add(id);
+    }
+    setStarredIds(newSet);
+  };
+
+  // Toggle expand/collapse for a file
+  const toggleExpand = (filename: string) => {
+      const newSet = new Set(expandedFiles);
+      if (newSet.has(filename)) {
+          newSet.delete(filename);
+      } else {
+          newSet.add(filename);
+      }
+      setExpandedFiles(newSet);
+  };
+
+  // Toggle all commands for a specific file
+  const toggleFileGroupSelection = (group: FileGroup, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent toggling expansion when clicking checkbox
+    const allSelected = group.commands.every(cmd => selectedIds.has(cmd.id));
+    const newSet = new Set(selectedIds);
+    
+    if (allSelected) {
+      group.commands.forEach(cmd => newSet.delete(cmd.id));
+    } else {
+      group.commands.forEach(cmd => newSet.add(cmd.id));
+    }
+    setSelectedIds(newSet);
+  };
+
+  // Toggle EVERYTHING
+  const toggleAll = () => {
+    const allCommandIds = fileGroups.flatMap(g => g.commands).map(c => c.id);
+    const allSelected = allCommandIds.every(id => selectedIds.has(id));
+    
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(allCommandIds));
+    }
+  };
+
+  const handleSingleCopy = (cmd: CommandArtifact) => {
+    navigator.clipboard.writeText(cmd.command);
+    
+    // Trigger toast
+    setJustCopiedId(cmd.id);
+    setTimeout(() => setJustCopiedId(null), 2000);
+
+    // Mark as historically copied
+    const newHistory = new Set(historyCopiedIds);
+    newHistory.add(cmd.id);
+    setHistoryCopiedIds(newHistory);
+  };
+
+  // Copy selected to clipboard
+  const handleBulkCopy = () => {
+    const allCommands = fileGroups.flatMap(g => g.commands);
+    const selectedCommands = allCommands
+        .filter(cmd => selectedIds.has(cmd.id))
+        .sort((a, b) => a.id - b.id); // Critical: Sort by ID
+
+    const text = selectedCommands.map(c => c.command).join('\n\n');
+    navigator.clipboard.writeText(text);
+    
+    // Mark all selected as copied in history
+    const newHistory = new Set(historyCopiedIds);
+    selectedCommands.forEach(c => newHistory.add(c.id));
+    setHistoryCopiedIds(newHistory);
+
+    alert(`Copied ${selectedCommands.length} commands to clipboard.`);
+  };
+
+  const getSelectedCommands = () => {
+    const allCommands = fileGroups.flatMap(g => g.commands);
+    return allCommands
+        .filter(cmd => selectedIds.has(cmd.id))
+        .sort((a, b) => a.id - b.id);
+  };
+
+  const triggerDownload = (content: string, filename: string, type: string) => {
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.download = filename;
+    link.href = url;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // Download as .sh file
+  const handleDownloadSH = () => {
+    const selectedCommands = getSelectedCommands();
+    const text = "#!/bin/bash\n\n" + selectedCommands.map(c => `# Command #${c.id} for ${c.filename}\n${c.command}`).join('\n\n');
+    triggerDownload(text, "update_script.sh", 'text/x-sh');
+  };
+
+  // Download as .txt file
+  const handleDownloadTXT = () => {
+    const selectedCommands = getSelectedCommands();
+    const text = selectedCommands.map(c => `--------------------------------------------------\n# Command #${c.id} for ${c.filename}\n--------------------------------------------------\n${c.command}`).join('\n\n');
+    triggerDownload(text, "commands.txt", 'text/plain');
+  };
+
+  // Download as .md file
+  const handleDownloadMD = () => {
+    const selectedCommands = getSelectedCommands();
+    const text = "# Extracted Commands\n\n" + selectedCommands.map(c => `### Command #${c.id} - ${c.filename}\n\`\`\`bash\n${c.command}\n\`\`\``).join('\n\n');
+    triggerDownload(text, "commands.md", 'text/markdown');
+  };
+
+  const totalCommands = fileGroups.reduce((acc, g) => acc + g.commands.length, 0);
+  const selectedCount = selectedIds.size;
+  const starredCount = starredIds.size;
+
+  return (
+    <div className="w-full max-w-6xl mx-auto flex flex-col flex-grow mt-8 bg-slate-800 rounded-lg border border-slate-700 shadow-2xl overflow-hidden" style={{maxHeight: '75vh'}}>
+        {/* Header / Controls */}
+        <div className="p-4 border-b border-slate-600 bg-slate-800 flex flex-col xl:flex-row justify-between items-center gap-4 flex-shrink-0 z-10">
+            <div className="flex items-center space-x-4 flex-wrap justify-center xl:justify-start">
+                <h2 className="text-xl font-bold text-sky-400 whitespace-nowrap">Artifacts Found</h2>
+                <span className="bg-slate-700 text-slate-300 px-3 py-1 rounded-full text-xs font-mono whitespace-nowrap">{fileGroups.length} Files</span>
+                <span className="bg-slate-700 text-slate-300 px-3 py-1 rounded-full text-xs font-mono whitespace-nowrap">{totalCommands} Versions</span>
+                <span className="bg-sky-900/50 text-sky-200 px-3 py-1 rounded-full text-xs font-mono whitespace-nowrap">{selectedCount} Selected</span>
+                {starredCount > 0 && <span className="bg-yellow-900/50 text-yellow-200 px-3 py-1 rounded-full text-xs font-mono flex items-center gap-1 whitespace-nowrap">
+                    <svg className="w-3 h-3 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                    {starredCount} Stars
+                </span>}
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                 <button 
+                    onClick={toggleAll}
+                    className="px-3 py-2 text-sm bg-slate-700 hover:bg-slate-600 text-white rounded border border-slate-600 transition-colors whitespace-nowrap"
+                >
+                    {selectedCount === totalCommands ? 'Deselect All' : 'Select All'}
+                </button>
+                <button 
+                    onClick={handleBulkCopy}
+                    disabled={selectedCount === 0}
+                    className="px-4 py-2 text-sm font-bold bg-sky-600 hover:bg-sky-500 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg shadow-sky-900/50 whitespace-nowrap"
+                >
+                    Copy Selected
+                </button>
+                
+                {/* Export Group */}
+                <div className="flex rounded-md shadow-sm" role="group">
+                    <button 
+                        onClick={handleDownloadSH}
+                        disabled={selectedCount === 0}
+                        className="px-4 py-2 text-sm font-bold bg-emerald-600 hover:bg-emerald-500 text-white rounded-l disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg shadow-emerald-900/50 whitespace-nowrap border-r border-emerald-700"
+                        title="Download executable Shell Script"
+                    >
+                        .SH
+                    </button>
+                    <button 
+                        onClick={handleDownloadTXT}
+                        disabled={selectedCount === 0}
+                        className="px-4 py-2 text-sm font-bold bg-slate-600 hover:bg-slate-500 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors border-r border-slate-700"
+                        title="Download as Text File"
+                    >
+                        .TXT
+                    </button>
+                    <button 
+                        onClick={handleDownloadMD}
+                        disabled={selectedCount === 0}
+                        className="px-4 py-2 text-sm font-bold bg-slate-600 hover:bg-slate-500 text-white rounded-r disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        title="Download as Markdown Documentation"
+                    >
+                        .MD
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        {/* Scrollable List */}
+        <div className="flex-grow overflow-y-auto p-4 space-y-4">
+            {fileGroups.map((group) => {
+                const groupSelectedCount = group.commands.filter(c => selectedIds.has(c.id)).length;
+                const isGroupFullySelected = groupSelectedCount === group.commands.length && group.commands.length > 0;
+                const isExpanded = expandedFiles.has(group.filename);
+
+                return (
+                    <div key={group.filename} className="bg-slate-900/50 rounded-lg border border-slate-700 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                        {/* File Header - Click to Expand/Collapse */}
+                        <div 
+                            className="p-4 bg-slate-800 hover:bg-slate-750 border-b border-slate-700 flex justify-between items-center cursor-pointer select-none transition-colors" 
+                            onClick={() => toggleExpand(group.filename)}
+                        >
+                            <div className="flex items-center space-x-4">
+                                {/* Checkbox - Click to Select All in Group */}
+                                <div onClick={(e) => toggleFileGroupSelection(group, e)} className="flex items-center">
+                                     <input 
+                                        type="checkbox" 
+                                        checked={isGroupFullySelected}
+                                        ref={input => {
+                                            if (input) {
+                                                input.indeterminate = groupSelectedCount > 0 && groupSelectedCount < group.commands.length;
+                                            }
+                                        }}
+                                        onChange={() => {}} // Controlled by div click
+                                        className="w-5 h-5 rounded border-slate-500 text-sky-600 focus:ring-sky-500 bg-slate-700 cursor-pointer"
+                                    />
+                                </div>
+                                
+                                <div className="flex flex-col">
+                                    <h3 className="font-mono text-base font-bold text-slate-200">{group.filename}</h3>
+                                    <span className="text-xs text-slate-400">
+                                        {group.commands.length} Version{group.commands.length !== 1 && 's'} Found
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center space-x-3">
+                                <span className={`transform transition-transform duration-200 text-slate-400 ${isExpanded ? 'rotate-180' : ''}`}>
+                                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Commands List - Collapsible */}
+                        {isExpanded && (
+                            <div className="divide-y divide-slate-800 bg-slate-900/30">
+                                {group.commands.map((cmd) => {
+                                    const isStarred = starredIds.has(cmd.id);
+                                    const isHistoryCopied = historyCopiedIds.has(cmd.id);
+
+                                    return (
+                                        <div key={cmd.id} className={`p-4 flex items-start space-x-4 hover:bg-slate-800/50 transition-colors group ${selectedIds.has(cmd.id) ? 'bg-sky-900/10' : ''} ${isStarred ? 'bg-yellow-900/5' : ''}`}>
+                                            <div className="pt-1 flex-shrink-0 flex items-center space-x-2">
+                                                {/* Selection Checkbox */}
+                                                <input 
+                                                    type="checkbox"
+                                                    checked={selectedIds.has(cmd.id)}
+                                                    onChange={() => toggleSelection(cmd.id)}
+                                                    className="w-4 h-4 rounded border-slate-600 text-sky-600 focus:ring-sky-500 bg-slate-800"
+                                                />
+                                                {/* Star Toggle */}
+                                                <button 
+                                                    onClick={() => toggleStar(cmd.id)}
+                                                    className={`transition-colors focus:outline-none ${isStarred ? 'text-yellow-400' : 'text-slate-600 hover:text-yellow-400/50'}`}
+                                                    title={isStarred ? "Remove Star" : "Mark as Good"}
+                                                >
+                                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                            <div className="flex-grow min-w-0">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <div className="flex items-center space-x-3">
+                                                        <span className={`text-xs font-bold uppercase px-2 py-0.5 rounded border ${cmd.type === 'eof' ? 'bg-purple-900/30 border-purple-700 text-purple-300' : 'bg-orange-900/30 border-orange-700 text-orange-300'}`}>
+                                                            {cmd.type}
+                                                        </span>
+                                                        <span className="text-xs font-mono text-slate-500">ID #{cmd.id}</span>
+                                                        {isHistoryCopied && (
+                                                            <span className="flex items-center space-x-1 text-xs font-bold text-green-400 bg-green-900/20 px-2 py-0.5 rounded border border-green-900/30">
+                                                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
+                                                                <span>Copied</span>
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    
+                                                    {/* Individual Copy Button */}
+                                                    <button
+                                                        onClick={() => handleSingleCopy(cmd)}
+                                                        className={`text-xs font-bold px-3 py-1 rounded transition-all flex items-center space-x-1
+                                                            ${justCopiedId === cmd.id 
+                                                                ? 'bg-green-600 text-white transform scale-105' 
+                                                                : 'bg-slate-700 text-slate-300 hover:bg-sky-600 hover:text-white'
+                                                            }`}
+                                                    >
+                                                        {justCopiedId === cmd.id ? (
+                                                            <>
+                                                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
+                                                                <span>Copied!</span>
+                                                            </>
+                                                        ) : (
+                                                            <span>Copy Version</span>
+                                                        )}
+                                                    </button>
+                                                </div>
+                                                <pre className={`text-xs md:text-sm font-mono text-slate-300 bg-black/40 p-4 rounded border overflow-x-auto whitespace-pre-wrap break-all shadow-inner ${isStarred ? 'border-yellow-500/30 shadow-yellow-900/20' : 'border-slate-700/50'}`}>
+                                                    {cmd.command}
+                                                </pre>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+                );
+            })}
+             {fileGroups.length === 0 && (
+                <div className="text-center py-12 text-slate-500">
+                    <p>No EOF or Sed commands found in this chat log.</p>
+                </div>
+            )}
+        </div>
+    </div>
+  );
+};
+
+┎━─━─━─━─━─━─━─━─━┒
+--- File: components/FileUpload.tsx ---
+┖━─━─━─━─━─━─━─━─━┚
+
+
+import React, { useCallback, useState, useRef } from 'react';
+
+interface FileUploadProps {
+  onFilesSelect: (files: File[]) => void;
+  onClear: () => void;
+  isProcessing: boolean;
+  hasFiles: boolean;
+}
+
+export const FileUpload: React.FC<FileUploadProps> = ({ onFilesSelect, onClear, isProcessing, hasFiles }) => {
+  const [dragActive, setDragActive] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleFiles = useCallback((files: FileList | null) => {
+    if (!files) return;
+    onFilesSelect(Array.from(files));
+  }, [onFilesSelect]);
+
+  const handleDrag = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFiles(e.dataTransfer.files);
+    }
+  }, [handleFiles]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    if (e.target.files && e.target.files.length > 0) {
+      handleFiles(e.target.files);
+    }
+  };
+
+  return (
+    <div className="w-full max-w-4xl mx-auto mb-8">
+      {!hasFiles ? (
+        <label
+          htmlFor="dropzone-file"
+          className={`relative flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-2xl cursor-pointer transition-all duration-300
+            ${dragActive ? 'border-sky-400 bg-slate-800 shadow-2xl shadow-sky-900/20' : 'border-slate-700 bg-slate-800/40 hover:bg-slate-800 hover:border-slate-600'}`}
+        >
+          <div onDragEnter={handleDrag} onDragLeave={handleDrag} onDragOver={handleDrag} onDrop={handleDrop} className="absolute top-0 left-0 w-full h-full"></div>
+          <div className="flex flex-col items-center justify-center pt-5 pb-6 pointer-events-none text-center px-4">
+            <div className={`p-4 rounded-full mb-4 bg-slate-900/50 border border-slate-700 transition-transform ${dragActive ? 'scale-110' : ''}`}>
+                <svg className="w-10 h-10 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+            </div>
+            <p className="mb-2 text-lg text-slate-300 font-bold tracking-tight">
+              {dragActive ? 'Release to Start Extraction' : 'Injest Chat Logs'}
+            </p>
+            <p className="text-sm text-slate-500 font-medium">Drag & Drop or click to browse (supports multi-selection)</p>
+            <p className="mt-4 text-[10px] text-slate-600 font-mono uppercase tracking-[0.3em]">Scalable Batch Processing v2.0</p>
+          </div>
+          <input ref={inputRef} id="dropzone-file" type="file" multiple className="hidden" onChange={handleChange} />
+        </label>
+      ) : (
+        <div className="flex items-center justify-between p-5 bg-slate-800/80 backdrop-blur rounded-2xl border border-slate-700 shadow-xl">
+            <div className='flex items-center space-x-4'>
+                <div className="w-10 h-10 bg-sky-900/30 rounded-lg flex items-center justify-center border border-sky-500/30">
+                    <svg className='w-6 h-6 text-sky-400' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' /></svg>
+                </div>
+                <div>
+                    <p className="font-bold text-slate-200">Processing Engine Active</p>
+                    <p className="text-xs text-slate-500 font-mono">Status: {isProcessing ? 'Extracting Data...' : 'Idle / Complete'}</p>
+                </div>
+            </div>
+            <button
+                onClick={onClear}
+                className="px-6 py-2 text-sm font-bold text-white bg-red-600/90 hover:bg-red-600 rounded-xl transition-all shadow-lg shadow-red-900/40"
+            >
+                RESET CONSOLE
+            </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+
+┍──━──━──┙◆┕──━──━──┑
+--- File: components/ConversationDisplay.tsx ---
+┕──━──━──┑◆┍──━──━──┙
+
+
+import React, { useState, useEffect } from 'react';
+import { Message, Prompt } from '../types';
+import { formatMessageContent, ExportFormat } from '../utils/exportUtils';
+
+interface ConversationDisplayProps {
+  messages: Message[];
+  fileName: string | null;
+  selectedPrompt: Prompt | null;
+  globalOptions: { includeCode: boolean; includeThoughts: boolean };
+}
+
+const UserMessage: React.FC<{ text: string }> = ({ text }) => (
+  <div className="col-start-1 col-end-12 md:col-start-3 rounded-lg mb-6">
+    <div className="bg-sky-700 text-white p-4 rounded-xl border border-sky-600/50 shadow-lg">
+      <h3 className="font-bold text-sky-200 border-b border-sky-500/50 pb-2 mb-2 text-xs uppercase tracking-widest">--- START OF USER MESSAGE ---</h3>
+      <pre className="whitespace-pre-wrap font-sans text-base leading-relaxed">{text.trim()}</pre>
+      <h3 className="font-bold text-sky-200 border-t border-sky-500/50 pt-2 mt-2 text-xs uppercase tracking-widest text-right">--- END OF USER MESSAGE ---</h3>
+    </div>
+  </div>
+);
+
+const ModelMessage: React.FC<{ text: string, isThought?: boolean }> = ({ text, isThought }) => (
+  <div className="col-start-1 col-end-12 md:col-end-11 rounded-lg mb-6">
+    <div className={`${isThought ? 'bg-purple-950/50 border-purple-700/50' : 'bg-slate-800 border-slate-700/50'} text-slate-200 p-4 rounded-xl shadow-lg border`}>
+      <h3 className={`font-bold ${isThought ? 'text-purple-300' : 'text-slate-400'} border-b pb-2 mb-2 text-xs uppercase tracking-widest`}>
+          {isThought ? '--- START OF MODEL THOUGHT ---' : '--- START OF CHATBOT MESSAGE ---'}
+      </h3>
+      <pre className={`whitespace-pre-wrap font-sans text-base leading-relaxed ${isThought ? 'text-purple-200/80 italic' : ''}`}>{text.trim()}</pre>
+      <h3 className={`font-bold ${isThought ? 'text-purple-300' : 'text-slate-400'} border-t pt-2 mt-2 text-xs uppercase tracking-widest text-right`}>
+          {isThought ? '--- END OF MODEL THOUGHT ---' : '--- END OF CHATBOT MESSAGE ---'}
+      </h3>
+    </div>
+  </div>
+);
+
+export const ConversationDisplay: React.FC<ConversationDisplayProps> = ({ messages, fileName, selectedPrompt, globalOptions }) => {
+  const [exportTitle, setExportTitle] = useState('');
+
+  useEffect(() => {
+    setExportTitle(fileName || "extracted_conversation");
+  }, [fileName]);
+
+  const handleDownload = (format: ExportFormat) => {
+    const content = formatMessageContent(messages, format, {
+      ...globalOptions,
+      exportTitle,
+      selectedPrompt
+    });
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.download = `${exportTitle}.${format}`;
+    link.href = url;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const visibleMessages = messages.filter(msg => globalOptions.includeThoughts || !msg.isThought);
+
+  return (
+    <div className="w-full max-w-4xl mx-auto flex flex-col mt-8 bg-slate-800 rounded-2xl border border-slate-700 shadow-2xl overflow-hidden" style={{maxHeight: '80vh'}}>
+      <div className="p-4 border-b border-slate-700 bg-slate-800/90 flex flex-col md:flex-row justify-between items-center gap-4">
+        <input 
+            type="text" 
+            value={exportTitle}
+            onChange={(e) => setExportTitle(e.target.value)}
+            className="w-full md:w-64 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-slate-200 font-mono text-xs"
+        />
+        <div className="flex gap-2">
+            {(['json', 'md', 'txt', 'html'] as ExportFormat[]).map(fmt => (
+              <button 
+                key={fmt} 
+                onClick={() => handleDownload(fmt)} 
+                className="px-4 py-1.5 text-[10px] font-bold text-slate-400 bg-slate-900 border border-slate-700 rounded-lg hover:text-white hover:border-sky-500 transition-all uppercase"
+              >
+                .{fmt}
+              </button>
+            ))}
+        </div>
+      </div>
+      <div className="flex-grow p-6 overflow-y-auto bg-slate-900/40">
+        <div className="grid grid-cols-12">
+          {visibleMessages.map((msg, index) => (
+            msg.role === 'user' ? (
+              <UserMessage key={index} text={msg.text} />
+            ) : (
+              <ModelMessage key={index} text={msg.text} isThought={msg.isThought} />
+            )
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+╔═══━━━─── • ───━━━═══╗
+--- File: utils/exportUtils.ts ---
+╚═══━━━─── • ───━━━═══╝
+
+
+import { Message, Prompt } from '../types';
+
+export type ExportFormat = 'json' | 'md' | 'txt' | 'html';
+
+export const formatMessageContent = (
+  messages: Message[], 
+  format: ExportFormat, 
+  options: { includeCode: boolean, includeThoughts: boolean, exportTitle: string, selectedPrompt: Prompt | null }
+): string => {
+  const { includeCode, includeThoughts, exportTitle, selectedPrompt } = options;
+  
+  const processText = (text: string) => {
+    if (includeCode) return text.trim();
+    return text
+      .replace(/cat\s+<<\s*(?:'|")?EOF(?:'|")?[\s\S]*?\n\s*EOF/g, '[CODE REMOVED]')
+      .replace(/```[\s\S]*?```/g, '[CODE REMOVED]')
+      .replace(/^sed\s+.*$/gm, '[SED REMOVED]')
+      .trim();
+  };
+
+  const visibleMessages = messages.filter(msg => includeThoughts || !msg.isThought);
+
+  if (format === 'json') {
+    const jsonOutput = visibleMessages.map(m => ({
+      role: m.role,
+      text: processText(m.text),
+      ...(includeThoughts && m.isThought ? { is_thought: true } : {})
+    }));
+    return JSON.stringify(jsonOutput, null, 2);
+  }
+
+  if (format === 'txt') {
+    let content = visibleMessages.map(msg => {
+      let start = msg.role === 'user' ? '--- START OF USER MESSAGE ---' : (msg.isThought ? '--- START OF MODEL THOUGHT ---' : '--- START OF CHATBOT MESSAGE ---');
+      let end = msg.role === 'user' ? '--- END OF USER MESSAGE ---' : (msg.isThought ? '--- END OF MODEL THOUGHT ---' : '--- END OF CHATBOT MESSAGE ---');
+      return `${start}\n${processText(msg.text)}\n${end}`;
+    }).join('\n\n');
+    
+    if (selectedPrompt) {
+      content = `--- SYSTEM PERSONA: ${selectedPrompt.name} ---\n${selectedPrompt.content}\n--- END PERSONA ---\n\n` + content;
+    }
+    return content;
+  }
+
+  if (format === 'md') {
+    const titleHeader = `# ${exportTitle}\n\n`;
+    let content = visibleMessages.map(msg => {
+      let roleHeader = msg.role === 'user' ? '### User' : (msg.isThought ? '### Model Thought' : '### Chatbot');
+      const text = processText(msg.text);
+      const formattedText = msg.isThought ? `> ${text.replace(/\n/g, '\n> ')}` : text;
+      return `${roleHeader}\n\n${formattedText}\n`;
+    }).join('\n---\n\n');
+
+    if (selectedPrompt) {
+      content = `## System Persona: ${selectedPrompt.name}\n> ${selectedPrompt.content.replace(/\n/g, '\n> ')}\n\n---\n\n` + content;
+    }
+    return titleHeader + content;
+  }
+
+  if (format === 'html') {
+    const escapeHtml = (u: string) => u.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    const conversationHtml = visibleMessages.map(msg => {
+      let bgClass = msg.role === 'user' ? 'bg-sky-700 text-white' : (msg.isThought ? 'bg-purple-900/90 text-slate-200' : 'bg-slate-800 text-slate-200');
+      let headerClass = msg.role === 'user' ? 'text-sky-200 border-sky-500/50' : (msg.isThought ? 'text-purple-300 border-purple-600/50' : 'text-slate-400 border-slate-700/50');
+      let start = msg.role === 'user' ? '--- START OF USER MESSAGE ---' : (msg.isThought ? '--- START OF MODEL THOUGHT ---' : '--- START OF CHATBOT MESSAGE ---');
+      let end = msg.role === 'user' ? '--- END OF USER MESSAGE ---' : (msg.isThought ? '--- END OF MODEL THOUGHT ---' : '--- END OF CHATBOT MESSAGE ---');
+      return `<div class="mb-6"><div class="${bgClass} p-5 rounded-xl border border-white/5 shadow-lg"><h3 class="font-bold ${headerClass} border-b pb-2 mb-3 text-xs tracking-widest uppercase">${start}</h3><pre class="whitespace-pre-wrap font-sans text-base leading-relaxed">${escapeHtml(processText(msg.text))}</pre><h3 class="font-bold ${headerClass} border-t pt-2 mt-3 text-xs tracking-widest text-right uppercase">${end}</h3></div></div>`;
+    }).join('');
+
+    const promptHtml = selectedPrompt ? `<div class="mb-10 p-6 bg-sky-900/20 border border-sky-500/50 rounded-2xl"><h2 class="text-sky-400 font-bold uppercase text-xs tracking-widest mb-4">System Persona: ${selectedPrompt.name}</h2><pre class="text-sky-100 font-mono text-sm whitespace-pre-wrap leading-relaxed">${escapeHtml(selectedPrompt.content)}</pre></div>` : '';
+
+    return `<!DOCTYPE html><html><head><meta charset="UTF-8" /><title>${exportTitle}</title><script src="https://cdn.tailwindcss.com"></script></head><body class="bg-slate-900 text-slate-200 p-8 font-sans"><div class="max-w-4xl mx-auto"><h1 class="text-4xl font-bold text-sky-400 uppercase tracking-tighter mb-8 text-center">${exportTitle}</h1>${promptHtml}${conversationHtml}</div></body></html>`;
+  }
+
+  return "";
+};
+
+
+╔══════════•⊱✦⊰•══════════╗
+--- File: utils/commandParser.ts ---
+╚══════════•⊱✦⊰•══════════╝
+
+import { Message, CommandArtifact, FileGroup } from '../types';
+
+export const parseCommands = (messages: Message[]): FileGroup[] => {
+  let globalIdCounter = 1;
+  const allCommands: CommandArtifact[] = [];
+
+  messages.forEach((msg, msgIndex) => {
+    // We primarily look at model messages for code generation, 
+    // but user messages might contain corrections. We scan everything.
+    const text = msg.text;
+
+    // 1. Regex for cat << 'EOF' > filename
+    // Captures: 1=Filename, 2=Content (inside the EOFs)
+    // We capture the whole match to get the full command.
+    const eofRegex = /cat\s+<<\s*(?:'|")?EOF(?:'|")?\s*>\s*([^\s;]+)[\s\S]*?\nEOF/g;
+    
+    let match;
+    while ((match = eofRegex.exec(text)) !== null) {
+      allCommands.push({
+        id: globalIdCounter++,
+        type: 'eof',
+        filename: match[1], // The captured filename
+        command: match[0],  // The full command string
+        sourceMessageIndex: msgIndex
+      });
+    }
+
+    // 2. Regex for sed commands
+    // We look for lines starting with 'sed' 
+    // Naive filename extraction: assume filename is the last non-flag argument
+    const sedRegex = /^sed\s+.*$/gm;
+    while ((match = sedRegex.exec(text)) !== null) {
+      const fullCommand = match[0];
+      
+      // Attempt to extract filename. 
+      // Strategy: split by spaces, ignore parts starting with -, take the last one.
+      // This is a heuristic.
+      const parts = fullCommand.split(/\s+/);
+      let likelyFilename = "Unknown_File";
+      
+      // Walk backwards
+      for (let i = parts.length - 1; i >= 0; i--) {
+        if (!parts[i].startsWith('-') && !parts[i].startsWith("'") && !parts[i].startsWith('"') && parts[i] !== 'sed') {
+            // Clean up potential trailing punctuation if it was grabbed (rare in code blocks but possible)
+            likelyFilename = parts[i].replace(/[;&|]*$/, '');
+            break;
+        }
+      }
+
+      allCommands.push({
+        id: globalIdCounter++,
+        type: 'sed',
+        filename: likelyFilename,
+        command: fullCommand,
+        sourceMessageIndex: msgIndex
+      });
+    }
+  });
+
+  // Group by filename
+  const groups: Record<string, CommandArtifact[]> = {};
+  
+  allCommands.forEach(cmd => {
+    if (!groups[cmd.filename]) {
+      groups[cmd.filename] = [];
+    }
+    groups[cmd.filename].push(cmd);
+  });
+
+  // Convert to array and sort groups alphabetically (optional, but nice)
+  // The commands INSIDE the groups are already sorted by ID because we pushed them linearly.
+  return Object.keys(groups).map(filename => ({
+    filename,
+    commands: groups[filename]
+  })).sort((a, b) => a.filename.localeCompare(b.filename));
+};
