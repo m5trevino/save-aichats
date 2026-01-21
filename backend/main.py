@@ -270,7 +270,7 @@ async def refine_stream(request: Request, file: UploadFile = File(...), options_
                 messages = brand_handler(item, options, raw=True)
                 name = item.get("title") or item.get("name") or f"{brand_name}_Chat_{start_index + idx}"
                 
-                yield f"data: {json.dumps({'status': 'welded', 'index': idx + 1, 'total': total_in_batch, 'name': name, 'messages': messages})}\n\n"
+                yield f"data: {json.dumps({'status': 'welded', 'index': idx + 1, 'total': total_in_batch, 'name': name, 'messages': messages, 'msg_count': len(messages)})}\n\n"
             
             yield f"data: {json.dumps({'status': 'complete'})}\n\n"
 
