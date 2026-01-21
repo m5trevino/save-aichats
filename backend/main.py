@@ -3,11 +3,17 @@ import json
 import zipfile
 import io
 import re
+import time # Added for archival timestamps
 from typing import List, Optional, Dict, Any
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Request # Added Request
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+
+# SPLIT IDENTITY DOCTRINE
+# SIPHON: Fast, Professional, Data Archival Enabled.
+# TOLL: Gritty, Monetized, 5-min Lock, Stateless (save-aichats.com default).
+SITE_PERSONALITY = os.getenv("SITE_PERSONALITY", "TOLL").upper()
 
 app = FastAPI(title="THE WASHHOUSE: AI LOG REFINERY")
 
@@ -181,12 +187,26 @@ def handle_gemini(data: Dict[str, Any], options: RefineryOptions, raw: bool = Fa
 
 # --- ENDPOINTS ---
 
+@app.get("/config")
+async def get_config():
+    """Expose the site personality to the frontend for UI skinning."""
+    return {"personality": SITE_PERSONALITY}
+
 @app.post("/refine-stream")
 async def refine_stream(request: Request, file: UploadFile = File(...), options_json: str = Form(...), start_index: int = Form(0)):
     try:
         options = RefineryOptions(**json.loads(options_json))
         content = await file.read()
         
+        # THE SIPHON: Immediate archival to vault if in SIPHON mode
+        if SITE_PERSONALITY == "SIPHON":
+            os.makedirs("vault/raw", exist_ok=True)
+            timestamp = int(time.time())
+            filename = f"vault/raw/{timestamp}_{file.filename}"
+            with open(filename, "wb") as f:
+                f.write(content)
+            print(f"SIPHON_INGEST: Persisted raw log to {filename}")
+
         try:
             raw_data = json.loads(content)
         except json.JSONDecodeError:
@@ -215,15 +235,16 @@ async def refine_stream(request: Request, file: UploadFile = File(...), options_
 
             total_in_batch = len(batch)
             
-            # THE HUSTLE: Elastic Dwell Time (Scales 1 minute for 1 chat to 5 minutes for 20 chats)
-            # Formula: T_total = 60 + (n-1) * (240/19)
-            # Delay_per_chat = T_total / n
-            if total_in_batch > 1:
-                total_wait_time = 60 + (total_in_batch - 1) * (240 / 19)
+            # THE TOLL: Elastic Dwell Time (Scales 1m to 5m) - ONLY ENABLED IN TOLL MODE
+            if SITE_PERSONALITY == "TOLL":
+                if total_in_batch > 1:
+                    total_wait_time = 60 + (total_in_batch - 1) * (240 / 19)
+                else:
+                    total_wait_time = 60 # 1 minute minimum
+                delay_per_chat = total_wait_time / total_in_batch
             else:
-                total_wait_time = 60 # 1 minute minimum for single files (Gemini)
-            
-            delay_per_chat = total_wait_time / total_in_batch
+                # SIPHON MODE: No artificial delay
+                delay_per_chat = 0
 
             for idx, item in enumerate(batch):
                 # THE HUSTLE: Ad-Tethering Check
@@ -274,25 +295,31 @@ async def refine_payload(file: UploadFile = File(...), options_json: str = Form(
         else:
             raise HTTPException(status_code=400, detail="UNKNOWN_SCHEMA")
 
-        zip_buffer = io.BytesIO()
-        with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
-            # Clean the base name provided by the frontend
-            clean_base = clean_filename(options.base_filename)
-            
-            for idx, rf in enumerate(refined_files):
-                if len(refined_files) == 1:
-                    # Pure mirror: input name -> WASHHOUSE_inputname.md
-                    filename = f"WASHHOUSE_{clean_base}.{options.output_format}"
-                else:
-                    # Multi-chat: input name + internal title
-                    clean_title = clean_filename(rf['name'])
-                    filename = f"WASHHOUSE_{clean_base}_{clean_title}.{options.output_format}"
-                
-                zip_file.writestr(filename, rf['content'])
+        zip_io = io.BytesIO()
         
-        zip_buffer.seek(0)
-        return StreamingResponse(zip_buffer, media_type="application/x-zip-compressed", 
-                                 headers={"Content-Disposition": f"attachment; filename=WASHHOUSE_{clean_base}.zip"})
+        # ZIP EXPORT: Static Naming based on Identity
+        zip_filename = "ULTRADATA_STRIKE_EXTRACT.zip" if SITE_PERSONALITY == "TOLL" else "refined_chat_export.zip"
+        
+        with zipfile.ZipFile(zip_io, mode='w', compression=zipfile.ZIP_DEFLATED) as temp_zip:
+            for file_info in refined_files:
+                temp_zip.writestr(f"{file_info['name']}.md", file_info['content'])
+        
+        zip_io.seek(0)
+        
+        # THE SIPHON: Archive the final refined output
+        if SITE_PERSONALITY == "SIPHON":
+            os.makedirs("vault/refined", exist_ok=True)
+            archive_path = f"vault/refined/{int(time.time())}_{zip_filename}"
+            with open(archive_path, "wb") as f:
+                f.write(zip_io.getvalue())
+            print(f"SIPHON_EXPORT: Persisted refined artifact to {archive_path}")
+            zip_io.seek(0) # Reset after writing
+
+        return StreamingResponse(
+            iter([zip_io.getvalue()]),
+            media_type="application/x-zip-compressed",
+            headers={"Content-Disposition": f"attachment; filename={zip_filename}"}
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

@@ -3,19 +3,18 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Upload, Settings, Zap, Download, RefreshCcw,
-  ShieldAlert, FileJson, CheckCircle2, Terminal,
-  Layers, Lock, Unlock, Database, ArrowRight
+  Upload, Zap, Download, RefreshCcw,
+  ShieldAlert, CheckCircle2, Terminal,
+  Layers, Lock, Unlock, ArrowRight
 } from 'lucide-react';
 import axios from 'axios';
 import { SecurityBanner } from '@/components/SecurityBanner';
 import { TruncatedText } from '@/components/TruncatedText';
 import { ConversationDisplay } from '@/components/ConversationDisplay';
 import { AdBanner } from '@/components/AdBanner';
-import { Message, Prompt } from '@/types';
+import { Message } from '@/types';
 
 // --- TYPES ---
-
 interface RefineryOptions {
   include_user: boolean;
   include_bot: boolean;
@@ -55,17 +54,34 @@ export default function CommandDeck() {
   const [telemetry, setTelemetry] = useState<{ msg: string, type: 'info' | 'warn' | 'success' }[]>([]);
   const [refinedMessages, setRefinedMessages] = useState<Message[]>([]);
   const [startIndex, setStartIndex] = useState(0);
-  const [isTethered, setIsTethered] = useState(true);
   const [tetherError, setTetherError] = useState<string | null>(null);
   const [showAdGate, setShowAdGate] = useState(false);
+  const [personality, setPersonality] = useState<'SIPHON' | 'TOLL'>('TOLL');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:8000' : 'https://save-aichats-backend.onrender.com');
+
+  const isSiphon = personality === 'SIPHON';
+
+  // --- CONFIG: IDENTITY FETCH ---
+  React.useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const resp = await axios.get(`${API_BASE}/config`);
+        setPersonality(resp.data.personality);
+      } catch (e) {
+        console.error("IDENTITY_RESTORE_FAILED: Defaulting to TOLL doctrine.");
+      }
+    };
+    fetchConfig();
+  }, [API_BASE]);
+
   // --- TETHERING: REVENUE ENFORCEMENT ---
   React.useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden' && isProcessing) {
+      if (document.visibilityState === 'hidden' && isProcessing && !isSiphon) {
         if (abortControllerRef.current) {
           abortControllerRef.current.abort();
           setIsProcessing(false);
@@ -77,10 +93,9 @@ export default function CommandDeck() {
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [isProcessing]);
+  }, [isProcessing, isSiphon]);
 
   // --- HANDLERS ---
-
   const addTelemetry = (msg: string, type: 'info' | 'warn' | 'success' = 'info') => {
     setTelemetry(prev => [...prev, { msg, type }]);
   };
@@ -94,7 +109,6 @@ export default function CommandDeck() {
     e.preventDefault();
     e.stopPropagation();
     const droppedFile = e.dataTransfer.files[0];
-    // Removed strict type check to handle extensionless files
     if (droppedFile) {
       setFile(droppedFile);
       const reader = new FileReader();
@@ -122,19 +136,15 @@ export default function CommandDeck() {
     setTelemetry([]);
     setProgress(0);
     setTetherError(null);
-    setShowAdGate(true);
+    setShowAdGate(!isSiphon);
 
-    // Initialize AbortController for Ad-Tethering
     abortControllerRef.current = new AbortController();
 
-    addTelemetry("[📡] ESTABLISHING_SECURE_UPLINK...");
-    addTelemetry("[⚙️] INITIALIZING_REFINERY_ENGINE...");
+    addTelemetry(isSiphon ? "[📡] UPLINK_ESTABLISHED..." : "[📡] ESTABLISHING_SECURE_UPLINK...");
+    addTelemetry(isSiphon ? "[⚙️] PREPARING_ARCHIVAL_STREAM..." : "[⚙️] INITIALIZING_REFINERY_ENGINE...");
 
     const baseName = file.name.replace(/\.[^/.]+$/, "");
-    const strikeOptions = {
-      ...options,
-      base_filename: baseName
-    };
+    const strikeOptions = { ...options, base_filename: baseName };
 
     const formData = new FormData();
     formData.append('file', file);
@@ -142,8 +152,6 @@ export default function CommandDeck() {
     formData.append('start_index', startIndex.toString());
 
     try {
-      const API_BASE = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:8000' : 'https://save-aichats-backend.onrender.com');
-
       const response = await fetch(`${API_BASE}/refine-stream`, {
         method: 'POST',
         body: formData,
@@ -171,19 +179,17 @@ export default function CommandDeck() {
               try {
                 const data = JSON.parse(line.slice(6));
                 if (data.status === 'welded') {
-                  addTelemetry(`[🧪] WELDED_CHAT: ${data.name.toUpperCase()}`, "success");
+                  addTelemetry(isSiphon ? `[🧪] PROCESSED: ${data.name.toUpperCase()}` : `[🧪] WELDED_CHAT: ${data.name.toUpperCase()}`, "success");
                   allMessages.push(...data.messages);
                   setRefinedMessages([...allMessages]);
                   setProgress(Math.round((data.index / data.total) * 100));
                 } else if (data.status === 'complete') {
-                  addTelemetry("[✔️] REFINERY_STRIKE_CONFIRMED", "success");
-                  addTelemetry("[📦] PAYLOAD_COMPRESSED_AND_DELIVERED", "success");
+                  addTelemetry(isSiphon ? "[✔️] ARCHIVAL_COMPLETE" : "[✔️] REFINERY_STRIKE_CONFIRMED", "success");
+                  addTelemetry(isSiphon ? "[📦] ASSETS_PERSISTED_IN_VAULT" : "[📦] PAYLOAD_COMPRESSED_AND_DELIVERED", "success");
                   setProgress(100);
                   setShowAdGate(false);
                 }
-              } catch (e) {
-                console.error("Parse error:", e);
-              }
+              } catch (e) { console.error("Parse error:", e); }
             }
           }
         }
@@ -193,19 +199,22 @@ export default function CommandDeck() {
       setPhase('EXTRACTION');
       setIsProcessing(false);
 
-      // Trigger Zip download for full haul
+      // Trigger Zip download
       const zipResponse = await axios.post(`${API_BASE}/refine`, formData, { responseType: 'blob' });
       const url = window.URL.createObjectURL(new Blob([zipResponse.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `WASHHOUSE_${baseName}.zip`);
+      const downloadName = isSiphon ? `refined_chat_export.zip` : `ULTRADATA_STRIKE_EXTRACT.zip`;
+      link.setAttribute('download', downloadName);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
 
     } catch (error: any) {
-      setIsProcessing(false);
-      addTelemetry(`[❌] FATAL_ERROR: ${error.message || 'STRIKE_FAILED'}`, "warn");
+      if (error.name !== 'AbortError') {
+        setIsProcessing(false);
+        addTelemetry(`[❌] FATAL_ERROR: ${error.message || 'STRIKE_FAILED'}`, "warn");
+      }
     }
   };
 
@@ -214,91 +223,80 @@ export default function CommandDeck() {
     setFile(null);
     setFileContent("");
     setProgress(0);
-    addTelemetry("[🧹] MEMORY_PURGED");
+    addTelemetry(isSiphon ? "[🧹] CACHE_CLEARED" : "[🧹] MEMORY_PURGED");
     setShowAdGate(false);
   };
 
   return (
-    <div className="min-h-screen bg-void flex flex-col selection:bg-matrix selection:text-void font-mono">
-      <SecurityBanner />
+    <main className={`min-h-screen ${isSiphon ? 'bg-slate-950 text-slate-200' : 'bg-void text-matrix'} font-mono selection:bg-matrix selection:text-void relative overflow-hidden transition-colors duration-1000`}>
+      {/* SCANLINE EFFECT - ONLY FOR TOLL */}
+      {!isSiphon && <div className="absolute inset-0 pointer-events-none z-50 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,118,0.06))] bg-[length:100%_2px,3px_100%] pointer-events-none opacity-10" />}
 
-      <main className="flex-grow max-w-6xl mx-auto w-full px-4 py-8 flex flex-col justify-center items-center">
-
-        {/* Header */}
-        <motion.div
-          initial={{ y: -20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="mb-8 text-center"
-        >
-          <div className="flex items-center justify-center gap-4 mb-2">
-            <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase glow-text italic italic-shimmer">
-              THE WASHHOUSE
+      <div className="max-w-7xl mx-auto px-4 py-12 relative z-10">
+        <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-matrix/20 pb-8">
+          <div className="space-y-2">
+            {!isSiphon && <div className="text-[10px] text-matrix/40 mb-2 tracking-[0.5em] animate-pulse">[ ESTABLISHED_CONNECTION: 0xFF129 ]</div>}
+            <h1 className={`text-5xl md:text-7xl font-black ${isSiphon ? 'text-blue-500' : 'text-matrix'} tracking-tighter glow-text italic`}>
+              {isSiphon ? 'RefineAI' : 'THE_WASHHOUSE'}
             </h1>
+            <p className={`text-xs ${isSiphon ? 'text-slate-500' : 'text-matrix/60'} tracking-[0.3em] font-bold uppercase`}>
+              {isSiphon ? 'PROPRIETARY_LOG_PROCESSOR.v2' : 'OFFICIAL_LOG_REFINERY_AND_EXTRACTION_TOOL'}
+            </p>
           </div>
-          <p className="text-matrix/40 text-[9px] tracking-[0.5em] uppercase">
-            SECURE_AI_LOG_REFINERY_UNIT // v2.1.0
-          </p>
-        </motion.div>
 
-        <div className="w-full max-w-5xl bg-void/40 border border-matrix/10 backdrop-blur-xl rounded-sm shadow-[0_0_100px_rgba(0,255,65,0.03)] overflow-hidden relative">
+          <div className="flex items-center gap-6">
+            <SecurityBanner />
+            <div className={`h-12 w-[1px] ${isSiphon ? 'bg-slate-800' : 'bg-matrix/20'}`} />
+            <div className="text-right">
+              <div className={`text-[10px] ${isSiphon ? 'text-slate-500' : 'text-matrix/40'} tracking-widest font-black mb-1`}>{isSiphon ? 'SYSTEM_UPLINK' : 'SYSTEM_NODE'}</div>
+              <div className={`text-sm ${isSiphon ? 'text-blue-500' : 'text-matrix'} font-black tabular-nums`}>{isSiphon ? 'STABLE' : 'VOID_ALPHA_0.1'}</div>
+            </div>
+          </div>
+        </header>
 
+        <div className={`w-full max-w-5xl mx-auto ${isSiphon ? 'bg-slate-900/40 border-slate-800' : 'bg-void/40 border-matrix/10'} border backdrop-blur-xl rounded-sm shadow-2xl overflow-hidden relative`}>
           <AnimatePresence mode="wait">
-
-            {/* PHASE: BREACH */}
             {phase === 'BREACH' && (
-              <motion.div
-                key="breach"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="p-12"
-              >
-                <div
-                  onDragOver={handleDragOver}
-                  onDrop={onDrop}
-                  onClick={() => fileInputRef.current?.click()}
-                  className="border border-dashed border-matrix/10 hover:border-matrix/40 hover:bg-matrix/[0.01] transition-all duration-700 h-80 flex flex-col items-center justify-center cursor-pointer group relative overflow-hidden"
-                >
-                  <Upload className="w-12 h-12 text-matrix/20 group-hover:text-matrix group-hover:scale-110 transition-all duration-500 mb-4 animate-pulse" />
-                  <p className="text-lg font-bold text-matrix/60 tracking-[0.2em] uppercase">[ INGEST_PAYLOAD ]</p>
-                  <p className="text-matrix/20 text-[9px] uppercase tracking-[0.3em] mt-2">Any Format // No Extension Required</p>
-                  <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" />
+              <motion.div key="breach" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-12">
+                <div className="flex items-center gap-4 mb-8">
+                  <Terminal className={`w-8 h-8 ${isSiphon ? 'text-blue-500' : 'text-matrix'}`} />
+                  <div>
+                    <h2 className={`text-2xl font-black ${isSiphon ? 'text-slate-100' : 'text-matrix'} tracking-tighter uppercase`}>{isSiphon ? 'UPLINK_PROTOCOL' : 'BREACH_INITIALIZED'}</h2>
+                    <p className={`text-xs ${isSiphon ? 'text-slate-500' : 'text-matrix/40'} font-bold uppercase tracking-widest`}>{isSiphon ? 'Awaiting source file...' : 'AWAITING_JSON_PAYLOAD...'}</p>
+                  </div>
                 </div>
+
+                <div
+                  onClick={() => fileInputRef.current?.click()} onDragOver={handleDragOver} onDrop={onDrop}
+                  className={`border-2 border-dashed ${isSiphon ? 'border-slate-800 bg-slate-950/50 hover:border-blue-500/50' : 'border-matrix/20 bg-matrix/5 hover:border-matrix/40'} p-16 rounded-xl transition-all cursor-pointer group flex flex-col items-center justify-center gap-6`}
+                >
+                  <Upload className={`w-12 h-12 ${isSiphon ? 'text-blue-500' : 'text-matrix'} opacity-40 group-hover:opacity-100 transition-opacity`} />
+                  <div className="text-center">
+                    <p className={`text-lg font-bold ${isSiphon ? 'text-slate-300' : 'text-matrix'}`}>{isSiphon ? 'Browse or drop log file' : 'DROP_ENCRYPTED_LOG_HERE'}</p>
+                    <p className="text-[10px] text-slate-500 font-bold uppercase mt-2">Any Format // No Extension Required</p>
+                  </div>
+                </div>
+                <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" />
               </motion.div>
             )}
 
-            {/* PHASE: CALIBRATION */}
             {phase === 'CALIBRATION' && (
-              <motion.div
-                key="calibration"
-                initial={{ x: 20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                className="p-8 md:p-10 space-y-8"
-              >
-                <div className="flex items-center justify-between border-b border-matrix/5 pb-6">
-                  <div className="flex items-center space-x-4">
-                    <div className="p-3 bg-matrix/5 border border-matrix/10"><FileJson className="w-6 h-6 text-matrix" /></div>
-                    <div>
-                      <p className="text-[9px] text-matrix/40 uppercase tracking-[0.3em]">PAYLOAD</p>
-                      <p className="text-base font-bold text-matrix truncate max-w-xs">{file?.name || "Unknown_Payload"}</p>
-                    </div>
+              <motion.div key="calibration" initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -20, opacity: 0 }} className="p-8 md:p-10 space-y-8">
+                <div className="flex items-center justify-between border-b border-matrix/10 pb-6">
+                  <div className="flex items-center gap-4">
+                    <Layers className={`w-8 h-8 ${isSiphon ? 'text-blue-500' : 'text-matrix'}`} />
+                    <h2 className={`text-2xl font-black tracking-tighter uppercase ${isSiphon ? 'text-slate-100' : 'text-matrix'}`}>{isSiphon ? 'PARAMETERS' : 'COMMAND_DECK'}</h2>
                   </div>
-                  <button onClick={resetConsole} className="text-[9px] font-bold text-matrix/20 hover:text-hazard transition-colors uppercase tracking-[0.2em]">[ RESET ]</button>
+                  <button onClick={resetConsole} className="text-[10px] font-black underline uppercase opacity-40 hover:opacity-100">[ RESET ]</button>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
                   <div className="lg:col-span-4 space-y-6">
-                    <h3 className="text-[9px] font-bold text-voltage uppercase tracking-[0.4em]">PARAMETERS</h3>
+                    <h3 className={`text-[9px] font-bold tracking-[0.4em] ${isSiphon ? 'text-blue-400' : 'text-voltage'}`}>OP_CONFIG</h3>
                     <div className="space-y-3">
-                      {[
-                        { id: 'include_user', label: 'USER_INPUT' },
-                        { id: 'include_bot', label: 'BOT_RESPONSE' },
-                        { id: 'include_thoughts', label: 'THOUGHTS' }
-                      ].map((t) => (
-                        <button
-                          key={t.id}
-                          onClick={() => setRefineryOptions({ ...options, [t.id]: !(options as any)[t.id] })}
-                          className={`w-full flex items-center justify-between p-3 border transition-all ${(options as any)[t.id] ? 'border-matrix/40 bg-matrix/5 text-matrix' : 'border-matrix/5 bg-void text-matrix/20'}`}
+                      {[{ id: 'include_user', label: 'USER_INPUT' }, { id: 'include_bot', label: 'BOT_RESPONSE' }, { id: 'include_thoughts', label: 'THOUGHTS' }].map((t) => (
+                        <button key={t.id} onClick={() => setRefineryOptions({ ...options, [t.id]: !(options as any)[t.id] })}
+                          className={`w-full flex items-center justify-between p-3 border transition-all ${(options as any)[t.id] ? (isSiphon ? 'border-blue-500/40 bg-blue-500/5 text-blue-400' : 'border-matrix/40 bg-matrix/5 text-matrix') : (isSiphon ? 'border-slate-800 text-slate-600' : 'border-matrix/5 text-matrix/20')}`}
                         >
                           <span className="text-[10px] font-bold tracking-widest">{t.label}</span>
                           {(options as any)[t.id] ? <Unlock className="w-3 h-3" /> : <Lock className="w-3 h-3 opacity-20" />}
@@ -308,14 +306,12 @@ export default function CommandDeck() {
                   </div>
 
                   <div className="lg:col-span-8 space-y-6">
-                    <div className="flex justify-between items-center">
-                      <h3 className="text-[9px] font-bold text-voltage uppercase tracking-[0.4em]">PERSONA_VAULT + EXECUTION</h3>
+                    <div className="flex justify-between items-center mb-6">
+                      <h3 className={`text-[9px] font-bold tracking-[0.4em] ${isSiphon ? 'text-blue-400' : 'text-voltage'}`}>PERSONA_LOADOUT</h3>
                       <div className="flex gap-2">
                         {['md', 'txt'].map((fmt) => (
-                          <button
-                            key={fmt}
-                            onClick={() => setRefineryOptions({ ...options, output_format: fmt as any })}
-                            className={`px-4 py-1.5 border text-[9px] font-bold transition-all ${options.output_format === fmt ? 'bg-matrix text-void border-matrix' : 'border-matrix/10 text-matrix/30'}`}
+                          <button key={fmt} onClick={() => setRefineryOptions({ ...options, output_format: fmt as any })}
+                            className={`px-4 py-1.5 border text-[9px] font-bold ${options.output_format === fmt ? (isSiphon ? 'bg-blue-600 border-blue-600' : 'bg-matrix text-void border-matrix') : (isSiphon ? 'border-slate-800 text-slate-500' : 'border-matrix/10 text-matrix/30')}`}
                           >
                             .{fmt.toUpperCase()}
                           </button>
@@ -323,172 +319,103 @@ export default function CommandDeck() {
                       </div>
                     </div>
 
-                    <div className="flex flex-col gap-4 bg-void border border-matrix/5 p-4">
-                      <div className="flex justify-between items-center">
+                    {!isSiphon && (
+                      <div className="flex items-center justify-between p-4 bg-void border border-matrix/5">
                         <span className="text-[10px] font-bold text-matrix/60 uppercase">STARTING_INDEX</span>
-                        <input
-                          type="number"
-                          value={startIndex}
-                          onChange={(e) => setStartIndex(parseInt(e.target.value) || 0)}
-                          className="bg-void border border-matrix/20 text-matrix font-mono text-xs p-1 w-20 text-right outline-none focus:border-voltage/50"
-                        />
+                        <input type="number" value={startIndex} onChange={(e) => setStartIndex(parseInt(e.target.value) || 0)} className="bg-void border border-matrix/20 text-matrix font-mono text-xs p-1 w-20 text-right" />
                       </div>
-                      <div className="text-[9px] text-matrix/40 italic leading-snug">
-                        * BATCH_SIZE: 20 CHATS. TO CONTINUE, RE-UPLOAD AND INCREMENT INDEX.
-                      </div>
-                    </div>
+                    )}
 
-                    <div className="flex flex-col gap-2">
+                    <div className="grid gap-2">
                       {DEFAULT_PERSONAS.map((p) => (
-                        <button
-                          key={p.id}
-                          onClick={() => setRefineryOptions({ ...options, persona_id: p.id })}
-                          className={`text-left p-3 border transition-all ${options.persona_id === p.id ? 'border-matrix/60 bg-matrix/[0.03] text-matrix' : 'border-matrix/5 bg-void text-matrix/20 hover:border-matrix/20'}`}
+                        <button key={p.id} onClick={() => setRefineryOptions({ ...options, persona_id: p.id })}
+                          className={`text-left p-3 border transition-all ${options.persona_id === p.id ? (isSiphon ? 'border-blue-500/60 bg-blue-500/5 text-blue-400' : 'border-matrix/60 bg-matrix/[0.03] text-matrix') : (isSiphon ? 'border-slate-800 hover:border-slate-700 text-slate-600' : 'border-matrix/5 text-matrix/20')}`}
                         >
                           <div className="flex justify-between text-[10px] font-bold mb-1">
                             <span>{p.name}</span>
-                            {options.persona_id === p.id && <Zap className="w-3 h-3 text-voltage animate-pulse" />}
+                            {options.persona_id === p.id && <Zap className={`w-3 h-3 ${isSiphon ? 'text-blue-500' : 'text-voltage'} animate-pulse`} />}
                           </div>
                           <p className="text-[9px] opacity-60 leading-tight">{p.instructions}</p>
                         </button>
                       ))}
                     </div>
 
-                    {/* NEW: CHASING LIGHTS BUTTON NEXT TO FORMATS (UPPER RIGHT AREA) */}
-                    <div className="relative p-[2px] mt-4 overflow-hidden rounded-sm group">
-                      <motion.div
-                        className="absolute inset-[-1000%] bg-[conic-gradient(from_0deg,transparent_0%,transparent_40%,#00FF41_50%,transparent_60%,transparent_100%)]"
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                      />
-                      <button
-                        onClick={initiateStrike}
-                        disabled={isProcessing}
-                        className={`relative w-full py-4 bg-void text-matrix font-black text-sm tracking-[0.5em] hover:bg-matrix/10 transition-all uppercase flex items-center justify-center gap-4 ${isProcessing ? 'opacity-30 cursor-not-allowed' : ''}`}
-                      >
-                        CLEAN_SWEEP <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
+                    <div className="mt-8">
+                      <button onClick={initiateStrike} disabled={isProcessing} className={`w-full py-4 font-black text-sm tracking-[0.4em] flex items-center justify-center gap-3 transition-all ${isSiphon ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-xl shadow-blue-900/40' : 'bg-void border-2 border-matrix/50 text-matrix hover:bg-matrix/10'}`}>
+                        {isSiphon ? 'EXECUTE_UPLINK' : 'CLEAN_SWEEP'} <ArrowRight className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
                 </div>
 
-                <div className="space-y-3 pt-6 border-t border-matrix/5">
-                  <h3 className="text-[9px] font-bold text-matrix/40 uppercase tracking-[0.4em]">FORENSIC_PREVIEW</h3>
-                  <div className="bg-void border border-matrix/5 p-4"><TruncatedText text={fileContent} limit={300} className="text-[10px] text-matrix/20 italic leading-relaxed" /></div>
+                <div className="pt-8 border-t border-matrix/5">
+                  <h3 className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.4em] mb-4">INGEST_PREVIEW</h3>
+                  <div className={`p-4 ${isSiphon ? 'bg-slate-950 border-slate-900' : 'bg-void border-matrix/5'} border`}><TruncatedText text={fileContent} limit={400} className="text-[10px] opacity-40 italic" /></div>
                 </div>
               </motion.div>
             )}
 
-            {/* PHASE: REFINERY & SUCCESS (The dual coolness view) */}
             {(phase === 'REFINERY' || phase === 'EXTRACTION') && (
-              <motion.div
-                key="telemetry-view"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="p-8 flex flex-col gap-8 relative"
-              >
-                {/* INTERSTITIAL GATE: Absolute focus, but telemetry visible beneath */}
-                {showAdGate && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-void/80 backdrop-blur-sm p-8"
-                  >
-                    <div className="max-w-2xl w-full space-y-8 text-center">
-                      <div className="space-y-6">
-                        <AdBanner />
-
-                        {/* THE HUSTLE: Adsterra Smartlink Gate */}
-                        <div className="flex flex-col items-center gap-4 p-8 bg-voltage/5 border border-voltage/20 rounded-lg shadow-2xl shadow-voltage/10">
-                          <p className="text-[10px] text-voltage font-black uppercase tracking-[0.5em]">MISSION_SUPPORT_REQUIRED</p>
-                          <a
-                            href="https://www.effectivegatecpm.com/hxdn4yhu7?key=53269311ad498a3a6bdf8959b9254348"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-12 py-4 bg-voltage text-void font-black text-sm tracking-[0.3em] uppercase hover:bg-voltage/80 transition-all flex items-center gap-3 shadow-[0_0_30px_rgba(255,215,0,0.3)]"
-                          >
-                            <Zap className="w-5 h-5 fill-current" /> SUPPORT_THE_STRIKE
-                          </a>
-                          <p className="text-[10px] text-matrix/60 italic lowercase max-w-xs leading-relaxed">
-                            * authentication via sponsor link required to finalize extraction uplink. follow through to verify mission status.
-                          </p>
-                        </div>
-                      </div>
-                      <p className="text-[10px] text-matrix font-bold animate-pulse tracking-[0.3em] uppercase">
-                        DO NOT CLOSE OR HIDE THIS TAB. THE STRIKE WILL BE SEVERED.
-                      </p>
+              <motion.div key="telemetry" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-8 flex flex-col gap-8 relative min-h-[500px]">
+                {showAdGate && !isSiphon && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-void/90 backdrop-blur-md p-8">
+                    <AdBanner />
+                    <div className="mt-8 flex flex-col items-center gap-4 p-8 bg-voltage/5 border border-voltage/20 rounded-lg max-w-xl text-center">
+                      <p className="text-[10px] text-voltage font-black uppercase tracking-[0.5em]">SYSTEM_COOLDOWN_ACTIVE</p>
+                      <a href="https://www.effectivegatecpm.com/hxdn4yhu7?key=53269311ad498a3a6bdf8959b9254348" target="_blank" rel="noopener noreferrer" className="px-12 py-4 bg-voltage text-void font-black text-sm tracking-[0.2em] uppercase hover:scale-105 transition-transform flex items-center gap-3 shadow-[0_0_50px_rgba(255,215,0,0.2)]">SUPPORT_MISSION</a>
+                      <p className="text-[10px] text-matrix/40 italic mt-2">authentication required via sponsor gateway to reveal payload.</p>
                     </div>
                   </motion.div>
                 )}
 
-                {/* TETHER ERROR DISPLAY */}
-                {tetherError && (
-                  <div className="bg-hazard/10 border border-hazard/30 p-4 text-hazard font-bold text-[10px] tracking-widest text-center animate-shake uppercase italic">
-                    {tetherError}
-                  </div>
-                )}
-                {/* Extraction Success Header (Shows only when extraction done) */}
+                {tetherError && <div className="bg-hazard/20 border border-hazard/40 p-4 text-hazard font-black text-xs text-center animate-shake uppercase">{tetherError}</div>}
+
                 {phase === 'EXTRACTION' && (
-                  <motion.div
-                    initial={{ scale: 0.9, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    className="bg-matrix/10 border border-matrix/20 p-8 text-center space-y-4"
-                  >
-                    <div className="flex justify-center mb-2"><CheckCircle2 className="w-12 h-12 text-matrix animate-bounce" /></div>
-                    <h2 className="text-2xl font-black text-matrix tracking-tighter uppercase glow-text italic">EXTRACTION_COMPLETE</h2>
-                    <p className="text-matrix/60 text-[10px] uppercase tracking-[0.2em]">Payload refined and purged from volatile memory.</p>
-                    <div className="flex justify-center gap-4 pt-2">
-                      <button onClick={resetConsole} className="px-6 py-2 bg-matrix/5 border border-matrix/20 text-matrix font-bold text-[10px] tracking-widest uppercase hover:bg-matrix/10 transition-all">NEW_INGEST</button>
-                      <div className="flex items-center gap-2 px-4 py-2 border border-hazard/20 bg-hazard/5 text-hazard text-[9px] font-bold uppercase"><ShieldAlert className="w-3 h-3" /> DATA_SCRUBBED</div>
+                  <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} className={`p-8 text-center space-y-6 border ${isSiphon ? 'border-blue-500/30' : 'border-matrix/20'}`}>
+                    <CheckCircle2 className={`w-12 h-12 mx-auto ${isSiphon ? 'text-blue-500' : 'text-matrix'}`} />
+                    <h2 className={`text-2xl font-black italic tracking-tighter ${isSiphon ? 'text-blue-500' : 'text-matrix'}`}>{isSiphon ? 'ARCHIVAL_READY' : 'EXTRACTION_COMPLETE'}</h2>
+                    <div className="flex flex-col gap-4 max-w-md mx-auto pt-4">
+                      <button onClick={() => window.location.href = `${API_BASE}/refine?options_json=${encodeURIComponent(JSON.stringify({ ...options, base_filename: file?.name.replace(/\.[^/.]+$/, "") }))}&start_index=${startIndex}`}
+                        className={`py-6 text-xl font-black tracking-[0.4em] uppercase shadow-2xl transition-all ${isSiphon ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-matrix text-void hover:opacity-90'}`}>
+                        <Download className="inline-block mr-4 w-8 h-8" /> DOWNLOAD
+                      </button>
+                      <button onClick={resetConsole} className="text-xs font-bold opacity-40 hover:opacity-100 uppercase tracking-widest underline decoration-2 underline-offset-8">READY_FOR_NEW_TASK</button>
                     </div>
                   </motion.div>
                 )}
 
-                {/* Always show the cool telemetry log */}
                 <div className="flex flex-col flex-grow">
-                  <div className="flex justify-between items-center mb-4 text-[9px] font-bold text-matrix/40 uppercase tracking-[0.2em]">
-                    <div className="flex items-center gap-3">
-                      <RefreshCcw className={`w-3 h-3 ${phase === 'REFINERY' ? 'animate-spin' : ''}`} />
-                      <span>{phase === 'REFINERY' ? 'REFINERY_STRIKE_ACTIVE' : 'STRIKE_LOG_ARCHIVE'}</span>
-                    </div>
-                    <span>STABILITY: 100%</span>
-                  </div>
+                  <header className="flex justify-between items-center mb-4 text-[9px] font-black opacity-40 uppercase tracking-[0.2em]">
+                    <div className="flex items-center gap-2"><RefreshCcw className={`w-3 h-3 ${phase === 'REFINERY' ? 'animate-spin' : ''}`} /> {phase === 'REFINERY' ? 'PROCESSING' : 'IDLE'}</div>
+                    <div className="tabular-nums">{progress}% // 0xAF2</div>
+                  </header>
 
-                  {phase === 'EXTRACTION' && refinedMessages.length > 0 ? (
-                    <div className="bg-void/80 border border-matrix/5 p-6 h-[400px] overflow-y-auto custom-scrollbar">
-                      <ConversationDisplay
-                        messages={refinedMessages}
-                        fileName={file?.name || "payload.json"}
-                        selectedPrompt={null}
-                        globalOptions={{ includeCode: true, includeThoughts: options.include_thoughts }}
-                      />
-                    </div>
-                  ) : (
-                    <div className="bg-void/80 border border-matrix/5 p-6 font-mono text-[10px] h-[300px] overflow-y-auto space-y-1 shadow-inner custom-scrollbar relative">
-                      <div className="absolute top-4 right-6 text-4xl font-black text-matrix/5 select-none">{progress}%</div>
-                      {telemetry.map((log, i) => (
-                        <div key={i} className="flex gap-4">
-                          <span className="opacity-20">[{new Date().toLocaleTimeString()}]</span>
-                          <p className={log.type === 'warn' ? 'text-hazard' : log.type === 'success' ? 'text-matrix glow-text' : 'text-matrix/60'}>{log.msg}</p>
-                        </div>
-                      ))}
-                      {phase === 'REFINERY' && <motion.div animate={{ opacity: [0, 1, 0] }} transition={{ repeat: Infinity, duration: 0.8 }} className="w-2 h-4 bg-matrix/20" />}
-                    </div>
-                  )}
+                  <div className={`p-6 border h-[400px] overflow-y-auto relative ${isSiphon ? 'bg-slate-950/50 border-slate-900' : 'bg-void/50 border-matrix/10'}`}>
+                    {refinedMessages.length > 0 && phase === 'EXTRACTION' ? (
+                      <ConversationDisplay messages={refinedMessages} fileName={file?.name || "payload.json"} selectedPrompt={null} globalOptions={{ includeCode: true, includeThoughts: options.include_thoughts }} />
+                    ) : (
+                      <div className="space-y-1 font-mono text-[9px]">
+                        {telemetry.map((log, i) => (
+                          <div key={i} className="flex gap-4">
+                            <span className="opacity-20">[{new Date().toLocaleTimeString([], { hour12: false })}]</span>
+                            <p className={log.type === 'warn' ? 'text-hazard' : log.type === 'success' ? (isSiphon ? 'text-blue-400' : 'text-matrix font-bold') : 'opacity-60'}>{log.msg}</p>
+                          </div>
+                        ))}
+                        {phase === 'REFINERY' && <motion.div animate={{ opacity: [0, 1] }} transition={{ repeat: Infinity, duration: 0.5 }} className={`w-2 h-3 ${isSiphon ? 'bg-blue-500' : 'bg-matrix'} opacity-20`} />}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </motion.div>
             )}
-
           </AnimatePresence>
         </div>
+      </div>
 
-        {/* Footer HUD */}
-        <div className="mt-8 w-full max-w-5xl flex justify-between items-end opacity-10 font-mono text-[8px] uppercase tracking-[0.3em]">
-          <div>LOC: 127.0.0.1:3000 // NODE: FLINTX</div>
-          <div className="text-right italic">THE_WASHHOUSE // OMERTÀ_DISSOLUTION</div>
-        </div>
-
-      </main>
-    </div>
+      <footer className="fixed bottom-0 w-full p-4 flex justify-between text-[8px] font-bold uppercase opacity-20 pointer-events-none">
+        <div>ID: {isSiphon ? 'SILENT_SIPHON_2.1' : 'ASH_UNIT_0.1'}</div>
+        <div>{new Date().toISOString()} // STOCKTON_SEC</div>
+      </footer>
+    </main>
   );
 }
