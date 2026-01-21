@@ -266,17 +266,17 @@ export default function CommandDeck() {
       {/* SCANLINE EFFECT - ONLY FOR TOLL */}
       {!isSiphon && <div className="absolute inset-0 pointer-events-none z-50 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,118,0.06))] bg-[length:100%_2px,3px_100%] pointer-events-none opacity-10" />}
 
-      {/* FLANKING GRIDS - ONLY IN REFINERY PHASE */}
+      {/* FLANKING GRIDS - REDESIGNED 2x5 TO PREVENT CUTOFF */}
       {(phase === 'REFINERY' || phase === 'EXTRACTION') && !isSiphon && (
         <>
-          {/* LEFT FLANK */}
-          <div className="fixed left-8 top-1/2 -translate-y-1/2 flex flex-col gap-10 z-0 scale-75 lg:scale-100">
+          {/* LEFT FLANK (2x5 Grid) */}
+          <div className="fixed left-4 top-1/2 -translate-y-1/2 grid grid-cols-2 gap-4 lg:gap-8 z-0 scale-75 xl:scale-100">
             {batchProgress.slice(0, 10).map((state, i) => (
               <TacticalIcon key={i} state={state} index={i} name={processedFileNames[i]} timer={state === 'PROCESSING' ? currentFileTimer : null} isSiphon={isSiphon} />
             ))}
           </div>
-          {/* RIGHT FLANK */}
-          <div className="fixed right-8 top-1/2 -translate-y-1/2 flex flex-col gap-10 z-0 scale-75 lg:scale-100">
+          {/* RIGHT FLANK (2x5 Grid) */}
+          <div className="fixed right-4 top-1/2 -translate-y-1/2 grid grid-cols-2 gap-4 lg:gap-8 z-0 scale-75 xl:scale-100">
             {batchProgress.slice(10, 20).map((state, i) => (
               <TacticalIcon key={i + 10} state={state} index={i + 10} name={processedFileNames[i + 10]} timer={state === 'PROCESSING' ? currentFileTimer : null} isSiphon={isSiphon} />
             ))}
@@ -284,7 +284,7 @@ export default function CommandDeck() {
         </>
       )}
 
-      <div className="max-w-7xl w-full mx-auto px-4 py-12 relative z-10">
+      <div className="max-w-7xl w-full mx-auto px-4 py-12 relative z-10 transition-all duration-700">
         <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-matrix/20 pb-8">
           <div className="space-y-2">
             {!isSiphon && <div className="text-[10px] text-matrix/40 mb-2 tracking-[0.5em] animate-pulse">[ ESTABLISHED_CONNECTION: 0xFF129 ]</div>}
@@ -538,42 +538,61 @@ export default function CommandDeck() {
 // --- SUB-COMPONENTS ---
 function TacticalIcon({ state, index, name, timer, isSiphon }: { state: any, index: number, name: string, timer: number | null, isSiphon: boolean }) {
   return (
-    <div className="flex items-center gap-6 group">
+    <div className="flex flex-col items-center gap-1 group">
       <motion.div
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
-        className={`w-20 h-20 md:w-24 md:h-24 chasing-border border border-matrix/10 flex items-center justify-center shrink-0 transition-shadow duration-500 ${state === 'PROCESSING' ? (isSiphon ? 'chasing-border-active chasing-border-blue shadow-[0_0_30px_rgba(37,99,235,0.2)]' : 'chasing-border-active chasing-border-voltage shadow-[0_0_30px_rgba(255,215,0,0.2)]') : state === 'COMPLETE' ? (isSiphon ? 'chasing-border-active chasing-border-blue shadow-[0_0_30px_rgba(37,99,235,0.1)]' : 'chasing-border-active shadow-[0_0_30px_rgba(0,255,65,0.1)]') : 'opacity-20'}`}
+        className={`w-16 h-16 lg:w-20 lg:h-20 chasing-border border border-matrix/10 flex items-center justify-center shrink-0 transition-shadow duration-500 ${state === 'PROCESSING' ? (isSiphon ? 'chasing-border-active chasing-border-blue shadow-[0_0_30px_rgba(37,99,235,0.2)]' : 'chasing-border-active chasing-border-voltage shadow-[0_0_30px_rgba(255,215,0,0.2)]') : state === 'COMPLETE' ? (isSiphon ? 'chasing-border-active chasing-border-blue shadow-[0_0_30px_rgba(37,99,235,0.1)]' : 'chasing-border-active shadow-[0_0_30px_rgba(0,255,65,0.1)]') : 'opacity-10'}`}
       >
-        <div className="inner-icon flex items-center justify-center relative bg-void">
-          <FileJson className={`w-10 h-10 md:w-12 md:h-12 ${state === 'COMPLETE' ? (isSiphon ? 'text-blue-500' : 'text-matrix') : state === 'PROCESSING' ? (isSiphon ? 'text-blue-400' : 'text-voltage') : (isSiphon ? 'text-slate-800' : 'text-matrix/20')}`} />
-          {state === 'COMPLETE' && <CheckCircle2 className={`w-5 h-5 md:w-6 md:h-6 ${isSiphon ? 'text-blue-500 shadow-[0_0_15px_#2563eb]' : 'text-matrix shadow-[0_0_15px_#00FF41]'} absolute -top-2 -right-2 bg-void rounded-full`} />}
+        <div className="inner-icon flex items-center justify-center relative bg-void overflow-hidden">
+          {/* INTENSIFIED WELDING EFFECT */}
+          {state === 'PROCESSING' && (
+            <motion.div
+              animate={{ y: ["-100%", "100%"] }}
+              transition={{ duration: 0.5, repeat: Infinity, ease: "linear" }}
+              className="absolute inset-0 bg-gradient-to-b from-transparent via-voltage/30 to-transparent z-10 pointer-events-none"
+            />
+          )}
+          {state === 'PROCESSING' && (
+            <motion.div
+              animate={{ opacity: [0.3, 1, 0.3] }}
+              transition={{ duration: 0.1, repeat: Infinity }}
+              className="absolute inset-x-0 top-0 h-px bg-voltage z-20 shadow-[0_0_10px_#FFD700]"
+            />
+          )}
+
+          <FileJson className={`w-8 h-8 lg:w-10 lg:h-10 ${state === 'COMPLETE' ? (isSiphon ? 'text-blue-500' : 'text-matrix') : state === 'PROCESSING' ? (isSiphon ? 'text-blue-400' : 'text-voltage') : (isSiphon ? 'text-slate-800' : 'text-matrix/20')}`} />
+
+          {state === 'COMPLETE' && (
+            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute inset-0 bg-matrix/10 flex items-center justify-center">
+              <CheckCircle2 className={`w-8 h-8 lg:w-10 lg:h-10 ${isSiphon ? 'text-blue-500 shadow-[0_0_15px_#2563eb]' : 'text-matrix shadow-[0_0_15px_#00FF41]'} rounded-full`} />
+            </motion.div>
+          )}
+
           {state === 'PROCESSING' && timer !== null && (
-            <div className="absolute inset-x-0 bottom-0 h-1 bg-void overflow-hidden">
+            <div className="absolute inset-x-0 bottom-0 h-1 bg-void overflow-hidden z-20">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${((15 - timer) / 15) * 100}%` }}
-                className={`h-full ${isSiphon ? 'bg-blue-400' : 'bg-voltage'}`}
+                className={`h-full ${isSiphon ? 'bg-blue-400' : 'bg-voltage shadow-[0_0_10px_#FFD700]'}`}
               />
             </div>
           )}
           {state === 'PROCESSING' && timer !== null && (
-            <div className="absolute top-1 right-1 text-[8px] font-black tabular-nums bg-void/80 px-1">{timer}S</div>
+            <div className="absolute top-1 right-1 text-[8px] lg:text-[10px] font-black tabular-nums bg-void/90 px-1 text-voltage z-20 shadow-lg border border-voltage/20">{timer}S</div>
           )}
         </div>
       </motion.div>
-      <div className="flex flex-col justify-center overflow-hidden min-w-[80px] md:min-w-[140px]">
-        <div className="flex items-center gap-2">
-          <span className={`text-[8px] md:text-[9px] font-black uppercase tracking-[0.3em] ${state === 'PROCESSING' ? (isSiphon ? 'text-blue-400' : 'text-voltage animate-pulse') : 'opacity-40'}`}>UNIT_{index + 1}</span>
-          {state === 'PROCESSING' && <RefreshCcw className={`w-2 h-2 animate-spin ${isSiphon ? 'text-blue-400' : 'text-voltage'}`} />}
-        </div>
+
+      <div className="flex flex-col items-center justify-center overflow-hidden w-full max-w-[80px] lg:max-w-[100px]">
+        <span className={`text-[7px] font-black uppercase tracking-[0.2em] ${state === 'PROCESSING' ? (isSiphon ? 'text-blue-400' : 'text-voltage animate-pulse') : 'opacity-20'}`}>UT_{index + 1}</span>
         {state === 'COMPLETE' && name && (
           <motion.div
-            initial={{ x: -10, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            className={`mt-1 bg-matrix/5 border-l-2 ${isSiphon ? 'border-blue-600' : 'border-matrix'} p-2 relative overflow-hidden hidden md:block`}
+            initial={{ y: 5, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className={`mt-0.5 bg-void border border-matrix/30 px-1 py-0.5 w-full text-center`}
           >
-            <div className={`absolute top-0 right-0 text-[6px] opacity-20 font-black px-1 uppercase ${isSiphon ? 'text-blue-400' : 'text-matrix'}`}>WELDED</div>
-            <span className={`text-[10px] font-bold ${isSiphon ? 'text-blue-300' : 'text-matrix'} truncate block tracking-widest`}>
+            <span className={`text-[8px] font-black ${isSiphon ? 'text-blue-300' : 'text-matrix'} truncate block tracking-tighter`}>
               {name.toUpperCase()}
             </span>
           </motion.div>
