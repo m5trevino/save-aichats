@@ -17,19 +17,19 @@ export const AdBanner: React.FC = () => {
         </p>
 
         {/* A-ADS IFRAME - ADAPTIVE */}
-        <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+        <div id="frame" style={{ width: '100%', margin: 'auto', position: 'relative', zIndex: 99998 }}>
           <iframe
             data-aa='2424680'
             src='//acceptable.a-ads.com/2424680/?size=Adaptive&background_color=050505&title_color=00FF41&text_color=00FF41&link_color=FFD700'
             style={{
-              border: 'none',
+              border: 0,
               padding: 0,
               width: '100%',
-              minWidth: '300px', // Minimum width for mobile
-              maxWidth: '728px', // Leaderboard max width
-              height: '90px',    // Standard height
+              height: 'auto',
+              minHeight: '90px',
               overflow: 'hidden',
-              display: 'block'
+              display: 'block',
+              margin: 'auto'
             }}
             title="Sponsor"
           />

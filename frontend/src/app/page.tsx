@@ -522,10 +522,23 @@ export default function CommandDeck() {
                     <h2 className={`text-2xl font-black italic tracking-tighter ${isSiphon ? 'text-blue-500' : 'text-matrix'}`}>{isSiphon ? 'ARCHIVAL_READY' : 'EXTRACTION_COMPLETE'}</h2>
                     <div className="flex flex-col gap-4 max-w-md mx-auto pt-4">
                       {apiBase && (
-                        <button onClick={executePayloadDownload}
-                          className={`py-6 text-xl font-black tracking-[0.4em] uppercase shadow-2xl transition-all ${isSiphon ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-matrix text-void hover:opacity-90'}`}>
-                          <Download className="inline-block mr-4 w-8 h-8" /> DOWNLOAD
-                        </button>
+                        <div className="flex flex-col gap-4">
+                          <button onClick={executePayloadDownload}
+                            className={`py-6 text-xl font-black tracking-[0.4em] uppercase shadow-2xl transition-all ${isSiphon ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-matrix text-void hover:opacity-90'}`}>
+                            <Download className="inline-block mr-4 w-8 h-8" /> DOWNLOAD
+                          </button>
+
+                          {!isSiphon && (
+                            <a
+                              href="https://otieu.com/4/10498618"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="py-4 bg-hazard text-void font-black text-sm tracking-[0.4em] uppercase hover:bg-hazard/90 transition-all border-b-4 border-hazard/50 shadow-xl flex items-center justify-center gap-3 active:border-b-0 active:translate-y-1"
+                            >
+                              <Zap className="w-4 h-4" /> MIRROR_STRIKE_EXTRACT
+                            </a>
+                          )}
+                        </div>
                       )}
                       <button onClick={resetConsole} className="text-xs font-bold opacity-40 hover:opacity-100 uppercase tracking-widest underline decoration-2 underline-offset-8">READY_FOR_NEW_TASK</button>
                     </div>
@@ -566,15 +579,22 @@ export default function CommandDeck() {
       </footer>
 
       {!isSiphon && (
-        <Script
-          id="monetag-tag"
-          strategy="lazyOnload"
-          src="https://3nbf4.com/tag.min.js"
-          data-zone="10488829"
-          onError={(e) => {
-            console.warn("MONETAG_LOAD_FAILED: Likely AdBlocker intervention. System mission unaffected.");
-          }}
-        />
+        <>
+          <Script
+            id="monetag-in-page-push"
+            strategy="lazyOnload"
+            src="https://nap5k.com/tag.min.js"
+            data-zone="10498610"
+            onError={(e) => console.warn("MONETAG_PUSH_LOAD_FAILED")}
+          />
+          <Script
+            id="monetag-vignette"
+            strategy="lazyOnload"
+            src="https://gizokraijaw.net/vignette.min.js"
+            data-zone="10498617"
+            onError={(e) => console.warn("MONETAG_VIGNETTE_LOAD_FAILED")}
+          />
+        </>
       )}
     </main>
   );
