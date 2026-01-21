@@ -5,9 +5,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Upload, Zap, Download, RefreshCcw,
   ShieldAlert, CheckCircle2, Terminal,
-  Layers, Lock, Unlock, ArrowRight
+  Layers, Lock, Unlock, ArrowRight, FileJson
 } from 'lucide-react';
 import axios from 'axios';
+import Script from 'next/script';
 import { SecurityBanner } from '@/components/SecurityBanner';
 import { TruncatedText } from '@/components/TruncatedText';
 import { ConversationDisplay } from '@/components/ConversationDisplay';
@@ -385,33 +386,33 @@ export default function CommandDeck() {
                               boxShadow: state === 'PROCESSING' ? '0 0 15px rgba(0,255,65,0.3)' : 'none'
                             }}
                             transition={{ duration: 0.8, repeat: state === 'PROCESSING' ? Infinity : 0 }}
-                            className={`w-10 h-10 border flex items-center justify-center relative ${state === 'COMPLETE' ? 'bg-matrix/20 border-matrix/40' : 'bg-void border-matrix/10'}`}
+                            className={`w-10 h-10 border flex items-center justify-center relative ${state === 'COMPLETE' ? (isSiphon ? 'bg-blue-600/20 border-blue-500/40' : 'bg-matrix/20 border-matrix/40') : 'bg-void border-matrix/10'}`}
                           >
-                            <FileJson className={`w-5 h-5 ${state === 'COMPLETE' ? 'text-matrix' : state === 'PROCESSING' ? 'text-voltage' : 'text-matrix/10'}`} />
-                            {state === 'COMPLETE' && <CheckCircle2 className="w-3 h-3 text-matrix absolute -top-1 -right-1 bg-void rounded-full" />}
+                            <FileJson className={`w-5 h-5 ${state === 'COMPLETE' ? (isSiphon ? 'text-blue-500' : 'text-matrix') : state === 'PROCESSING' ? 'text-voltage' : 'text-matrix/10'}`} />
+                            {state === 'COMPLETE' && <CheckCircle2 className={`w-3 h-3 ${isSiphon ? 'text-blue-500' : 'text-matrix'} absolute -top-1 -right-1 bg-void rounded-full`} />}
                             <span className="absolute -bottom-4 text-[7px] opacity-20">{i + 1}</span>
                           </motion.div>
                         ))}
                       </div>
 
                       <div className="flex flex-col items-center gap-4 w-full">
-                        <a
-                          href="https://www.effectivegatecpm.com/m0kxvk642t?key=51386459553fb047084ac8d5f5c38786"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-12 py-4 bg-voltage text-void font-black text-sm tracking-[0.2em] uppercase hover:scale-105 transition-transform flex items-center gap-3 shadow-[0_0_50px_rgba(255,215,0,0.2)]"
-                        >
-                          <Zap className="w-4 h-4 fill-current" /> SUPPORT_MISSION
-                        </a>
+                        <div className="p-4 bg-void border border-matrix/20 rounded shadow-inner w-full flex justify-center">
+                          <AdBanner />
+                        </div>
 
                         <AnimatePresence>
                           {progress === 100 && (
                             <motion.button
                               initial={{ y: 20, opacity: 0 }}
                               animate={{ y: 0, opacity: 1 }}
+                              id="collect-payload-btn"
                               onClick={async () => {
+                                // Trigger the Monetag event if available
+                                if ((window as any).show_monetag_vignette) {
+                                  (window as any).show_monetag_vignette();
+                                }
+
                                 setShowAdGate(false);
-                                // Trigger actual download now
                                 addTelemetry("[🚀] INITIATING_FINAL_DOWNLOAD...");
                                 const baseName = file?.name.replace(/\.[^/.]+$/, "") || "payload";
                                 const formData = new FormData();
@@ -432,16 +433,16 @@ export default function CommandDeck() {
                                   addTelemetry("[❌] DOWNLOAD_FAILED", "warn");
                                 }
                               }}
-                              className="px-8 py-3 bg-matrix text-void font-black text-xs tracking-[0.3em] uppercase hover:bg-matrix/90 transition-all border-b-4 border-matrix-dark shadow-xl"
+                              className="px-12 py-5 bg-matrix text-void font-black text-sm tracking-[0.4em] uppercase hover:bg-matrix/90 transition-all border-b-8 border-matrix/50 shadow-2xl active:border-b-0 active:translate-y-2 mt-4"
                             >
-                              RECOVER_ARTIFACT
+                              COLLECT_PAYLOAD
                             </motion.button>
                           )}
                         </AnimatePresence>
                       </div>
 
                       <p className="text-[10px] text-matrix/40 italic mt-2 text-center leading-relaxed">
-                        authentication required via sponsor gateway to reveal payload.<br />
+                        mission sustainment provided by A-ADS. sustain the strike by maintaining visibility.<br />
                         * DO NOT CLOSE OR NAVIGATE AWAY. THE STRIKE WILL BE SEVERED.
                       </p>
                     </div>
@@ -496,6 +497,16 @@ export default function CommandDeck() {
         <div>ID: {isSiphon ? 'SILENT_SIPHON_2.1' : 'ASH_UNIT_0.1'}</div>
         <div>{new Date().toISOString()} // STOCKTON_SEC</div>
       </footer>
+
+      {/* THE HUSTLE: Monetag SmartTag Integration */}
+      {!isSiphon && (
+        <Script
+          id="monetag-tag"
+          strategy="lazyOnload"
+          src="https://3nbf4.com/tag.min.js"
+          data-zone="10488829"
+        />
+      )}
     </main>
   );
 }
