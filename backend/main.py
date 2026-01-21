@@ -214,16 +214,28 @@ async def refine_stream(request: Request, file: UploadFile = File(...), options_
                 return
 
             total_in_batch = len(batch)
+            
+            # THE HUSTLE: Elastic Dwell Time (Scales 1 minute for 1 chat to 5 minutes for 20 chats)
+            # Formula: T_total = 60 + (n-1) * (240/19)
+            # Delay_per_chat = T_total / n
+            if total_in_batch > 1:
+                total_wait_time = 60 + (total_in_batch - 1) * (240 / 19)
+            else:
+                total_wait_time = 60 # 1 minute minimum for single files (Gemini)
+            
+            delay_per_chat = total_wait_time / total_in_batch
+
             for idx, item in enumerate(batch):
                 # THE HUSTLE: Ad-Tethering Check
                 if await request.is_disconnected():
                     print("STRIKE_SEVERED: Client disconnected. Purging volatile memory.")
                     break
 
-                # THE TOLL BOOTH: 15-second delay per chat (5 mins total for 20)
-                if idx > 0: # Delay before each chat except the first one to start the weld feel immediately? 
-                    # Actually, the user says "15 SECONDS PER CHAT", so let's sleep before each yield.
-                    await asyncio.sleep(15)
+                # THE TOLL BOOTH: Dynamic Elastic Delay
+                if idx > 0 or total_in_batch == 1:
+                    # For total_in_batch == 1, we wait before the first and only yield
+                    # For total_in_batch > 1, we wait before each yield to stagger
+                    await asyncio.sleep(delay_per_chat)
                 
                 messages = brand_handler(item, options, raw=True)
                 name = item.get("title") or item.get("name") or f"{brand_name}_Chat_{start_index + idx}"
