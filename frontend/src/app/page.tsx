@@ -65,6 +65,7 @@ export default function CommandDeck() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const logContainerRef = useRef<HTMLDivElement>(null);
 
   const API_BASE = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:8000' : 'https://save-aichats-backend.onrender.com');
 
@@ -100,7 +101,7 @@ export default function CommandDeck() {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [isProcessing, isSiphon]);
 
-  // --- TIMER: PER-FILE COUNTDOWN ---
+  // --- TIMER: PER-FILE COUNTDOWN (INTERNAL ONLY NOW) ---
   React.useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isProcessing && currentFileTimer > 0) {
@@ -110,6 +111,13 @@ export default function CommandDeck() {
     }
     return () => clearInterval(interval);
   }, [isProcessing, currentFileTimer]);
+
+  // --- SCROLL LOGS ---
+  React.useEffect(() => {
+    if (logContainerRef.current) {
+      logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
+    }
+  }, [telemetry]);
 
   // --- HANDLERS ---
   const addTelemetry = (msg: string, type: 'info' | 'warn' | 'success' = 'info') => {
@@ -413,11 +421,27 @@ export default function CommandDeck() {
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-void/40 backdrop-blur-sm p-8">
                     <AdBanner />
 
-                    <div className="mt-8 w-full max-w-2xl bg-voltage/5 border border-voltage/20 rounded-lg p-8 flex flex-col items-center gap-8 shadow-[0_0_50px_rgba(255,215,0,0.1)]">
+                    <div className="mt-8 w-full max-w-2xl bg-voltage/5 border border-voltage/20 rounded-lg p-6 flex flex-col items-center gap-6 shadow-[0_0_50px_rgba(255,215,0,0.1)]">
                       <div className="text-center space-y-2">
                         <p className="text-[10px] text-voltage font-black uppercase tracking-[0.5em]">{progress === 100 ? 'MISSION_SUCCESS' : 'SYSTEM_COOLDOWN_ACTIVE'}</p>
                         <p className="text-[9px] text-matrix/40 italic uppercase tracking-widest">{progress === 100 ? 'GATE_UNLOCKED. CLOSE TO DOWNLOAD PAYLOAD.' : 'DO NOT CLOSE GATE. REFINERY STRIKE IN PROGRESS.'}</p>
                       </div>
+
+                      {/* EMBEDDED TELEMETRY IN GATE */}
+                      {progress < 100 && (
+                        <div className="w-full bg-void/80 border border-matrix/20 rounded p-4 h-32 overflow-hidden relative group">
+                          <div className="absolute top-2 right-2 text-[8px] text-matrix/20 font-black animate-pulse uppercase tracking-tighter">LIVE_TELEMETRY</div>
+                          <div ref={logContainerRef} className="h-full overflow-y-auto font-mono text-[9px] space-y-1 scrollbar-hide">
+                            {telemetry.slice(-10).map((log, i) => (
+                              <div key={i} className="flex gap-2">
+                                <span className="text-matrix/20">[{new Date().toLocaleTimeString([], { hour12: false })}]</span>
+                                <p className={`${log.type === 'warn' ? 'text-hazard' : log.type === 'success' ? 'text-matrix' : 'text-matrix/60'} truncate`}>{log.msg.toUpperCase()}</p>
+                              </div>
+                            ))}
+                            <motion.div animate={{ opacity: [0, 1] }} transition={{ repeat: Infinity, duration: 0.5 }} className="w-1.5 h-3 bg-matrix opacity-40 inline-block align-middle" />
+                          </div>
+                        </div>
+                      )}
 
                       <div className="flex flex-col items-center gap-4 w-full">
                         <div className="p-4 bg-void border border-matrix/20 rounded shadow-inner w-full flex justify-center">
@@ -431,11 +455,9 @@ export default function CommandDeck() {
                               animate={{ y: 0, opacity: 1 }}
                               id="collect-payload-btn"
                               onClick={async () => {
-                                // Trigger the Monetag event if available
                                 if ((window as any).show_monetag_vignette) {
                                   (window as any).show_monetag_vignette();
                                 }
-
                                 setShowAdGate(false);
                                 addTelemetry("[🚀] INITIATING_FINAL_DOWNLOAD...");
                                 const baseName = file?.name.replace(/\.[^/.]+$/, "") || "payload";
@@ -465,7 +487,7 @@ export default function CommandDeck() {
                         </AnimatePresence>
                       </div>
 
-                      <p className="text-[10px] text-matrix/40 italic mt-2 text-center leading-relaxed">
+                      <p className="text-[10px] text-matrix/40 italic text-center leading-relaxed">
                         mission sustainment provided by A-ADS. sustain the strike by maintaining visibility.<br />
                         * DO NOT CLOSE OR NAVIGATE AWAY. THE STRIKE WILL BE SEVERED.
                       </p>
@@ -522,7 +544,6 @@ export default function CommandDeck() {
         <div>{new Date().toISOString()} // STOCKTON_SEC</div>
       </footer>
 
-      {/* THE HUSTLE: Monetag SmartTag Integration */}
       {!isSiphon && (
         <Script
           id="monetag-tag"
@@ -542,35 +563,27 @@ function TacticalIcon({ state, index, name, timer, isSiphon }: { state: any, ind
       <motion.div
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
-        className={`w-16 h-16 lg:w-20 lg:h-20 chasing-border border border-matrix/10 flex items-center justify-center shrink-0 transition-shadow duration-500 ${state === 'PROCESSING' ? (isSiphon ? 'chasing-border-active chasing-border-blue shadow-[0_0_30px_rgba(37,99,235,0.2)]' : 'chasing-border-active chasing-border-voltage shadow-[0_0_30px_rgba(255,215,0,0.2)]') : state === 'COMPLETE' ? (isSiphon ? 'chasing-border-active chasing-border-blue shadow-[0_0_30px_rgba(37,99,235,0.1)]' : 'chasing-border-active shadow-[0_0_30px_rgba(0,255,65,0.1)]') : 'opacity-10'}`}
+        className={`w-16 h-16 lg:w-20 lg:h-20 chasing-border border border-matrix/10 flex items-center justify-center shrink-0 transition-shadow duration-500 ${state === 'PROCESSING' ? (isSiphon ? 'chasing-border-active chasing-border-blue shadow-[0_0_30px_rgba(37,99,235,0.2)]' : 'chasing-border-active chasing-border-voltage shadow-[0_0_30px_rgba(255,215,0,0.3)]') : state === 'COMPLETE' ? (isSiphon ? 'chasing-border-active chasing-border-blue shadow-[0_0_30px_rgba(37,99,235,0.1)]' : 'chasing-border-active shadow-[0_0_30px_rgba(0,255,65,0.1)]') : 'opacity-10'}`}
       >
         <div className="inner-icon flex items-center justify-center relative bg-void overflow-hidden">
-          {/* INTENSIFIED WELDING EFFECT */}
           {state === 'PROCESSING' && (
             <motion.div
               animate={{ y: ["-100%", "100%"] }}
-              transition={{ duration: 0.5, repeat: Infinity, ease: "linear" }}
-              className="absolute inset-0 bg-gradient-to-b from-transparent via-voltage/30 to-transparent z-10 pointer-events-none"
-            />
-          )}
-          {state === 'PROCESSING' && (
-            <motion.div
-              animate={{ opacity: [0.3, 1, 0.3] }}
-              transition={{ duration: 0.1, repeat: Infinity }}
-              className="absolute inset-x-0 top-0 h-px bg-voltage z-20 shadow-[0_0_10px_#FFD700]"
+              transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+              className="absolute inset-0 bg-gradient-to-b from-transparent via-voltage/20 to-transparent z-10 pointer-events-none"
             />
           )}
 
           <FileJson className={`w-8 h-8 lg:w-10 lg:h-10 ${state === 'COMPLETE' ? (isSiphon ? 'text-blue-500' : 'text-matrix') : state === 'PROCESSING' ? (isSiphon ? 'text-blue-400' : 'text-voltage') : (isSiphon ? 'text-slate-800' : 'text-matrix/20')}`} />
 
           {state === 'COMPLETE' && (
-            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute inset-0 bg-matrix/10 flex items-center justify-center">
+            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute inset-0 bg-matrix/20 flex items-center justify-center">
               <CheckCircle2 className={`w-8 h-8 lg:w-10 lg:h-10 ${isSiphon ? 'text-blue-500 shadow-[0_0_15px_#2563eb]' : 'text-matrix shadow-[0_0_15px_#00FF41]'} rounded-full`} />
             </motion.div>
           )}
 
           {state === 'PROCESSING' && timer !== null && (
-            <div className="absolute inset-x-0 bottom-0 h-1 bg-void overflow-hidden z-20">
+            <div className="absolute inset-x-2 bottom-2 h-1.5 bg-void border border-matrix/20 overflow-hidden z-20">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${((15 - timer) / 15) * 100}%` }}
@@ -578,8 +591,9 @@ function TacticalIcon({ state, index, name, timer, isSiphon }: { state: any, ind
               />
             </div>
           )}
-          {state === 'PROCESSING' && timer !== null && (
-            <div className="absolute top-1 right-1 text-[8px] lg:text-[10px] font-black tabular-nums bg-void/90 px-1 text-voltage z-20 shadow-lg border border-voltage/20">{timer}S</div>
+
+          {state === 'PROCESSING' && (
+            <div className="absolute top-1 left-2 text-[7px] font-black uppercase tracking-tighter text-voltage z-20 animate-pulse">WELDING...</div>
           )}
         </div>
       </motion.div>
@@ -590,7 +604,7 @@ function TacticalIcon({ state, index, name, timer, isSiphon }: { state: any, ind
           <motion.div
             initial={{ y: 5, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className={`mt-0.5 bg-void border border-matrix/30 px-1 py-0.5 w-full text-center`}
+            className={`mt-0.5 bg-matrix/5 border border-matrix/30 px-1 py-0.5 w-full text-center`}
           >
             <span className={`text-[8px] font-black ${isSiphon ? 'text-blue-300' : 'text-matrix'} truncate block tracking-tighter`}>
               {name.toUpperCase()}
