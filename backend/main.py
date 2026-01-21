@@ -182,7 +182,7 @@ def handle_gemini(data: Dict[str, Any], options: RefineryOptions, raw: bool = Fa
 # --- ENDPOINTS ---
 
 @app.post("/refine-stream")
-async def refine_stream(file: UploadFile = File(...), options_json: str = Form(...)):
+async def refine_stream(request: Request, file: UploadFile = File(...), options_json: str = Form(...), start_index: int = Form(0)):
     try:
         options = RefineryOptions(**json.loads(options_json))
         content = await file.read()
@@ -193,23 +193,42 @@ async def refine_stream(file: UploadFile = File(...), options_json: str = Form(.
             raise HTTPException(status_code=400, detail="INVALID_JSON_PAYLOAD")
 
         async def event_generator():
-            refined_files = []
+            batch = []
             if isinstance(raw_data, list) and len(raw_data) > 0 and "mapping" in raw_data[0]:
-                for conv in raw_data:
-                    # For streaming, we want raw messages for the humanized view
-                    messages = handle_chatgpt(conv, options, raw=True)
-                    refined_files.append({"name": conv.get("title") or "ChatGPT_Chat", "messages": messages})
+                # ChatGPT Logic: 20-chat batching
+                batch = raw_data[start_index : start_index + 20]
+                brand_handler = handle_chatgpt
+                brand_name = "ChatGPT"
             elif isinstance(raw_data, list) and len(raw_data) > 0 and "chat_messages" in raw_data[0]:
-                for chat in raw_data:
-                    messages = handle_claude(chat, options, raw=True)
-                    refined_files.append({"name": chat.get("name") or "Claude_Chat", "messages": messages})
+                # Claude Logic: 20-chat batching
+                batch = raw_data[start_index : start_index + 20]
+                brand_handler = handle_claude
+                brand_name = "Claude"
             elif isinstance(raw_data, dict) and "chunkedPrompt" in raw_data:
-                messages = handle_gemini(raw_data, options, raw=True)
-                refined_files.append({"name": file.filename or "Gemini_Export", "messages": messages})
-            
-            total = len(refined_files)
-            for idx, rf in enumerate(refined_files):
-                yield f"data: {json.dumps({'status': 'welded', 'index': idx + 1, 'total': total, 'name': rf['name'], 'messages': rf['messages']})}\n\n"
+                # Gemini Logic: Whole file (as it's usually singular)
+                batch = [raw_data]
+                brand_handler = handle_gemini
+                brand_name = "Gemini"
+            else:
+                yield f"data: {json.dumps({'status': 'error', 'message': 'UNKNOWN_SCHEMA'})}\n\n"
+                return
+
+            total_in_batch = len(batch)
+            for idx, item in enumerate(batch):
+                # THE HUSTLE: Ad-Tethering Check
+                if await request.is_disconnected():
+                    print("STRIKE_SEVERED: Client disconnected. Purging volatile memory.")
+                    break
+
+                # THE TOLL BOOTH: 15-second delay per chat (5 mins total for 20)
+                if idx > 0: # Delay before each chat except the first one to start the weld feel immediately? 
+                    # Actually, the user says "15 SECONDS PER CHAT", so let's sleep before each yield.
+                    await asyncio.sleep(15)
+                
+                messages = brand_handler(item, options, raw=True)
+                name = item.get("title") or item.get("name") or f"{brand_name}_Chat_{start_index + idx}"
+                
+                yield f"data: {json.dumps({'status': 'welded', 'index': idx + 1, 'total': total_in_batch, 'name': name, 'messages': messages})}\n\n"
             
             yield f"data: {json.dumps({'status': 'complete'})}\n\n"
 
@@ -218,12 +237,11 @@ async def refine_stream(file: UploadFile = File(...), options_json: str = Form(.
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/refine")
-async def refine_payload(file: UploadFile = File(...), options_json: str = Form(...)):
+async def refine_payload(file: UploadFile = File(...), options_json: str = Form(...), start_index: int = Form(0)):
     try:
         options = RefineryOptions(**json.loads(options_json))
         content = await file.read()
         
-        # Extension-agnostic Forensic Detection
         try:
             raw_data = json.loads(content)
         except json.JSONDecodeError:
@@ -232,10 +250,12 @@ async def refine_payload(file: UploadFile = File(...), options_json: str = Form(
         refined_files = []
         
         if isinstance(raw_data, list) and len(raw_data) > 0 and "mapping" in raw_data[0]:
-            for conv in raw_data:
+            batch = raw_data[start_index : start_index + 20]
+            for conv in batch:
                 refined_files.append({"name": conv.get("title") or "ChatGPT_Chat", "content": handle_chatgpt(conv, options)})
         elif isinstance(raw_data, list) and len(raw_data) > 0 and "chat_messages" in raw_data[0]:
-            for chat in raw_data:
+            batch = raw_data[start_index : start_index + 20]
+            for chat in batch:
                 refined_files.append({"name": chat.get("name") or "Claude_Chat", "content": handle_claude(chat, options)})
         elif isinstance(raw_data, dict) and "chunkedPrompt" in raw_data:
             refined_files.append({"name": file.filename or "Gemini_Export", "content": handle_gemini(raw_data, options)})

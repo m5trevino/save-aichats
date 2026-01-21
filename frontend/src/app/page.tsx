@@ -11,6 +11,7 @@ import axios from 'axios';
 import { SecurityBanner } from '@/components/SecurityBanner';
 import { TruncatedText } from '@/components/TruncatedText';
 import { ConversationDisplay } from '@/components/ConversationDisplay';
+import { AdBanner } from '@/components/AdBanner';
 import { Message, Prompt } from '@/types';
 
 // --- TYPES ---
@@ -53,7 +54,29 @@ export default function CommandDeck() {
   const [progress, setProgress] = useState(0);
   const [telemetry, setTelemetry] = useState<{ msg: string, type: 'info' | 'warn' | 'success' }[]>([]);
   const [refinedMessages, setRefinedMessages] = useState<Message[]>([]);
+  const [startIndex, setStartIndex] = useState(0);
+  const [isTethered, setIsTethered] = useState(true);
+  const [tetherError, setTetherError] = useState<string | null>(null);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // --- TETHERING: REVENUE ENFORCEMENT ---
+  React.useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden' && isProcessing) {
+        if (abortControllerRef.current) {
+          abortControllerRef.current.abort();
+          setIsProcessing(false);
+          setTetherError("STRIKE_SEVERED: ADS MUST REMAIN VISIBLE DURING REFINEMENT.");
+          addTelemetry("[🔴] CONNECTION_TERMINATED: AD_TETHER_BROKEN", "warn");
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [isProcessing]);
 
   // --- HANDLERS ---
 
@@ -97,6 +120,11 @@ export default function CommandDeck() {
     setIsProcessing(true);
     setTelemetry([]);
     setProgress(0);
+    setTetherError(null);
+
+    // Initialize AbortController for Ad-Tethering
+    abortControllerRef.current = new AbortController();
+
     addTelemetry("[📡] ESTABLISHING_SECURE_UPLINK...");
     addTelemetry("[⚙️] INITIALIZING_REFINERY_ENGINE...");
 
@@ -109,6 +137,7 @@ export default function CommandDeck() {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('options_json', JSON.stringify(strikeOptions));
+    formData.append('start_index', startIndex.toString());
 
     try {
       const API_BASE = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:8000' : 'https://save-aichats-backend.onrender.com');
@@ -116,6 +145,7 @@ export default function CommandDeck() {
       const response = await fetch(`${API_BASE}/refine-stream`, {
         method: 'POST',
         body: formData,
+        signal: abortControllerRef.current.signal
       });
 
       if (!response.ok) throw new Error(`STRIKE_FAILED: ${response.statusText}`);
@@ -289,6 +319,21 @@ export default function CommandDeck() {
                       </div>
                     </div>
 
+                    <div className="flex flex-col gap-4 bg-void border border-matrix/5 p-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] font-bold text-matrix/60 uppercase">STARTING_INDEX</span>
+                        <input
+                          type="number"
+                          value={startIndex}
+                          onChange={(e) => setStartIndex(parseInt(e.target.value) || 0)}
+                          className="bg-void border border-matrix/20 text-matrix font-mono text-xs p-1 w-20 text-right outline-none focus:border-voltage/50"
+                        />
+                      </div>
+                      <div className="text-[9px] text-matrix/40 italic leading-snug">
+                        * BATCH_SIZE: 20 CHATS. TO CONTINUE, RE-UPLOAD AND INCREMENT INDEX.
+                      </div>
+                    </div>
+
                     <div className="flex flex-col gap-2">
                       {DEFAULT_PERSONAS.map((p) => (
                         <button
@@ -314,7 +359,8 @@ export default function CommandDeck() {
                       />
                       <button
                         onClick={initiateStrike}
-                        className="relative w-full py-4 bg-void text-matrix font-black text-sm tracking-[0.5em] hover:bg-matrix/10 transition-all uppercase flex items-center justify-center gap-4"
+                        disabled={isProcessing}
+                        className={`relative w-full py-4 bg-void text-matrix font-black text-sm tracking-[0.5em] hover:bg-matrix/10 transition-all uppercase flex items-center justify-center gap-4 ${isProcessing ? 'opacity-30 cursor-not-allowed' : ''}`}
                       >
                         CLEAN_SWEEP <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
                       </button>
@@ -337,6 +383,39 @@ export default function CommandDeck() {
                 animate={{ opacity: 1 }}
                 className="p-8 flex flex-col gap-8"
               >
+                {/* AD_TETHER: Mandatory Dwell-Time Sponsor */}
+                {phase === 'REFINERY' && (
+                  <div className="space-y-6">
+                    <AdBanner />
+
+                    {/* THE HUSTLE: Adsterra Smartlink Gate */}
+                    <div className="flex flex-col items-center gap-3 p-6 bg-voltage/5 border border-voltage/20 rounded-lg animate-pulse">
+                      <p className="text-[10px] text-voltage font-black uppercase tracking-[0.3em]">MISSION_SUPPORT_REQUIRED</p>
+                      <a
+                        href="https://www.effectivegatecpm.com/hxdn4yhu7?key=53269311ad498a3a6bdf8959b9254348"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-8 py-3 bg-voltage text-void font-bold text-xs tracking-widest uppercase hover:bg-voltage/80 transition-all flex items-center gap-2"
+                      >
+                        <Zap className="w-4 h-4 fill-current" /> SUPPORT_THE_STRIKE
+                      </a>
+                      <p className="text-[9px] text-matrix/60 italic lowercase">
+                        * Click to authenticate refinery uplink and keep strike active.
+                      </p>
+                    </div>
+
+                    <p className="text-[9px] text-center text-voltage/60 animate-bounce uppercase tracking-[0.2em] font-bold">
+                      DO NOT HIDE THIS TAB. REFINEMENT PAUSES IF AD IS SEVERED.
+                    </p>
+                  </div>
+                )}
+
+                {/* TETHER ERROR DISPLAY */}
+                {tetherError && (
+                  <div className="bg-hazard/10 border border-hazard/30 p-4 text-hazard font-bold text-[10px] tracking-widest text-center animate-shake uppercase italic">
+                    {tetherError}
+                  </div>
+                )}
                 {/* Extraction Success Header (Shows only when extraction done) */}
                 {phase === 'EXTRACTION' && (
                   <motion.div

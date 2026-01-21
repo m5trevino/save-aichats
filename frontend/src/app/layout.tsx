@@ -20,6 +20,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${jbMono.variable} font-mono antialiased matrix-grid min-h-screen relative`}>
+        {/* THE HUSTLE: Adsterra / PopAds / Monetag Global Scripts */}
+        {/* <script src="..." /> */}
+
         {/* Overlay Effects */}
         <div className="fixed inset-0 pointer-events-none z-50">
           <div className="absolute inset-0 animate-scanline scanline"></div>
