@@ -57,6 +57,7 @@ export default function CommandDeck() {
   const [startIndex, setStartIndex] = useState(0);
   const [isTethered, setIsTethered] = useState(true);
   const [tetherError, setTetherError] = useState<string | null>(null);
+  const [showAdGate, setShowAdGate] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -121,6 +122,7 @@ export default function CommandDeck() {
     setTelemetry([]);
     setProgress(0);
     setTetherError(null);
+    setShowAdGate(true);
 
     // Initialize AbortController for Ad-Tethering
     abortControllerRef.current = new AbortController();
@@ -177,6 +179,7 @@ export default function CommandDeck() {
                   addTelemetry("[✔️] REFINERY_STRIKE_CONFIRMED", "success");
                   addTelemetry("[📦] PAYLOAD_COMPRESSED_AND_DELIVERED", "success");
                   setProgress(100);
+                  setShowAdGate(false);
                 }
               } catch (e) {
                 console.error("Parse error:", e);
@@ -211,7 +214,8 @@ export default function CommandDeck() {
     setFile(null);
     setFileContent("");
     setProgress(0);
-    setTelemetry([]);
+    addTelemetry("[🧹] MEMORY_PURGED");
+    setShowAdGate(false);
   };
 
   return (
@@ -381,33 +385,40 @@ export default function CommandDeck() {
                 key="telemetry-view"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="p-8 flex flex-col gap-8"
+                className="p-8 flex flex-col gap-8 relative"
               >
-                {/* AD_TETHER: Mandatory Dwell-Time Sponsor */}
-                {phase === 'REFINERY' && (
-                  <div className="space-y-6">
-                    <AdBanner />
+                {/* INTERSTITIAL GATE: Absolute focus, but telemetry visible beneath */}
+                {showAdGate && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-void/80 backdrop-blur-sm p-8"
+                  >
+                    <div className="max-w-2xl w-full space-y-8 text-center">
+                      <div className="space-y-6">
+                        <AdBanner />
 
-                    {/* THE HUSTLE: Adsterra Smartlink Gate */}
-                    <div className="flex flex-col items-center gap-3 p-6 bg-voltage/5 border border-voltage/20 rounded-lg animate-pulse">
-                      <p className="text-[10px] text-voltage font-black uppercase tracking-[0.3em]">MISSION_SUPPORT_REQUIRED</p>
-                      <a
-                        href="https://www.effectivegatecpm.com/hxdn4yhu7?key=53269311ad498a3a6bdf8959b9254348"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-8 py-3 bg-voltage text-void font-bold text-xs tracking-widest uppercase hover:bg-voltage/80 transition-all flex items-center gap-2"
-                      >
-                        <Zap className="w-4 h-4 fill-current" /> SUPPORT_THE_STRIKE
-                      </a>
-                      <p className="text-[9px] text-matrix/60 italic lowercase">
-                        * Click to authenticate refinery uplink and keep strike active.
+                        {/* THE HUSTLE: Adsterra Smartlink Gate */}
+                        <div className="flex flex-col items-center gap-4 p-8 bg-voltage/5 border border-voltage/20 rounded-lg shadow-2xl shadow-voltage/10">
+                          <p className="text-[10px] text-voltage font-black uppercase tracking-[0.5em]">MISSION_SUPPORT_REQUIRED</p>
+                          <a
+                            href="https://www.effectivegatecpm.com/hxdn4yhu7?key=53269311ad498a3a6bdf8959b9254348"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-12 py-4 bg-voltage text-void font-black text-sm tracking-[0.3em] uppercase hover:bg-voltage/80 transition-all flex items-center gap-3 shadow-[0_0_30px_rgba(255,215,0,0.3)]"
+                          >
+                            <Zap className="w-5 h-5 fill-current" /> SUPPORT_THE_STRIKE
+                          </a>
+                          <p className="text-[10px] text-matrix/60 italic lowercase max-w-xs leading-relaxed">
+                            * authentication via sponsor link required to finalize extraction uplink. follow through to verify mission status.
+                          </p>
+                        </div>
+                      </div>
+                      <p className="text-[10px] text-matrix font-bold animate-pulse tracking-[0.3em] uppercase">
+                        DO NOT CLOSE OR HIDE THIS TAB. THE STRIKE WILL BE SEVERED.
                       </p>
                     </div>
-
-                    <p className="text-[9px] text-center text-voltage/60 animate-bounce uppercase tracking-[0.2em] font-bold">
-                      DO NOT HIDE THIS TAB. REFINEMENT PAUSES IF AD IS SEVERED.
-                    </p>
-                  </div>
+                  </motion.div>
                 )}
 
                 {/* TETHER ERROR DISPLAY */}
