@@ -64,6 +64,7 @@ export default function CommandDeck() {
 
   const [batchProgress, setBatchProgress] = useState<('IDLE' | 'PROCESSING' | 'COMPLETE')[]>(Array(20).fill('IDLE'));
   const [processedFileNames, setProcessedFileNames] = useState<string[]>(Array(20).fill(""));
+  const [batchNames, setBatchNames] = useState<string[]>(Array(20).fill("AWAITING_TAG..."));
   const [currentFileTimer, setCurrentFileTimer] = useState(15);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -257,6 +258,7 @@ export default function CommandDeck() {
               try {
                 const data = JSON.parse(line.slice(6));
                 if (data.status === 'start') {
+                  setBatchNames(data.batch_names || []);
                   addTelemetry(isSiphon ? `[📡] EXTRACTION_STARTED: ${data.total} ASSETS` : `[📡] REFINERY_STRIKE_CONFIRMED: ${data.total} TARGETS_LOCKED`, "success");
                 } else if (data.status === 'welded') {
                   const msg = isSiphon ? `PROCESSED: ${data.name.toUpperCase()}` : `WELDED: [${data.name.toUpperCase()}] // MSGS: ${data.msg_count}`;
@@ -351,21 +353,6 @@ export default function CommandDeck() {
     <main className={`min-h-screen ${isSiphon ? 'bg-slate-950 text-slate-200' : 'bg-void text-matrix'} font-mono selection:bg-matrix selection:text-void relative overflow-hidden transition-colors duration-1000 flex flex-col items-center`}>
       {!isSiphon && <div className="absolute inset-0 pointer-events-none z-50 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,118,0.06))] bg-[length:100%_2px,3px_100%] pointer-events-none opacity-10" />}
 
-      {(phase === 'REFINERY' || phase === 'EXTRACTION') && !isSiphon && (
-        <>
-          <div className="fixed left-4 top-1/2 -translate-y-1/2 grid grid-cols-2 gap-4 lg:gap-8 z-0 scale-75 xl:scale-100">
-            {batchProgress.slice(0, 10).map((state, i) => (
-              <TacticalIcon key={i} state={state} index={i} name={processedFileNames[i]} timer={state === 'PROCESSING' ? currentFileTimer : null} isSiphon={isSiphon} />
-            ))}
-          </div>
-          <div className="fixed right-4 top-1/2 -translate-y-1/2 grid grid-cols-2 gap-4 lg:gap-8 z-0 scale-75 xl:scale-100">
-            {batchProgress.slice(10, 20).map((state, i) => (
-              <TacticalIcon key={i + 10} state={state} index={i + 10} name={processedFileNames[i + 10]} timer={state === 'PROCESSING' ? currentFileTimer : null} isSiphon={isSiphon} />
-            ))}
-          </div>
-        </>
-      )}
-
       <div className="max-w-7xl w-full mx-auto px-4 py-12 relative z-10 transition-all duration-700">
         <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-matrix/20 pb-8">
           <div className="space-y-2">
@@ -402,12 +389,42 @@ export default function CommandDeck() {
 
                 <div
                   onClick={() => fileInputRef.current?.click()} onDragOver={handleDragOver} onDrop={onDrop}
-                  className={`border-2 border-dashed ${isSiphon ? 'border-slate-800 bg-slate-950/50 hover:border-blue-500/50' : 'border-matrix/20 bg-matrix/5 hover:border-matrix/40'} p-16 rounded-xl transition-all cursor-pointer group flex flex-col items-center justify-center gap-6`}
+                  className={`border-2 border-dashed ${isSiphon ? 'border-slate-800 bg-slate-950/50 hover:border-blue-500/50' : 'border-matrix/20 bg-matrix/5 hover:border-matrix/40'} p-16 rounded-xl transition-all cursor-pointer group flex flex-col items-center justify-center gap-6 shadow-inner mb-12`}
                 >
                   <Upload className={`w-12 h-12 ${isSiphon ? 'text-blue-500' : 'text-matrix'} opacity-40 group-hover:opacity-100 transition-opacity`} />
                   <div className="text-center">
-                    <p className={`text-lg font-bold ${isSiphon ? 'text-slate-300' : 'text-matrix'}`}>{isSiphon ? 'Browse or drop log file' : 'DROP_ENCRYPTED_LOG_HERE'}</p>
-                    <p className="text-[10px] text-slate-500 font-bold uppercase mt-2">Any Format // No Extension Required</p>
+                    <p className={`text-lg font-bold ${isSiphon ? 'text-slate-300' : 'text-matrix'}`}>{isSiphon ? 'Browse or drop log file' : 'DROP_JSON_OR_ZIP_PAYLOAD_HERE'}</p>
+                    <p className="text-[10px] text-slate-500 font-bold uppercase mt-2">Validated Extraction for ChatGPT, Claude, Gemini</p>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between border-b border-matrix/10 pb-2">
+                    <h3 className="text-[10px] font-black text-matrix/40 uppercase tracking-[0.4em]">SUPPORTED_ASSET_REGISTRY</h3>
+                    <div className="flex gap-4">
+                      <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-[#00FF41] rounded-full" /><span className="text-[8px] font-bold opacity-40">LIVE</span></div>
+                      <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-voltage rounded-full" /><span className="text-[8px] font-bold opacity-40">PIPELINE</span></div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                    {[
+                      { name: 'ChatGPT', status: 'LIVE' },
+                      { name: 'Claude', status: 'LIVE' },
+                      { name: 'Gemini', status: 'LIVE' },
+                      { name: 'Perplexity', status: 'DEV' },
+                      { name: 'DeepSeek', status: 'DEV' },
+                      { name: 'Grok', status: 'DEV' },
+                      { name: 'Mistral', status: 'DEV' },
+                      { name: 'Copilot', status: 'DEV' },
+                      { name: 'Poe', status: 'DEV' },
+                      { name: 'Kimi', status: 'DEV' }
+                    ].map((asset) => (
+                      <div key={asset.name} className={`p-3 border ${asset.status === 'LIVE' ? 'border-[#00FF41]/20 bg-[#00FF41]/5 text-[#00FF41]' : 'border-voltage/10 bg-voltage/5 text-voltage opacity-40'} rounded flex flex-col items-center gap-1 transition-all hover:scale-105`}>
+                        <span className="text-[10px] font-black tracking-tighter">{asset.name.toUpperCase()}</span>
+                        <span className="text-[7px] font-bold opacity-60 tracking-widest">{asset.status === 'LIVE' ? 'OPERATIONAL' : 'IN_PRODUCTION'}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
                 <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" />
@@ -506,88 +523,117 @@ export default function CommandDeck() {
             )}
 
             {(phase === 'REFINERY' || phase === 'EXTRACTION') && (
-              <motion.div key="telemetry" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-4 md:p-8 flex flex-col gap-8 relative min-h-[600px]">
+              <motion.div key="telemetry" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-4 md:p-8 flex flex-col gap-8 relative min-h-[700px]">
                 {showAdGate && !isSiphon && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 z-[100] flex flex-col items-center justify-start bg-void/90 backdrop-blur-md p-4 md:p-12 overflow-y-auto">
-                    <div className="w-full max-w-6xl mx-auto flex flex-col items-center gap-8">
-                      <div className="w-full flex justify-center">
-                        <AdBanner />
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 z-[100] flex flex-col items-center justify-start bg-void/95 backdrop-blur-xl p-4 md:p-12 overflow-y-auto">
+                    <div className="w-full max-w-[1600px] mx-auto flex flex-col gap-6">
+
+                      {/* TOP SECTION: MASSIVE AD DOMINANCE */}
+                      <div className="w-full bg-void border border-matrix/20 p-8 flex justify-center shadow-[0_0_50px_rgba(0,255,65,0.05)]">
+                        <div className="scale-125 md:scale-[1.75] origin-center py-12">
+                          <AdBanner />
+                        </div>
                       </div>
 
-                      <div className="w-full bg-voltage/5 border-2 border-voltage/20 rounded-lg p-8 flex flex-col items-center gap-8 shadow-[0_0_100px_rgba(255,215,0,0.1)]">
-                        <div className="flex flex-col md:flex-row items-center justify-between w-full gap-8">
-                          <div className="flex-1 space-y-4 text-center md:text-left">
-                            <p className="text-sm text-voltage font-black uppercase tracking-[0.5em]">{progress === 100 ? 'MISSION_SUCCESS' : 'SYSTEM_COOLDOWN_ACTIVE'}</p>
-                            <h2 className="text-3xl md:text-5xl font-black italic tracking-tighter text-matrix">
-                              {progress === 100 ? 'GATE_UNLOCKED' : 'REFINING_PAYLOAD...'}
-                            </h2>
-                            <p className="text-xs text-matrix/40 italic uppercase tracking-widest leading-relaxed">
-                              {progress === 100 ? 'MISSION COMPLETE. YOU MAY NOW COLLECT THE REFINED DATA.' : 'DO NOT DISCONNECT. THE STRIKE IS CURRENTLY EXTRACTING HIGH-VALUE METADATA.'}
-                            </p>
-                            <div className="pt-4 flex items-center gap-4 justify-center md:justify-start">
-                              <div className="flex flex-col">
-                                <span className="text-[10px] font-black text-voltage">{progress < 100 ? 'TARGET_LOCK' : 'STRIKE_CONFIRMED'}</span>
-                                <span className="text-2xl font-black text-matrix tabular-nums">{Math.floor((progress / 100) * 20)} / 20</span>
+                      {/* MIDDLE SECTION: SIDEBAR + TERMINAL */}
+                      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[500px]">
+
+                        {/* SIDEBAR: FORENSIC STACK */}
+                        <div className="lg:col-span-1 bg-void border border-matrix/20 overflow-hidden flex flex-col">
+                          <div className="p-3 border-b border-matrix/20 bg-matrix/5 flex justify-between items-center font-black text-[10px] tracking-widest text-matrix/40">
+                            <span>TARGET_BATCH</span>
+                            <span>STATUS</span>
+                          </div>
+                          <div className="flex-grow overflow-y-auto scrollbar-hide">
+                            {batchNames.map((name, i) => (
+                              <div key={i} className={`relative p-3 border-b border-matrix/10 transition-colors ${batchProgress[i] === 'PROCESSING' ? 'bg-voltage/5' : batchProgress[i] === 'COMPLETE' ? 'bg-matrix/5' : ''}`}>
+                                {/* Progress Fill Background */}
+                                {batchProgress[i] === 'PROCESSING' && (
+                                  <motion.div
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${((15 - currentFileTimer) / 15) * 100}%` }}
+                                    className="absolute inset-0 bg-voltage/20 z-0"
+                                  />
+                                )}
+                                <div className="relative z-10 flex justify-between items-center">
+                                  <div className="flex items-center gap-3">
+                                    <span className={`text-[10px] font-black tabular-nums ${batchProgress[i] === 'COMPLETE' ? 'text-matrix' : batchProgress[i] === 'PROCESSING' ? 'text-voltage' : 'text-matrix/20'}`}>
+                                      {String(i + 1).padStart(2, '0')}
+                                    </span>
+                                    <span className={`text-[11px] font-black uppercase tracking-tighter truncate max-w-[140ch] ${batchProgress[i] === 'COMPLETE' ? 'text-matrix' : batchProgress[i] === 'PROCESSING' ? 'text-voltage' : 'text-matrix/40'}`}>
+                                      {name}
+                                    </span>
+                                  </div>
+                                  {batchProgress[i] === 'COMPLETE' && <CheckCircle2 className="w-3 h-3 text-matrix" />}
+                                </div>
                               </div>
-                              <div className="w-[2px] h-10 bg-matrix/20" />
-                              <AnalogCycle progress={progress < 100 ? (15 - currentFileTimer) * (100 / 15) : 100} />
-                            </div>
-                          </div>
-
-                          <div className="w-full md:w-[500px] h-[350px] bg-void border-2 border-matrix/20 rounded-sm p-6 overflow-hidden relative group shadow-2xl">
-                            <div className="absolute top-3 right-4 text-[10px] text-matrix/20 font-black animate-pulse uppercase tracking-tighter flex items-center gap-2">
-                              <div className="w-2 h-2 bg-voltage rounded-full" /> LIVE_FORENSIC_TERMINAL
-                            </div>
-                            <div ref={logContainerRef} className="h-full overflow-y-auto font-mono text-sm md:text-base space-y-3 pt-4 scrollbar-hide">
-                              {telemetry.slice(-20).map((log, i) => (
-                                <div key={i} className="flex gap-3 leading-tight border-l-4 border-transparent hover:border-matrix/20 pl-2 transition-all">
-                                  <span className="text-matrix/20 text-[10px] whitespace-nowrap pt-1">[{new Date().toLocaleTimeString([], { hour12: false })}]</span>
-                                  <p className={`${log.type === 'warn' ? 'text-hazard font-black' : log.type === 'success' ? 'text-[#00FF41] font-bold drop-shadow-[0_0_5px_rgba(0,255,65,0.4)]' : 'text-matrix/70'}`}>
-                                    {log.msg.toUpperCase()}
-                                  </p>
-                                </div>
-                              ))}
-                              {progress < 100 && (
-                                <div className="flex items-center gap-2 pt-2">
-                                  <motion.div animate={{ opacity: [0, 1] }} transition={{ repeat: Infinity, duration: 0.5 }} className="w-3 h-5 bg-matrix opacity-60" />
-                                  <span className="text-[10px] text-matrix/20 animate-pulse">AWAITING_NEXT_PACKET...</span>
-                                </div>
-                              )}
-                            </div>
+                            ))}
                           </div>
                         </div>
 
-                        <div className="flex flex-col md:flex-row items-center gap-8 w-full border-t border-matrix/5 pt-8">
-                          <div className="flex-1 p-6 bg-void/50 border border-matrix/10 rounded shadow-inner flex justify-center overflow-hidden">
-                            <AdBanner />
+                        {/* MAIN: FORENSIC TERMINAL */}
+                        <div className="lg:col-span-3 bg-void border border-matrix/20 relative group shadow-2xl overflow-hidden flex flex-col">
+                          <div className="absolute top-3 right-4 text-[10px] text-matrix/20 font-black animate-pulse uppercase tracking-tighter flex items-center gap-2 z-20">
+                            <div className="w-2 h-2 bg-voltage rounded-full" /> LIVE_FORENSIC_STREAM
                           </div>
-
-                          <AnimatePresence>
-                            {progress === 100 && (
-                              <motion.button
-                                initial={{ y: 20, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                id="collect-payload-btn"
-                                onClick={async () => {
-                                  if ((window as any).show_monetag_vignette) {
-                                    (window as any).show_monetag_vignette();
-                                  }
-                                  setShowAdGate(false);
-                                  executePayloadDownload();
-                                }}
-                                className="w-full md:w-auto px-16 py-8 bg-matrix text-void font-black text-xl tracking-[0.4em] uppercase hover:bg-matrix/90 transition-all border-b-8 border-matrix/50 shadow-2xl active:border-b-0 active:translate-y-2"
-                              >
-                                COLLECT_PAYLOAD
-                              </motion.button>
+                          <div ref={logContainerRef} className="flex-grow overflow-y-auto font-mono text-base md:text-lg space-y-4 p-8 scrollbar-hide pt-10">
+                            {telemetry.slice(-30).map((log, i) => (
+                              <div key={i} className="flex gap-4 leading-normal border-l-4 border-transparent hover:border-matrix/20 pl-4 transition-all">
+                                <span className="text-matrix/20 text-[10px] whitespace-nowrap pt-1 bg-void/40 px-1 rounded">[{new Date().toLocaleTimeString([], { hour12: false })}]</span>
+                                <p className={`${log.type === 'warn' ? 'text-hazard font-black' : log.type === 'success' ? 'text-[#00FF41] font-bold drop-shadow-[0_0_8px_rgba(0,255,65,0.6)]' : 'text-matrix/70'}`}>
+                                  {log.msg.toUpperCase()}
+                                </p>
+                              </div>
+                            ))}
+                            {progress < 100 && (
+                              <div className="flex items-center gap-3 pt-2">
+                                <motion.div animate={{ opacity: [0, 1] }} transition={{ repeat: Infinity, duration: 0.5 }} className="w-4 h-6 bg-matrix opacity-60" />
+                                <span className="text-sm text-matrix/20 animate-pulse font-black tracking-widest">AWAITING_REFINED_PACKET...</span>
+                              </div>
                             )}
-                          </AnimatePresence>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* BOTTOM SECTION: STATUS + BUTTONS */}
+                      <div className="bg-void border border-matrix/20 p-8 flex flex-col md:flex-row items-center justify-between gap-8">
+                        <div className="flex items-center gap-10">
+                          <div className="flex flex-col">
+                            <span className="text-[10px] font-black text-voltage tracking-widest uppercase mb-1">STRIKE_PROGRESS</span>
+                            <span className="text-4xl font-black text-matrix tabular-nums tracking-tighter shadow-matrix/20">{Math.floor((progress / 100) * 20)} / 20</span>
+                          </div>
+                          <div className="w-[1px] h-16 bg-matrix/20" />
+                          <AnalogCycle progress={progress < 100 ? (15 - currentFileTimer) * (100 / 15) : 100} />
                         </div>
 
-                        <p className="text-[10px] text-matrix/40 italic text-center leading-relaxed max-w-2xl uppercase tracking-tighter">
-                          mission sustainment provided by A-ADS & Monetag. maintain visibility to ensure successful extraction.<br />
-                          * WARNING: REFINERY TERMINATION WILL OCCUR IMMEDIATELY IF UPLINK IS SEVERED.
-                        </p>
+                        <AnimatePresence>
+                          {progress === 100 && (
+                            <motion.button
+                              initial={{ scale: 0.9, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              id="collect-payload-btn"
+                              onClick={async () => {
+                                if ((window as any).show_monetag_vignette) {
+                                  (window as any).show_monetag_vignette();
+                                }
+                                setShowAdGate(false);
+                                executePayloadDownload();
+                              }}
+                              className="px-24 py-10 bg-matrix text-void font-black text-2xl tracking-[0.6em] uppercase hover:bg-[#00FF41] transition-all border-b-[12px] border-matrix/50 shadow-[0_30px_60px_rgba(0,255,65,0.1)] active:border-b-0 active:translate-y-2"
+                            >
+                              COLLECT_PAYLOAD
+                            </motion.button>
+                          )}
+                        </AnimatePresence>
+
+                        <div className="text-right hidden md:block">
+                          <p className="text-[9px] text-matrix/40 italic uppercase tracking-widest leading-relaxed max-w-sm">
+                            MISSION SUSTAINMENT BY A-ADS. MAINTAIN VISIBILITY TO SECURE PAYLOAD EXTRACTION.
+                          </p>
+                          <p className="text-[9px] text-hazard font-black uppercase mt-1">WARNING: UPLINK TERMINATION UPON GATE CLOSURE.</p>
+                        </div>
                       </div>
+
                     </div>
                   </motion.div>
                 )}

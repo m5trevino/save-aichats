@@ -236,10 +236,14 @@ async def refine_stream(request: Request, file: UploadFile = File(...), options_
                 yield f"data: {json.dumps({'status': 'error', 'message': 'UNKNOWN_SCHEMA'})}\n\n"
                 return
 
-            yield f"data: {json.dumps({'status': 'start', 'total': len(batch)})}\n\n"
-            print("DEBUG: START_PACKET_YIELDED")
-
             total_in_batch = len(batch)
+            batch_names = []
+            for idx, item in enumerate(batch):
+                name = item.get("title") or item.get("name") or f"{brand_name}_Chat_{start_index + idx}"
+                batch_names.append(name)
+
+            yield f"data: {json.dumps({'status': 'start', 'total': total_in_batch, 'batch_names': batch_names})}\n\n"
+            print("DEBUG: START_PACKET_YIELDED_WITH_NAMES")
             
             # THE TOLL: Elastic Dwell Time (Scales 1m to 5m) - ONLY ENABLED IN TOLL MODE
             if SITE_PERSONALITY == "TOLL":
