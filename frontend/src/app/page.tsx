@@ -60,6 +60,7 @@ export default function CommandDeck() {
   const [personality, setPersonality] = useState<'SIPHON' | 'TOLL'>('TOLL');
 
   const [batchProgress, setBatchProgress] = useState<('IDLE' | 'PROCESSING' | 'COMPLETE')[]>(Array(20).fill('IDLE'));
+  const [processedFileNames, setProcessedFileNames] = useState<string[]>(Array(20).fill(""));
   const [currentFileTimer, setCurrentFileTimer] = useState(15);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -154,6 +155,7 @@ export default function CommandDeck() {
     setShowAdGate(!isSiphon);
 
     setCurrentFileTimer(15);
+    setProcessedFileNames(Array(20).fill(""));
     setBatchProgress(prev => {
       const next = [...prev];
       next[0] = 'PROCESSING';
@@ -164,8 +166,6 @@ export default function CommandDeck() {
 
     addTelemetry(isSiphon ? "[📡] UPLINK_ESTABLISHED..." : "[📡] ESTABLISHING_SECURE_UPLINK...");
     addTelemetry(isSiphon ? "[⚙️] PREPARING_ARCHIVAL_STREAM..." : "[⚙️] INITIALIZING_REFINERY_ENGINE...");
-
-    setBatchProgress(Array(20).fill('IDLE'));
 
     const baseName = file.name.replace(/\.[^/.]+$/, "");
     const strikeOptions = { ...options, base_filename: baseName };
@@ -214,6 +214,11 @@ export default function CommandDeck() {
                     const idx = data.index - 1;
                     if (idx >= 0 && idx < 20) {
                       next[idx] = 'COMPLETE';
+                      setProcessedFileNames(prevNames => {
+                        const nextNames = [...prevNames];
+                        nextNames[idx] = data.name;
+                        return nextNames;
+                      });
                       if (idx + 1 < 20) {
                         next[idx + 1] = 'PROCESSING';
                         setCurrentFileTimer(15); // Reset timer for next file
@@ -257,11 +262,29 @@ export default function CommandDeck() {
   };
 
   return (
-    <main className={`min-h-screen ${isSiphon ? 'bg-slate-950 text-slate-200' : 'bg-void text-matrix'} font-mono selection:bg-matrix selection:text-void relative overflow-hidden transition-colors duration-1000`}>
+    <main className={`min-h-screen ${isSiphon ? 'bg-slate-950 text-slate-200' : 'bg-void text-matrix'} font-mono selection:bg-matrix selection:text-void relative overflow-hidden transition-colors duration-1000 flex flex-col items-center`}>
       {/* SCANLINE EFFECT - ONLY FOR TOLL */}
       {!isSiphon && <div className="absolute inset-0 pointer-events-none z-50 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,118,0.06))] bg-[length:100%_2px,3px_100%] pointer-events-none opacity-10" />}
 
-      <div className="max-w-7xl mx-auto px-4 py-12 relative z-10">
+      {/* FLANKING GRIDS - ONLY IN REFINERY PHASE */}
+      {(phase === 'REFINERY' || phase === 'EXTRACTION') && !isSiphon && (
+        <>
+          {/* LEFT FLANK */}
+          <div className="fixed left-8 top-1/2 -translate-y-1/2 flex flex-col gap-10 z-0 scale-75 lg:scale-100">
+            {batchProgress.slice(0, 10).map((state, i) => (
+              <TacticalIcon key={i} state={state} index={i} name={processedFileNames[i]} timer={state === 'PROCESSING' ? currentFileTimer : null} isSiphon={isSiphon} />
+            ))}
+          </div>
+          {/* RIGHT FLANK */}
+          <div className="fixed right-8 top-1/2 -translate-y-1/2 flex flex-col gap-10 z-0 scale-75 lg:scale-100">
+            {batchProgress.slice(10, 20).map((state, i) => (
+              <TacticalIcon key={i + 10} state={state} index={i + 10} name={processedFileNames[i + 10]} timer={state === 'PROCESSING' ? currentFileTimer : null} isSiphon={isSiphon} />
+            ))}
+          </div>
+        </>
+      )}
+
+      <div className="max-w-7xl w-full mx-auto px-4 py-12 relative z-10">
         <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-matrix/20 pb-8">
           <div className="space-y-2">
             {!isSiphon && <div className="text-[10px] text-matrix/40 mb-2 tracking-[0.5em] animate-pulse">[ ESTABLISHED_CONNECTION: 0xFF129 ]</div>}
@@ -387,39 +410,13 @@ export default function CommandDeck() {
             {(phase === 'REFINERY' || phase === 'EXTRACTION') && (
               <motion.div key="telemetry" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-8 flex flex-col gap-8 relative min-h-[500px]">
                 {showAdGate && !isSiphon && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-void/60 backdrop-blur-sm p-8">
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-void/40 backdrop-blur-sm p-8">
                     <AdBanner />
 
                     <div className="mt-8 w-full max-w-2xl bg-voltage/5 border border-voltage/20 rounded-lg p-8 flex flex-col items-center gap-8 shadow-[0_0_50px_rgba(255,215,0,0.1)]">
                       <div className="text-center space-y-2">
                         <p className="text-[10px] text-voltage font-black uppercase tracking-[0.5em]">{progress === 100 ? 'MISSION_SUCCESS' : 'SYSTEM_COOLDOWN_ACTIVE'}</p>
                         <p className="text-[9px] text-matrix/40 italic uppercase tracking-widest">{progress === 100 ? 'GATE_UNLOCKED. CLOSE TO DOWNLOAD PAYLOAD.' : 'DO NOT CLOSE GATE. REFINERY STRIKE IN PROGRESS.'}</p>
-                      </div>
-
-                      {/* BATCH GRID */}
-                      <div className="grid grid-cols-5 gap-3">
-                        {batchProgress.map((state, i) => (
-                          <motion.div
-                            key={i}
-                            initial={{ opacity: 0.2 }}
-                            animate={{
-                              opacity: state === 'IDLE' ? 0.2 : 1,
-                              scale: state === 'PROCESSING' ? [1, 1.1, 1] : 1,
-                              boxShadow: state === 'PROCESSING' ? '0 0 15px rgba(0,255,65,0.3)' : 'none'
-                            }}
-                            transition={{ duration: 0.8, repeat: state === 'PROCESSING' ? Infinity : 0 }}
-                            className={`w-10 h-10 border flex items-center justify-center relative ${state === 'COMPLETE' ? (isSiphon ? 'bg-blue-600/20 border-blue-500/40' : 'bg-matrix/20 border-matrix/40') : 'bg-void border-matrix/10'}`}
-                          >
-                            <FileJson className={`w-5 h-5 ${state === 'COMPLETE' ? (isSiphon ? 'text-blue-500' : 'text-matrix') : state === 'PROCESSING' ? 'text-voltage' : 'text-matrix/10'}`} />
-                            {state === 'COMPLETE' && <CheckCircle2 className={`w-3 h-3 ${isSiphon ? 'text-blue-500' : 'text-matrix'} absolute -top-1 -right-1 bg-void rounded-full`} />}
-                            {state === 'PROCESSING' && (
-                              <div className="absolute inset-0 flex items-center justify-center">
-                                <span className={`text-[10px] font-black ${isSiphon ? 'text-blue-400' : 'text-voltage'}`}>{currentFileTimer}s</span>
-                              </div>
-                            )}
-                            <span className="absolute -bottom-4 text-[7px] opacity-20">{i + 1}</span>
-                          </motion.div>
-                        ))}
                       </div>
 
                       <div className="flex flex-col items-center gap-4 w-full">
@@ -535,5 +532,53 @@ export default function CommandDeck() {
         />
       )}
     </main>
+  );
+}
+
+// --- SUB-COMPONENTS ---
+function TacticalIcon({ state, index, name, timer, isSiphon }: { state: any, index: number, name: string, timer: number | null, isSiphon: boolean }) {
+  return (
+    <div className="flex items-center gap-6 group">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className={`w-20 h-20 md:w-24 md:h-24 chasing-border border border-matrix/10 flex items-center justify-center shrink-0 transition-shadow duration-500 ${state === 'PROCESSING' ? (isSiphon ? 'chasing-border-active chasing-border-blue shadow-[0_0_30px_rgba(37,99,235,0.2)]' : 'chasing-border-active chasing-border-voltage shadow-[0_0_30px_rgba(255,215,0,0.2)]') : state === 'COMPLETE' ? (isSiphon ? 'chasing-border-active chasing-border-blue shadow-[0_0_30px_rgba(37,99,235,0.1)]' : 'chasing-border-active shadow-[0_0_30px_rgba(0,255,65,0.1)]') : 'opacity-20'}`}
+      >
+        <div className="inner-icon flex items-center justify-center relative bg-void">
+          <FileJson className={`w-10 h-10 md:w-12 md:h-12 ${state === 'COMPLETE' ? (isSiphon ? 'text-blue-500' : 'text-matrix') : state === 'PROCESSING' ? (isSiphon ? 'text-blue-400' : 'text-voltage') : (isSiphon ? 'text-slate-800' : 'text-matrix/20')}`} />
+          {state === 'COMPLETE' && <CheckCircle2 className={`w-5 h-5 md:w-6 md:h-6 ${isSiphon ? 'text-blue-500 shadow-[0_0_15px_#2563eb]' : 'text-matrix shadow-[0_0_15px_#00FF41]'} absolute -top-2 -right-2 bg-void rounded-full`} />}
+          {state === 'PROCESSING' && timer !== null && (
+            <div className="absolute inset-x-0 bottom-0 h-1 bg-void overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${((15 - timer) / 15) * 100}%` }}
+                className={`h-full ${isSiphon ? 'bg-blue-400' : 'bg-voltage'}`}
+              />
+            </div>
+          )}
+          {state === 'PROCESSING' && timer !== null && (
+            <div className="absolute top-1 right-1 text-[8px] font-black tabular-nums bg-void/80 px-1">{timer}S</div>
+          )}
+        </div>
+      </motion.div>
+      <div className="flex flex-col justify-center overflow-hidden min-w-[80px] md:min-w-[140px]">
+        <div className="flex items-center gap-2">
+          <span className={`text-[8px] md:text-[9px] font-black uppercase tracking-[0.3em] ${state === 'PROCESSING' ? (isSiphon ? 'text-blue-400' : 'text-voltage animate-pulse') : 'opacity-40'}`}>UNIT_{index + 1}</span>
+          {state === 'PROCESSING' && <RefreshCcw className={`w-2 h-2 animate-spin ${isSiphon ? 'text-blue-400' : 'text-voltage'}`} />}
+        </div>
+        {state === 'COMPLETE' && name && (
+          <motion.div
+            initial={{ x: -10, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            className={`mt-1 bg-matrix/5 border-l-2 ${isSiphon ? 'border-blue-600' : 'border-matrix'} p-2 relative overflow-hidden hidden md:block`}
+          >
+            <div className={`absolute top-0 right-0 text-[6px] opacity-20 font-black px-1 uppercase ${isSiphon ? 'text-blue-400' : 'text-matrix'}`}>WELDED</div>
+            <span className={`text-[10px] font-bold ${isSiphon ? 'text-blue-300' : 'text-matrix'} truncate block tracking-widest`}>
+              {name.toUpperCase()}
+            </span>
+          </motion.div>
+        )}
+      </div>
+    </div>
   );
 }
