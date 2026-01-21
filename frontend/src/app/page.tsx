@@ -221,7 +221,9 @@ export default function CommandDeck() {
             if (line.startsWith('data: ')) {
               try {
                 const data = JSON.parse(line.slice(6));
-                if (data.status === 'welded') {
+                if (data.status === 'start') {
+                  addTelemetry(isSiphon ? `[📡] EXTRACTION_STARTED: ${data.total} ASSETS` : `[📡] REFINERY_STRIKE_CONFIRMED: ${data.total} TARGETS_LOCKED`, "success");
+                } else if (data.status === 'welded') {
                   addTelemetry(isSiphon ? `[🧪] PROCESSED: ${data.name.toUpperCase()}` : `[🧪] WELDED_CHAT: ${data.name.toUpperCase()}`, "success");
                   allMessages.push(...data.messages);
                   setRefinedMessages([...allMessages]);
@@ -246,12 +248,18 @@ export default function CommandDeck() {
                   });
 
                 } else if (data.status === 'complete') {
-                  addTelemetry(isSiphon ? "[✔️] ARCHIVAL_COMPLETE" : "[✔️] REFINERY_STRIKE_CONFIRMED", "success");
+                  addTelemetry(isSiphon ? "[✔️] ARCHIVAL_COMPLETE" : "[✔️] REFINERY_STRIKE_SUCCESSFUL", "success");
                   addTelemetry(isSiphon ? "[📦] ASSETS_PERSISTED_IN_VAULT" : "[📦] PAYLOAD_COMPRESSED_AND_DELIVERED", "success");
                   setProgress(100);
                   setBatchProgress(prev => prev.map(s => s === 'PROCESSING' ? 'COMPLETE' : s));
+                } else if (data.status === 'error') {
+                  addTelemetry(`[❌] REFINERY_MALFUNCTION: ${data.message.toUpperCase()}`, "warn");
+                  setIsProcessing(false);
                 }
-              } catch (e) { console.error("Parse error:", e); }
+              } catch (e) {
+                console.error("Parse error:", e);
+                addTelemetry("[⚠️] FRAGMENTED_PACKET_DROPPED", "warn");
+              }
             }
           }
         }

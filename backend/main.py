@@ -210,10 +210,13 @@ async def refine_stream(request: Request, file: UploadFile = File(...), options_
 
         try:
             raw_data = json.loads(content)
-        except json.JSONDecodeError:
+            print(f"DEBUG: JSON_LOAD_SUCCESS. Type: {type(raw_data)}")
+        except json.JSONDecodeError as je:
+            print(f"DEBUG: JSON_LOAD_FAILED: {je}")
             raise HTTPException(status_code=400, detail="INVALID_JSON_PAYLOAD")
 
         async def event_generator():
+            print("DEBUG: STREAM_STARTING...")
             batch = []
             if isinstance(raw_data, list) and len(raw_data) > 0 and "mapping" in raw_data[0]:
                 # ChatGPT Logic: 20-chat batching
@@ -230,9 +233,11 @@ async def refine_stream(request: Request, file: UploadFile = File(...), options_
                 batch = [raw_data]
                 brand_handler = handle_gemini
                 brand_name = "Gemini"
-            else:
                 yield f"data: {json.dumps({'status': 'error', 'message': 'UNKNOWN_SCHEMA'})}\n\n"
                 return
+
+            yield f"data: {json.dumps({'status': 'start', 'total': len(batch)})}\n\n"
+            print("DEBUG: START_PACKET_YIELDED")
 
             total_in_batch = len(batch)
             
@@ -247,7 +252,10 @@ async def refine_stream(request: Request, file: UploadFile = File(...), options_
                 # SIPHON MODE: No artificial delay
                 delay_per_chat = 0
 
+            print(f"DEBUG: BATCH_SIZE={len(batch)}, DELAY_PER_CHAT={delay_per_chat}")
+
             for idx, item in enumerate(batch):
+                print(f"DEBUG: PROCESSING_ITEM_{idx + 1}/{len(batch)}")
                 # THE HUSTLE: Ad-Tethering Check
                 if await request.is_disconnected():
                     print("STRIKE_SEVERED: Client disconnected. Purging volatile memory.")
@@ -266,8 +274,17 @@ async def refine_stream(request: Request, file: UploadFile = File(...), options_
             
             yield f"data: {json.dumps({'status': 'complete'})}\n\n"
 
-        return StreamingResponse(event_generator(), media_type="text/event-stream")
+        return StreamingResponse(
+            event_generator(), 
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "X-Accel-Buffering": "no"
+            }
+        )
     except Exception as e:
+        print(f"DEBUG: REFINE_STREAM_ERROR: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/refine")
