@@ -2,6 +2,7 @@ export interface Message {
   role: 'user' | 'model';
   text: string;
   isThought?: boolean;
+  ascii_header?: string;
 }
 
 export interface Chunk {

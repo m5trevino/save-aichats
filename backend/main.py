@@ -29,7 +29,7 @@ class RefineryOptions(BaseModel):
 
 # --- ASCII ART ASSETS ---
 
-ASCII_PATH = "/home/flintx/website/ascii"
+ASCII_PATH = os.path.join(os.path.dirname(__file__), "..", "ascii")
 
 def get_ascii(filename: str, font_block: str = "double_blocky") -> str:
     path = os.path.join(ASCII_PATH, filename)
@@ -38,18 +38,37 @@ def get_ascii(filename: str, font_block: str = "double_blocky") -> str:
     try:
         with open(path, 'r', encoding='utf-8') as f:
             content = f.read()
-            # Extract specific font block if exists, otherwise return whole file
+            # Extract specific font block
             pattern = rf"--- FONT: {font_block} ---\n(.*?)\n\n"
             match = re.search(pattern, content, re.DOTALL)
             if match:
-                return match.group(1).strip()
-            return content.strip()
+                return match.group(1).strip('\n')
+            return content.strip('\n')
     except:
         return ""
 
-USER_HEADER = get_ascii("user.txt", "pagga") # pagga looks cleaner for User
+def get_dividers() -> List[tuple]:
+    path = os.path.join(ASCII_PATH, "dividers.txt")
+    if not os.path.exists(path):
+        return [("╔═══━━━─── • ───━━━═══╗", "╚═══━━━─── • ───━━━═══╝")]
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+            # Simple eval of the tuples in the file
+            divs = []
+            for line in lines:
+                if "(" in line and ")" in line:
+                    # Clean the line and wrap in brackets if needed for eval
+                    clean = line.strip().strip(',')
+                    divs.append(eval(clean))
+            return divs if divs else [("╔═══━━━─── • ───━━━═══╗", "╚═══━━━─── • ───━━━═══╝")]
+    except:
+        return [("╔═══━━━─── • ───━━━═══╗", "╚═══━━━─── • ───━━━═══╝")]
+
+USER_HEADER = get_ascii("user.txt", "pagga")
 GEMINI_HEADER = get_ascii("gemini.txt", "double_blocky")
 CLAUDE_HEADER = get_ascii("claude.txt", "double_blocky")
+DIVIDERS = get_dividers()
 
 # --- UTILS ---
 
@@ -60,13 +79,17 @@ def clean_filename(name: str) -> str:
     return cleaned.strip('.')
 
 def format_message(role: str, text: str, brand: str, index: int) -> str:
+    # Use different dividers based on index to keep it fresh
+    div_pair = DIVIDERS[index % len(DIVIDERS)]
+    top_div, bot_div = div_pair
+    
     if role == "user":
-        header = f"╔═══━━━─── • ───━━━═══╗\n{USER_HEADER}\n[USER ENTRY #{str(index).zfill(3)}]\n╚═══━━━─── • ───━━━═══╝"
+        header = f"{top_div}\n{USER_HEADER}\n[USER ENTRY #{str(index).zfill(3)}]\n{bot_div}"
         return f"\n{header}\n\n{text}\n\n"
     else:
         art = GEMINI_HEADER if brand.lower() == "gemini" else CLAUDE_HEADER
         label = brand.upper()
-        header = f"┎━─━─━─━─━─━─━─━─━┒\n{art}\n[{label} RESPONSE #{str(index).zfill(3)}]\n┖━─━─━─━─━─━─━─━─━┚"
+        header = f"{top_div}\n{art}\n[{label} RESPONSE #{str(index).zfill(3)}]\n{bot_div}"
         return f"\n{header}\n\n{text}\n\n"
 
 class LogRefiner:
@@ -101,8 +124,14 @@ class LogRefiner:
             if not self.options.include_thoughts and msg.get("is_thought"): continue
             if not self.options.include_user and role == "user": continue
             if not self.options.include_bot and role == "model": continue
+            
             current_idx = user_idx if role == "user" else bot_idx
-            output.append(format_message(role, msg["text"], self.brand, current_idx))
+            formatted = format_message(role, msg["text"], self.brand, current_idx)
+            output.append(formatted)
+            
+            # Update msg for stream if needed (add the ascii art version)
+            msg["ascii_header"] = formatted.split("\n\n")[0].strip()
+            
             if role == "user": user_idx += 1
             else: bot_idx += 1
         return "".join(output)
