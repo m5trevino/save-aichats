@@ -369,6 +369,7 @@ export default function CommandDeck() {
                       <ConversationDisplay
                         messages={refinedMessages}
                         fileName={file?.name || "payload.json"}
+                        selectedPrompt={null}
                         globalOptions={{ includeCode: true, includeThoughts: options.include_thoughts }}
                       />
                     </div>
