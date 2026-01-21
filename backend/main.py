@@ -84,6 +84,15 @@ class LogRefiner:
                 return
         self.extracted.append({"role": role, "text": text.strip(), "is_thought": is_thought})
 
+    def get_refined_messages(self) -> List[Dict[str, Any]]:
+        output = []
+        for msg in self.extracted:
+            if not self.options.include_thoughts and msg.get("is_thought"): continue
+            if not self.options.include_user and msg["role"] == "user": continue
+            if not self.options.include_bot and msg["role"] == "model": continue
+            output.append(msg)
+        return output
+
     def get_refined_content(self) -> str:
         output = []
         user_idx, bot_idx = 1, 1
@@ -100,7 +109,7 @@ class LogRefiner:
 
 # --- BRAND HANDLERS ---
 
-def handle_chatgpt(conv: Dict[str, Any], options: RefineryOptions) -> str:
+def handle_chatgpt(conv: Dict[str, Any], options: RefineryOptions, raw: bool = False) -> Any:
     refiner = LogRefiner("ChatGPT", options)
     mapping = conv.get("mapping", {})
     root_id = next((node_id for node_id, node in mapping.items() if node.get("parent") is None), None)
@@ -117,18 +126,18 @@ def handle_chatgpt(conv: Dict[str, Any], options: RefineryOptions) -> str:
                 refiner.push_or_merge("user" if role == "user" else "model", text)
         children = node.get("children", [])
         current_id = children[-1] if children else None
-    return refiner.get_refined_content()
+    return refiner.get_refined_messages() if raw else refiner.get_refined_content()
 
-def handle_claude(chat: Dict[str, Any], options: RefineryOptions) -> str:
+def handle_claude(chat: Dict[str, Any], options: RefineryOptions, raw: bool = False) -> Any:
     refiner = LogRefiner("Claude", options)
     for m in chat.get("chat_messages", []):
         sender = m.get("sender")
         content_blocks = m.get("content", [])
         text = "".join([b.get("text", "") for b in content_blocks if isinstance(b, dict) and b.get("type") == "text"])
         refiner.push_or_merge("user" if sender == "human" else "model", text)
-    return refiner.get_refined_content()
+    return refiner.get_refined_messages() if raw else refiner.get_refined_content()
 
-def handle_gemini(data: Dict[str, Any], options: RefineryOptions) -> str:
+def handle_gemini(data: Dict[str, Any], options: RefineryOptions, raw: bool = False) -> Any:
     refiner = LogRefiner("Gemini", options)
     chunks = data.get("chunkedPrompt", {}).get("chunks", [])
     for chunk in chunks:
@@ -139,9 +148,45 @@ def handle_gemini(data: Dict[str, Any], options: RefineryOptions) -> str:
                 text += "".join([p.get("text", "") for p in chunk["parts"] if isinstance(p, dict) and "text" in p])
             is_thought = chunk.get("isThought", False) or any(p.get("thought") for p in chunk.get("parts", []) if isinstance(p, dict))
             refiner.push_or_merge(role, text, is_thought)
-    return refiner.get_refined_content()
+    return refiner.get_refined_messages() if raw else refiner.get_refined_content()
 
 # --- ENDPOINTS ---
+
+@app.post("/refine-stream")
+async def refine_stream(file: UploadFile = File(...), options_json: str = Form(...)):
+    try:
+        options = RefineryOptions(**json.loads(options_json))
+        content = await file.read()
+        
+        try:
+            raw_data = json.loads(content)
+        except json.JSONDecodeError:
+            raise HTTPException(status_code=400, detail="INVALID_JSON_PAYLOAD")
+
+        async def event_generator():
+            refined_files = []
+            if isinstance(raw_data, list) and len(raw_data) > 0 and "mapping" in raw_data[0]:
+                for conv in raw_data:
+                    # For streaming, we want raw messages for the humanized view
+                    messages = handle_chatgpt(conv, options, raw=True)
+                    refined_files.append({"name": conv.get("title") or "ChatGPT_Chat", "messages": messages})
+            elif isinstance(raw_data, list) and len(raw_data) > 0 and "chat_messages" in raw_data[0]:
+                for chat in raw_data:
+                    messages = handle_claude(chat, options, raw=True)
+                    refined_files.append({"name": chat.get("name") or "Claude_Chat", "messages": messages})
+            elif isinstance(raw_data, dict) and "chunkedPrompt" in raw_data:
+                messages = handle_gemini(raw_data, options, raw=True)
+                refined_files.append({"name": file.filename or "Gemini_Export", "messages": messages})
+            
+            total = len(refined_files)
+            for idx, rf in enumerate(refined_files):
+                yield f"data: {json.dumps({'status': 'welded', 'index': idx + 1, 'total': total, 'name': rf['name'], 'messages': rf['messages']})}\n\n"
+            
+            yield f"data: {json.dumps({'status': 'complete'})}\n\n"
+
+        return StreamingResponse(event_generator(), media_type="text/event-stream")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/refine")
 async def refine_payload(file: UploadFile = File(...), options_json: str = Form(...)):

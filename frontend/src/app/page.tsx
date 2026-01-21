@@ -2,14 +2,16 @@
 
 import React, { useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Upload, Settings, Zap, Download, RefreshCcw, 
-  ShieldAlert, FileJson, CheckCircle2, Terminal, 
+import {
+  Upload, Settings, Zap, Download, RefreshCcw,
+  ShieldAlert, FileJson, CheckCircle2, Terminal,
   Layers, Lock, Unlock, Database, ArrowRight
 } from 'lucide-react';
 import axios from 'axios';
 import { SecurityBanner } from '@/components/SecurityBanner';
 import { TruncatedText } from '@/components/TruncatedText';
+import { ConversationDisplay } from '@/components/ConversationDisplay';
+import { Message, Prompt } from '@/types';
 
 // --- TYPES ---
 
@@ -49,7 +51,8 @@ export default function CommandDeck() {
   });
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [telemetry, setTelemetry] = useState<{msg: string, type: 'info' | 'warn' | 'success'}[]>([]);
+  const [telemetry, setTelemetry] = useState<{ msg: string, type: 'info' | 'warn' | 'success' }[]>([]);
+  const [refinedMessages, setRefinedMessages] = useState<Message[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // --- HANDLERS ---
@@ -96,60 +99,80 @@ export default function CommandDeck() {
     setProgress(0);
     addTelemetry("[📡] ESTABLISHING_SECURE_UPLINK...");
     addTelemetry("[⚙️] INITIALIZING_REFINERY_ENGINE...");
-    
+
     const baseName = file.name.replace(/\.[^/.]+$/, "");
     const strikeOptions = {
       ...options,
       base_filename: baseName
     };
-    
+
     const formData = new FormData();
     formData.append('file', file);
     formData.append('options_json', JSON.stringify(strikeOptions));
 
     try {
-      const interval = setInterval(() => {
-        setProgress((prev) => {
-          if (prev >= 95) {
-            clearInterval(interval);
-            return prev;
-          }
-          return prev + 2;
-        });
-        
-        const logs = [
-          `[⚙️] PARSING_DATA_CHUNKS...`,
-          `[🛠️] APPLYING_PERSONA: ${options.persona_id?.toUpperCase()}`,
-          `[🧪] DATA_WELDING: ACTIVE`,
-          `[🔍] FORENSIC_SCAN: OK`
-        ];
-        if (Math.random() > 0.7) addTelemetry(logs[Math.floor(Math.random() * logs.length)]);
-      }, 150);
+      const API_BASE = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:8000' : 'https://save-aichats-backend.onrender.com');
 
-      const response = await axios.post('http://localhost:8000/refine', formData, {
-        responseType: 'blob',
+      const response = await fetch(`${API_BASE}/refine-stream`, {
+        method: 'POST',
+        body: formData,
       });
 
-      clearInterval(interval);
-      setProgress(100);
-      addTelemetry("[✔️] REFINERY_STRIKE_CONFIRMED", "success");
-      addTelemetry("[📦] PAYLOAD_COMPRESSED_AND_DELIVERED", "success");
-      
-      setTimeout(() => {
-        const url = window.URL.createObjectURL(new Blob([response.data]));
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', `WASHHOUSE_${baseName}.zip`);
-        document.body.appendChild(link);
-        link.click();
-        link.parentNode?.removeChild(link);
-        setPhase('EXTRACTION');
-        setIsProcessing(false);
-      }, 1000);
+      if (!response.ok) throw new Error(`STRIKE_FAILED: ${response.statusText}`);
 
-    } catch (error) {
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      const allMessages: Message[] = [];
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n\n');
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6));
+                if (data.status === 'welded') {
+                  addTelemetry(`[🧪] WELDED_CHAT: ${data.name.toUpperCase()}`, "success");
+                  allMessages.push(...data.messages);
+                  setRefinedMessages([...allMessages]);
+                  setProgress(Math.round((data.index / data.total) * 100));
+                } else if (data.status === 'complete') {
+                  addTelemetry("[✔️] REFINERY_STRIKE_CONFIRMED", "success");
+                  addTelemetry("[📦] PAYLOAD_COMPRESSED_AND_DELIVERED", "success");
+                  setProgress(100);
+                }
+              } catch (e) {
+                console.error("Parse error:", e);
+              }
+            }
+          }
+        }
+      }
+
+      setRefinedMessages(allMessages);
+      setPhase('EXTRACTION');
       setIsProcessing(false);
-      addTelemetry("[❌] FATAL_ERROR: STRIKE_FAILED", "warn");
+
+      // Trigger Zip download for full haul
+      const zipResponse = await axios.post(`${API_BASE}/refine`, formData, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([zipResponse.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `WASHHOUSE_${baseName}.zip`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+    } catch (error: any) {
+      setIsProcessing(false);
+      addTelemetry(`[❌] FATAL_ERROR: ${error.message || 'STRIKE_FAILED'}`, "warn");
     }
   };
 
@@ -164,11 +187,11 @@ export default function CommandDeck() {
   return (
     <div className="min-h-screen bg-void flex flex-col selection:bg-matrix selection:text-void font-mono">
       <SecurityBanner />
-      
+
       <main className="flex-grow max-w-6xl mx-auto w-full px-4 py-8 flex flex-col justify-center items-center">
-        
+
         {/* Header */}
-        <motion.div 
+        <motion.div
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           className="mb-8 text-center"
@@ -184,9 +207,9 @@ export default function CommandDeck() {
         </motion.div>
 
         <div className="w-full max-w-5xl bg-void/40 border border-matrix/10 backdrop-blur-xl rounded-sm shadow-[0_0_100px_rgba(0,255,65,0.03)] overflow-hidden relative">
-          
+
           <AnimatePresence mode="wait">
-            
+
             {/* PHASE: BREACH */}
             {phase === 'BREACH' && (
               <motion.div
@@ -196,7 +219,7 @@ export default function CommandDeck() {
                 exit={{ opacity: 0 }}
                 className="p-12"
               >
-                <div 
+                <div
                   onDragOver={handleDragOver}
                   onDrop={onDrop}
                   onClick={() => fileInputRef.current?.click()}
@@ -238,10 +261,10 @@ export default function CommandDeck() {
                         { id: 'include_bot', label: 'BOT_RESPONSE' },
                         { id: 'include_thoughts', label: 'THOUGHTS' }
                       ].map((t) => (
-                        <button 
+                        <button
                           key={t.id}
-                          onClick={() => setRefineryOptions({...options, [t.id]: !(options as any)[t.id]})}
-                          className={`w-full flex items-center justify-between p-3 border transition-all ${ (options as any)[t.id] ? 'border-matrix/40 bg-matrix/5 text-matrix' : 'border-matrix/5 bg-void text-matrix/20'}`}
+                          onClick={() => setRefineryOptions({ ...options, [t.id]: !(options as any)[t.id] })}
+                          className={`w-full flex items-center justify-between p-3 border transition-all ${(options as any)[t.id] ? 'border-matrix/40 bg-matrix/5 text-matrix' : 'border-matrix/5 bg-void text-matrix/20'}`}
                         >
                           <span className="text-[10px] font-bold tracking-widest">{t.label}</span>
                           {(options as any)[t.id] ? <Unlock className="w-3 h-3" /> : <Lock className="w-3 h-3 opacity-20" />}
@@ -255,9 +278,9 @@ export default function CommandDeck() {
                       <h3 className="text-[9px] font-bold text-voltage uppercase tracking-[0.4em]">PERSONA_VAULT + EXECUTION</h3>
                       <div className="flex gap-2">
                         {['md', 'txt'].map((fmt) => (
-                          <button 
+                          <button
                             key={fmt}
-                            onClick={() => setRefineryOptions({...options, output_format: fmt as any})}
+                            onClick={() => setRefineryOptions({ ...options, output_format: fmt as any })}
                             className={`px-4 py-1.5 border text-[9px] font-bold transition-all ${options.output_format === fmt ? 'bg-matrix text-void border-matrix' : 'border-matrix/10 text-matrix/30'}`}
                           >
                             .{fmt.toUpperCase()}
@@ -265,12 +288,12 @@ export default function CommandDeck() {
                         ))}
                       </div>
                     </div>
-                    
+
                     <div className="flex flex-col gap-2">
                       {DEFAULT_PERSONAS.map((p) => (
                         <button
                           key={p.id}
-                          onClick={() => setRefineryOptions({...options, persona_id: p.id})}
+                          onClick={() => setRefineryOptions({ ...options, persona_id: p.id })}
                           className={`text-left p-3 border transition-all ${options.persona_id === p.id ? 'border-matrix/60 bg-matrix/[0.03] text-matrix' : 'border-matrix/5 bg-void text-matrix/20 hover:border-matrix/20'}`}
                         >
                           <div className="flex justify-between text-[10px] font-bold mb-1">
@@ -284,12 +307,12 @@ export default function CommandDeck() {
 
                     {/* NEW: CHASING LIGHTS BUTTON NEXT TO FORMATS (UPPER RIGHT AREA) */}
                     <div className="relative p-[2px] mt-4 overflow-hidden rounded-sm group">
-                      <motion.div 
+                      <motion.div
                         className="absolute inset-[-1000%] bg-[conic-gradient(from_0deg,transparent_0%,transparent_40%,#00FF41_50%,transparent_60%,transparent_100%)]"
                         animate={{ rotate: 360 }}
                         transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
                       />
-                      <button 
+                      <button
                         onClick={initiateStrike}
                         className="relative w-full py-4 bg-void text-matrix font-black text-sm tracking-[0.5em] hover:bg-matrix/10 transition-all uppercase flex items-center justify-center gap-4"
                       >
@@ -316,7 +339,7 @@ export default function CommandDeck() {
               >
                 {/* Extraction Success Header (Shows only when extraction done) */}
                 {phase === 'EXTRACTION' && (
-                  <motion.div 
+                  <motion.div
                     initial={{ scale: 0.9, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     className="bg-matrix/10 border border-matrix/20 p-8 text-center space-y-4"
@@ -340,18 +363,27 @@ export default function CommandDeck() {
                     </div>
                     <span>STABILITY: 100%</span>
                   </div>
-                  
-                  <div className="bg-void/80 border border-matrix/5 p-6 font-mono text-[10px] h-[300px] overflow-y-auto space-y-1 shadow-inner custom-scrollbar relative">
-                    {/* Progress floating in the console background */}
-                    <div className="absolute top-4 right-6 text-4xl font-black text-matrix/5 select-none">{progress}%</div>
-                    {telemetry.map((log, i) => (
-                      <div key={i} className="flex gap-4">
-                        <span className="opacity-20">[{new Date().toLocaleTimeString()}]</span>
-                        <p className={log.type === 'warn' ? 'text-hazard' : log.type === 'success' ? 'text-matrix glow-text' : 'text-matrix/60'}>{log.msg}</p>
-                      </div>
-                    ))}
-                    {phase === 'REFINERY' && <motion.div animate={{ opacity: [0, 1, 0] }} transition={{ repeat: Infinity, duration: 0.8 }} className="w-2 h-4 bg-matrix/20" />}
-                  </div>
+
+                  {phase === 'EXTRACTION' && refinedMessages.length > 0 ? (
+                    <div className="bg-void/80 border border-matrix/5 p-6 h-[400px] overflow-y-auto custom-scrollbar">
+                      <ConversationDisplay
+                        messages={refinedMessages}
+                        fileName={file?.name || "payload.json"}
+                        globalOptions={{ includeCode: true, includeThoughts: options.include_thoughts }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="bg-void/80 border border-matrix/5 p-6 font-mono text-[10px] h-[300px] overflow-y-auto space-y-1 shadow-inner custom-scrollbar relative">
+                      <div className="absolute top-4 right-6 text-4xl font-black text-matrix/5 select-none">{progress}%</div>
+                      {telemetry.map((log, i) => (
+                        <div key={i} className="flex gap-4">
+                          <span className="opacity-20">[{new Date().toLocaleTimeString()}]</span>
+                          <p className={log.type === 'warn' ? 'text-hazard' : log.type === 'success' ? 'text-matrix glow-text' : 'text-matrix/60'}>{log.msg}</p>
+                        </div>
+                      ))}
+                      {phase === 'REFINERY' && <motion.div animate={{ opacity: [0, 1, 0] }} transition={{ repeat: Infinity, duration: 0.8 }} className="w-2 h-4 bg-matrix/20" />}
+                    </div>
+                  )}
                 </div>
               </motion.div>
             )}
