@@ -58,6 +58,8 @@ export default function CommandDeck() {
   const [showAdGate, setShowAdGate] = useState(false);
   const [personality, setPersonality] = useState<'SIPHON' | 'TOLL'>('TOLL');
 
+  const [batchProgress, setBatchProgress] = useState<('IDLE' | 'PROCESSING' | 'COMPLETE')[]>(Array(20).fill('IDLE'));
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -143,6 +145,8 @@ export default function CommandDeck() {
     addTelemetry(isSiphon ? "[📡] UPLINK_ESTABLISHED..." : "[📡] ESTABLISHING_SECURE_UPLINK...");
     addTelemetry(isSiphon ? "[⚙️] PREPARING_ARCHIVAL_STREAM..." : "[⚙️] INITIALIZING_REFINERY_ENGINE...");
 
+    setBatchProgress(Array(20).fill('IDLE'));
+
     const baseName = file.name.replace(/\.[^/.]+$/, "");
     const strikeOptions = { ...options, base_filename: baseName };
 
@@ -183,11 +187,24 @@ export default function CommandDeck() {
                   allMessages.push(...data.messages);
                   setRefinedMessages([...allMessages]);
                   setProgress(Math.round((data.index / data.total) * 100));
+
+                  // Update batch progress grid
+                  setBatchProgress(prev => {
+                    const next = [...prev];
+                    const idx = data.index - 1;
+                    if (idx >= 0 && idx < 20) {
+                      next[idx] = 'COMPLETE';
+                      if (idx + 1 < 20) next[idx + 1] = 'PROCESSING';
+                    }
+                    return next;
+                  });
+
                 } else if (data.status === 'complete') {
                   addTelemetry(isSiphon ? "[✔️] ARCHIVAL_COMPLETE" : "[✔️] REFINERY_STRIKE_CONFIRMED", "success");
                   addTelemetry(isSiphon ? "[📦] ASSETS_PERSISTED_IN_VAULT" : "[📦] PAYLOAD_COMPRESSED_AND_DELIVERED", "success");
                   setProgress(100);
-                  setShowAdGate(false);
+                  setBatchProgress(prev => prev.map(s => s === 'PROCESSING' ? 'COMPLETE' : s));
+                  // We don't hide the gate yet, wait for user click
                 }
               } catch (e) { console.error("Parse error:", e); }
             }
@@ -198,17 +215,6 @@ export default function CommandDeck() {
       setRefinedMessages(allMessages);
       setPhase('EXTRACTION');
       setIsProcessing(false);
-
-      // Trigger Zip download
-      const zipResponse = await axios.post(`${API_BASE}/refine`, formData, { responseType: 'blob' });
-      const url = window.URL.createObjectURL(new Blob([zipResponse.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      const downloadName = isSiphon ? `refined_chat_export.zip` : `ULTRADATA_STRIKE_EXTRACT.zip`;
-      link.setAttribute('download', downloadName);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
 
     } catch (error: any) {
       if (error.name !== 'AbortError') {
@@ -358,12 +364,86 @@ export default function CommandDeck() {
             {(phase === 'REFINERY' || phase === 'EXTRACTION') && (
               <motion.div key="telemetry" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-8 flex flex-col gap-8 relative min-h-[500px]">
                 {showAdGate && !isSiphon && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-void/90 backdrop-blur-md p-8">
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-void/95 backdrop-blur-xl p-8">
                     <AdBanner />
-                    <div className="mt-8 flex flex-col items-center gap-4 p-8 bg-voltage/5 border border-voltage/20 rounded-lg max-w-xl text-center">
-                      <p className="text-[10px] text-voltage font-black uppercase tracking-[0.5em]">SYSTEM_COOLDOWN_ACTIVE</p>
-                      <a href="https://www.effectivegatecpm.com/hxdn4yhu7?key=53269311ad498a3a6bdf8959b9254348" target="_blank" rel="noopener noreferrer" className="px-12 py-4 bg-voltage text-void font-black text-sm tracking-[0.2em] uppercase hover:scale-105 transition-transform flex items-center gap-3 shadow-[0_0_50px_rgba(255,215,0,0.2)]">SUPPORT_MISSION</a>
-                      <p className="text-[10px] text-matrix/40 italic mt-2">authentication required via sponsor gateway to reveal payload.</p>
+
+                    <div className="mt-8 w-full max-w-2xl bg-voltage/5 border border-voltage/20 rounded-lg p-8 flex flex-col items-center gap-8 shadow-[0_0_50px_rgba(255,215,0,0.1)]">
+                      <div className="text-center space-y-2">
+                        <p className="text-[10px] text-voltage font-black uppercase tracking-[0.5em]">{progress === 100 ? 'MISSION_SUCCESS' : 'SYSTEM_COOLDOWN_ACTIVE'}</p>
+                        <p className="text-[9px] text-matrix/40 italic uppercase tracking-widest">{progress === 100 ? 'GATE_UNLOCKED. CLOSE TO DOWNLOAD PAYLOAD.' : 'DO NOT CLOSE GATE. REFINERY STRIKE IN PROGRESS.'}</p>
+                      </div>
+
+                      {/* BATCH GRID */}
+                      <div className="grid grid-cols-5 gap-3">
+                        {batchProgress.map((state, i) => (
+                          <motion.div
+                            key={i}
+                            initial={{ opacity: 0.2 }}
+                            animate={{
+                              opacity: state === 'IDLE' ? 0.2 : 1,
+                              scale: state === 'PROCESSING' ? [1, 1.1, 1] : 1,
+                              boxShadow: state === 'PROCESSING' ? '0 0 15px rgba(0,255,65,0.3)' : 'none'
+                            }}
+                            transition={{ duration: 0.8, repeat: state === 'PROCESSING' ? Infinity : 0 }}
+                            className={`w-10 h-10 border flex items-center justify-center relative ${state === 'COMPLETE' ? 'bg-matrix/20 border-matrix/40' : 'bg-void border-matrix/10'}`}
+                          >
+                            <FileJson className={`w-5 h-5 ${state === 'COMPLETE' ? 'text-matrix' : state === 'PROCESSING' ? 'text-voltage' : 'text-matrix/10'}`} />
+                            {state === 'COMPLETE' && <CheckCircle2 className="w-3 h-3 text-matrix absolute -top-1 -right-1 bg-void rounded-full" />}
+                            <span className="absolute -bottom-4 text-[7px] opacity-20">{i + 1}</span>
+                          </motion.div>
+                        ))}
+                      </div>
+
+                      <div className="flex flex-col items-center gap-4 w-full">
+                        <a
+                          href="https://www.effectivegatecpm.com/m0kxvk642t?key=51386459553fb047084ac8d5f5c38786"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-12 py-4 bg-voltage text-void font-black text-sm tracking-[0.2em] uppercase hover:scale-105 transition-transform flex items-center gap-3 shadow-[0_0_50px_rgba(255,215,0,0.2)]"
+                        >
+                          <Zap className="w-4 h-4 fill-current" /> SUPPORT_MISSION
+                        </a>
+
+                        <AnimatePresence>
+                          {progress === 100 && (
+                            <motion.button
+                              initial={{ y: 20, opacity: 0 }}
+                              animate={{ y: 0, opacity: 1 }}
+                              onClick={async () => {
+                                setShowAdGate(false);
+                                // Trigger actual download now
+                                addTelemetry("[🚀] INITIATING_FINAL_DOWNLOAD...");
+                                const baseName = file?.name.replace(/\.[^/.]+$/, "") || "payload";
+                                const formData = new FormData();
+                                formData.append('file', file!);
+                                formData.append('options_json', JSON.stringify({ ...options, base_filename: baseName }));
+                                formData.append('start_index', startIndex.toString());
+                                try {
+                                  const zipResponse = await axios.post(`${API_BASE}/refine`, formData, { responseType: 'blob' });
+                                  const url = window.URL.createObjectURL(new Blob([zipResponse.data]));
+                                  const link = document.createElement('a');
+                                  link.href = url;
+                                  link.setAttribute('download', isSiphon ? `refined_chat_export.zip` : `ULTRADATA_STRIKE_EXTRACT.zip`);
+                                  document.body.appendChild(link);
+                                  link.click();
+                                  document.body.removeChild(link);
+                                  addTelemetry("[🏁] MISSION_COMPLETE", "success");
+                                } catch (e) {
+                                  addTelemetry("[❌] DOWNLOAD_FAILED", "warn");
+                                }
+                              }}
+                              className="px-8 py-3 bg-matrix text-void font-black text-xs tracking-[0.3em] uppercase hover:bg-matrix/90 transition-all border-b-4 border-matrix-dark shadow-xl"
+                            >
+                              RECOVER_ARTIFACT
+                            </motion.button>
+                          )}
+                        </AnimatePresence>
+                      </div>
+
+                      <p className="text-[10px] text-matrix/40 italic mt-2 text-center leading-relaxed">
+                        authentication required via sponsor gateway to reveal payload.<br />
+                        * DO NOT CLOSE OR NAVIGATE AWAY. THE STRIKE WILL BE SEVERED.
+                      </p>
                     </div>
                   </motion.div>
                 )}
