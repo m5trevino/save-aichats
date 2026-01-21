@@ -60,6 +60,7 @@ export default function CommandDeck() {
   const [personality, setPersonality] = useState<'SIPHON' | 'TOLL'>('TOLL');
 
   const [batchProgress, setBatchProgress] = useState<('IDLE' | 'PROCESSING' | 'COMPLETE')[]>(Array(20).fill('IDLE'));
+  const [currentFileTimer, setCurrentFileTimer] = useState(15);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -97,6 +98,17 @@ export default function CommandDeck() {
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [isProcessing, isSiphon]);
+
+  // --- TIMER: PER-FILE COUNTDOWN ---
+  React.useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isProcessing && currentFileTimer > 0) {
+      interval = setInterval(() => {
+        setCurrentFileTimer(prev => Math.max(0, prev - 1));
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isProcessing, currentFileTimer]);
 
   // --- HANDLERS ---
   const addTelemetry = (msg: string, type: 'info' | 'warn' | 'success' = 'info') => {
@@ -140,6 +152,13 @@ export default function CommandDeck() {
     setProgress(0);
     setTetherError(null);
     setShowAdGate(!isSiphon);
+
+    setCurrentFileTimer(15);
+    setBatchProgress(prev => {
+      const next = [...prev];
+      next[0] = 'PROCESSING';
+      return next;
+    });
 
     abortControllerRef.current = new AbortController();
 
@@ -195,7 +214,10 @@ export default function CommandDeck() {
                     const idx = data.index - 1;
                     if (idx >= 0 && idx < 20) {
                       next[idx] = 'COMPLETE';
-                      if (idx + 1 < 20) next[idx + 1] = 'PROCESSING';
+                      if (idx + 1 < 20) {
+                        next[idx + 1] = 'PROCESSING';
+                        setCurrentFileTimer(15); // Reset timer for next file
+                      }
                     }
                     return next;
                   });
@@ -365,7 +387,7 @@ export default function CommandDeck() {
             {(phase === 'REFINERY' || phase === 'EXTRACTION') && (
               <motion.div key="telemetry" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-8 flex flex-col gap-8 relative min-h-[500px]">
                 {showAdGate && !isSiphon && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-void/95 backdrop-blur-xl p-8">
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-void/60 backdrop-blur-sm p-8">
                     <AdBanner />
 
                     <div className="mt-8 w-full max-w-2xl bg-voltage/5 border border-voltage/20 rounded-lg p-8 flex flex-col items-center gap-8 shadow-[0_0_50px_rgba(255,215,0,0.1)]">
@@ -390,6 +412,11 @@ export default function CommandDeck() {
                           >
                             <FileJson className={`w-5 h-5 ${state === 'COMPLETE' ? (isSiphon ? 'text-blue-500' : 'text-matrix') : state === 'PROCESSING' ? 'text-voltage' : 'text-matrix/10'}`} />
                             {state === 'COMPLETE' && <CheckCircle2 className={`w-3 h-3 ${isSiphon ? 'text-blue-500' : 'text-matrix'} absolute -top-1 -right-1 bg-void rounded-full`} />}
+                            {state === 'PROCESSING' && (
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <span className={`text-[10px] font-black ${isSiphon ? 'text-blue-400' : 'text-voltage'}`}>{currentFileTimer}s</span>
+                              </div>
+                            )}
                             <span className="absolute -bottom-4 text-[7px] opacity-20">{i + 1}</span>
                           </motion.div>
                         ))}
