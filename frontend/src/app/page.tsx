@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Upload, Zap, Download, RefreshCcw,
@@ -40,6 +40,7 @@ const DEFAULT_PERSONAS: Persona[] = [
 ];
 
 export default function CommandDeck() {
+  const [mounted, setMounted] = useState(false);
   const [phase, setPhase] = useState<Phase>('BREACH');
   const [file, setFile] = useState<File | null>(null);
   const [fileContent, setFileContent] = useState<string>("");
@@ -58,6 +59,7 @@ export default function CommandDeck() {
   const [tetherError, setTetherError] = useState<string | null>(null);
   const [showAdGate, setShowAdGate] = useState(false);
   const [personality, setPersonality] = useState<'SIPHON' | 'TOLL'>('TOLL');
+  const [mountedTime, setMountedTime] = useState("");
 
   const [batchProgress, setBatchProgress] = useState<('IDLE' | 'PROCESSING' | 'COMPLETE')[]>(Array(20).fill('IDLE'));
   const [processedFileNames, setProcessedFileNames] = useState<string[]>(Array(20).fill(""));
@@ -67,25 +69,34 @@ export default function CommandDeck() {
   const abortControllerRef = useRef<AbortController | null>(null);
   const logContainerRef = useRef<HTMLDivElement>(null);
 
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:8000' : 'https://save-aichats-backend.onrender.com');
+  // Use a state for API_BASE to avoid hydration mismatch
+  const [apiBase, setApiBase] = useState("");
+
+  useEffect(() => {
+    setMounted(true);
+    setMountedTime(new Date().toISOString());
+    const base = process.env.NEXT_PUBLIC_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:8000' : 'https://save-aichats-backend.onrender.com');
+    setApiBase(base);
+  }, []);
 
   const isSiphon = personality === 'SIPHON';
 
   // --- CONFIG: IDENTITY FETCH ---
-  React.useEffect(() => {
+  useEffect(() => {
+    if (!apiBase) return;
     const fetchConfig = async () => {
       try {
-        const resp = await axios.get(`${API_BASE}/config`);
+        const resp = await axios.get(`${apiBase}/config`);
         setPersonality(resp.data.personality);
       } catch (e) {
         console.error("IDENTITY_RESTORE_FAILED: Defaulting to TOLL doctrine.");
       }
     };
     fetchConfig();
-  }, [API_BASE]);
+  }, [apiBase]);
 
   // --- TETHERING: REVENUE ENFORCEMENT ---
-  React.useEffect(() => {
+  useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden' && isProcessing && !isSiphon) {
         if (abortControllerRef.current) {
@@ -102,7 +113,7 @@ export default function CommandDeck() {
   }, [isProcessing, isSiphon]);
 
   // --- TIMER: PER-FILE COUNTDOWN (INTERNAL ONLY NOW) ---
-  React.useEffect(() => {
+  useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isProcessing && currentFileTimer > 0) {
       interval = setInterval(() => {
@@ -113,7 +124,7 @@ export default function CommandDeck() {
   }, [isProcessing, currentFileTimer]);
 
   // --- SCROLL LOGS ---
-  React.useEffect(() => {
+  useEffect(() => {
     if (logContainerRef.current) {
       logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
     }
@@ -154,7 +165,7 @@ export default function CommandDeck() {
   };
 
   const initiateStrike = async () => {
-    if (!file) return;
+    if (!file || !apiBase) return;
     setPhase('REFINERY');
     setIsProcessing(true);
     setTelemetry([]);
@@ -184,7 +195,7 @@ export default function CommandDeck() {
     formData.append('start_index', startIndex.toString());
 
     try {
-      const response = await fetch(`${API_BASE}/refine-stream`, {
+      const response = await fetch(`${apiBase}/refine-stream`, {
         method: 'POST',
         body: formData,
         signal: abortControllerRef.current.signal
@@ -216,7 +227,6 @@ export default function CommandDeck() {
                   setRefinedMessages([...allMessages]);
                   setProgress(Math.round((data.index / data.total) * 100));
 
-                  // Update batch progress grid
                   setBatchProgress(prev => {
                     const next = [...prev];
                     const idx = data.index - 1;
@@ -229,7 +239,7 @@ export default function CommandDeck() {
                       });
                       if (idx + 1 < 20) {
                         next[idx + 1] = 'PROCESSING';
-                        setCurrentFileTimer(15); // Reset timer for next file
+                        setCurrentFileTimer(15);
                       }
                     }
                     return next;
@@ -240,7 +250,6 @@ export default function CommandDeck() {
                   addTelemetry(isSiphon ? "[📦] ASSETS_PERSISTED_IN_VAULT" : "[📦] PAYLOAD_COMPRESSED_AND_DELIVERED", "success");
                   setProgress(100);
                   setBatchProgress(prev => prev.map(s => s === 'PROCESSING' ? 'COMPLETE' : s));
-                  // We don't hide the gate yet, wait for user click
                 }
               } catch (e) { console.error("Parse error:", e); }
             }
@@ -269,21 +278,19 @@ export default function CommandDeck() {
     setShowAdGate(false);
   };
 
+  if (!mounted) return <div className="min-h-screen bg-void" />;
+
   return (
     <main className={`min-h-screen ${isSiphon ? 'bg-slate-950 text-slate-200' : 'bg-void text-matrix'} font-mono selection:bg-matrix selection:text-void relative overflow-hidden transition-colors duration-1000 flex flex-col items-center`}>
-      {/* SCANLINE EFFECT - ONLY FOR TOLL */}
       {!isSiphon && <div className="absolute inset-0 pointer-events-none z-50 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,118,0.06))] bg-[length:100%_2px,3px_100%] pointer-events-none opacity-10" />}
 
-      {/* FLANKING GRIDS - REDESIGNED 2x5 TO PREVENT CUTOFF */}
       {(phase === 'REFINERY' || phase === 'EXTRACTION') && !isSiphon && (
         <>
-          {/* LEFT FLANK (2x5 Grid) */}
           <div className="fixed left-4 top-1/2 -translate-y-1/2 grid grid-cols-2 gap-4 lg:gap-8 z-0 scale-75 xl:scale-100">
             {batchProgress.slice(0, 10).map((state, i) => (
               <TacticalIcon key={i} state={state} index={i} name={processedFileNames[i]} timer={state === 'PROCESSING' ? currentFileTimer : null} isSiphon={isSiphon} />
             ))}
           </div>
-          {/* RIGHT FLANK (2x5 Grid) */}
           <div className="fixed right-4 top-1/2 -translate-y-1/2 grid grid-cols-2 gap-4 lg:gap-8 z-0 scale-75 xl:scale-100">
             {batchProgress.slice(10, 20).map((state, i) => (
               <TacticalIcon key={i + 10} state={state} index={i + 10} name={processedFileNames[i + 10]} timer={state === 'PROCESSING' ? currentFileTimer : null} isSiphon={isSiphon} />
@@ -427,7 +434,6 @@ export default function CommandDeck() {
                         <p className="text-[9px] text-matrix/40 italic uppercase tracking-widest">{progress === 100 ? 'GATE_UNLOCKED. CLOSE TO DOWNLOAD PAYLOAD.' : 'DO NOT CLOSE GATE. REFINERY STRIKE IN PROGRESS.'}</p>
                       </div>
 
-                      {/* EMBEDDED TELEMETRY IN GATE */}
                       {progress < 100 && (
                         <div className="w-full bg-void/80 border border-matrix/20 rounded p-4 h-32 overflow-hidden relative group">
                           <div className="absolute top-2 right-2 text-[8px] text-matrix/20 font-black animate-pulse uppercase tracking-tighter">LIVE_TELEMETRY</div>
@@ -466,7 +472,7 @@ export default function CommandDeck() {
                                 formData.append('options_json', JSON.stringify({ ...options, base_filename: baseName }));
                                 formData.append('start_index', startIndex.toString());
                                 try {
-                                  const zipResponse = await axios.post(`${API_BASE}/refine`, formData, { responseType: 'blob' });
+                                  const zipResponse = await axios.post(`${apiBase}/refine`, formData, { responseType: 'blob' });
                                   const url = window.URL.createObjectURL(new Blob([zipResponse.data]));
                                   const link = document.createElement('a');
                                   link.href = url;
@@ -502,10 +508,12 @@ export default function CommandDeck() {
                     <CheckCircle2 className={`w-12 h-12 mx-auto ${isSiphon ? 'text-blue-500' : 'text-matrix'}`} />
                     <h2 className={`text-2xl font-black italic tracking-tighter ${isSiphon ? 'text-blue-500' : 'text-matrix'}`}>{isSiphon ? 'ARCHIVAL_READY' : 'EXTRACTION_COMPLETE'}</h2>
                     <div className="flex flex-col gap-4 max-w-md mx-auto pt-4">
-                      <button onClick={() => window.location.href = `${API_BASE}/refine?options_json=${encodeURIComponent(JSON.stringify({ ...options, base_filename: file?.name.replace(/\.[^/.]+$/, "") }))}&start_index=${startIndex}`}
-                        className={`py-6 text-xl font-black tracking-[0.4em] uppercase shadow-2xl transition-all ${isSiphon ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-matrix text-void hover:opacity-90'}`}>
-                        <Download className="inline-block mr-4 w-8 h-8" /> DOWNLOAD
-                      </button>
+                      {apiBase && (
+                        <button onClick={() => window.location.href = `${apiBase}/refine?options_json=${encodeURIComponent(JSON.stringify({ ...options, base_filename: file?.name.replace(/\.[^/.]+$/, "") }))}&start_index=${startIndex}`}
+                          className={`py-6 text-xl font-black tracking-[0.4em] uppercase shadow-2xl transition-all ${isSiphon ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-matrix text-void hover:opacity-90'}`}>
+                          <Download className="inline-block mr-4 w-8 h-8" /> DOWNLOAD
+                        </button>
+                      )}
                       <button onClick={resetConsole} className="text-xs font-bold opacity-40 hover:opacity-100 uppercase tracking-widest underline decoration-2 underline-offset-8">READY_FOR_NEW_TASK</button>
                     </div>
                   </motion.div>
@@ -541,7 +549,7 @@ export default function CommandDeck() {
 
       <footer className="fixed bottom-0 w-full p-4 flex justify-between text-[8px] font-bold uppercase opacity-20 pointer-events-none">
         <div>ID: {isSiphon ? 'SILENT_SIPHON_2.1' : 'ASH_UNIT_0.1'}</div>
-        <div>{new Date().toISOString()} // STOCKTON_SEC</div>
+        <div>{mountedTime} // STOCKTON_SEC</div>
       </footer>
 
       {!isSiphon && (
@@ -550,6 +558,9 @@ export default function CommandDeck() {
           strategy="lazyOnload"
           src="https://3nbf4.com/tag.min.js"
           data-zone="10488829"
+          onError={(e) => {
+            console.warn("MONETAG_LOAD_FAILED: Likely AdBlocker intervention. System mission unaffected.");
+          }}
         />
       )}
     </main>
