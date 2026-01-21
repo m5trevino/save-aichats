@@ -277,6 +277,29 @@ export default function CommandDeck() {
     }
   };
 
+  const executePayloadDownload = async () => {
+    if (!file || !apiBase) return;
+    addTelemetry("[🚀] INITIATING_FINAL_DOWNLOAD...");
+    const baseName = file.name.replace(/\.[^/.]+$/, "") || "payload";
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('options_json', JSON.stringify({ ...options, base_filename: baseName }));
+    formData.append('start_index', startIndex.toString());
+    try {
+      const zipResponse = await axios.post(`${apiBase}/refine`, formData, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([zipResponse.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', isSiphon ? `refined_chat_export.zip` : `ULTRADATA_STRIKE_EXTRACT.zip`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      addTelemetry("[🏁] MISSION_COMPLETE", "success");
+    } catch (e) {
+      addTelemetry("[❌] DOWNLOAD_FAILED", "warn");
+    }
+  };
+
   const resetConsole = () => {
     setPhase('BREACH');
     setFile(null);
@@ -473,25 +496,7 @@ export default function CommandDeck() {
                                   (window as any).show_monetag_vignette();
                                 }
                                 setShowAdGate(false);
-                                addTelemetry("[🚀] INITIATING_FINAL_DOWNLOAD...");
-                                const baseName = file?.name.replace(/\.[^/.]+$/, "") || "payload";
-                                const formData = new FormData();
-                                formData.append('file', file!);
-                                formData.append('options_json', JSON.stringify({ ...options, base_filename: baseName }));
-                                formData.append('start_index', startIndex.toString());
-                                try {
-                                  const zipResponse = await axios.post(`${apiBase}/refine`, formData, { responseType: 'blob' });
-                                  const url = window.URL.createObjectURL(new Blob([zipResponse.data]));
-                                  const link = document.createElement('a');
-                                  link.href = url;
-                                  link.setAttribute('download', isSiphon ? `refined_chat_export.zip` : `ULTRADATA_STRIKE_EXTRACT.zip`);
-                                  document.body.appendChild(link);
-                                  link.click();
-                                  document.body.removeChild(link);
-                                  addTelemetry("[🏁] MISSION_COMPLETE", "success");
-                                } catch (e) {
-                                  addTelemetry("[❌] DOWNLOAD_FAILED", "warn");
-                                }
+                                executePayloadDownload();
                               }}
                               className="px-12 py-5 bg-matrix text-void font-black text-sm tracking-[0.4em] uppercase hover:bg-matrix/90 transition-all border-b-8 border-matrix/50 shadow-2xl active:border-b-0 active:translate-y-2 mt-4"
                             >
@@ -517,7 +522,7 @@ export default function CommandDeck() {
                     <h2 className={`text-2xl font-black italic tracking-tighter ${isSiphon ? 'text-blue-500' : 'text-matrix'}`}>{isSiphon ? 'ARCHIVAL_READY' : 'EXTRACTION_COMPLETE'}</h2>
                     <div className="flex flex-col gap-4 max-w-md mx-auto pt-4">
                       {apiBase && (
-                        <button onClick={() => window.location.href = `${apiBase}/refine?options_json=${encodeURIComponent(JSON.stringify({ ...options, base_filename: file?.name.replace(/\.[^/.]+$/, "") }))}&start_index=${startIndex}`}
+                        <button onClick={executePayloadDownload}
                           className={`py-6 text-xl font-black tracking-[0.4em] uppercase shadow-2xl transition-all ${isSiphon ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-matrix text-void hover:opacity-90'}`}>
                           <Download className="inline-block mr-4 w-8 h-8" /> DOWNLOAD
                         </button>
