@@ -353,9 +353,9 @@ export default function CommandDeck() {
     <main className={`min-h-screen ${isSiphon ? 'bg-slate-950 text-slate-200' : 'bg-void text-matrix'} font-mono selection:bg-matrix selection:text-void relative overflow-hidden transition-colors duration-1000 flex flex-col items-center`}>
       {!isSiphon && <div className="absolute inset-0 pointer-events-none z-50 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,118,0.06))] bg-[length:100%_2px,3px_100%] pointer-events-none opacity-10" />}
 
-      <div className="max-w-7xl w-full mx-auto px-4 py-12 relative z-10 transition-all duration-700">
-        <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-matrix/20 pb-8">
-          <div className="space-y-2">
+      <div className={`${(phase === 'REFINERY' || phase === 'EXTRACTION') ? 'w-full' : 'max-w-7xl'} w-full mx-auto px-4 py-12 relative z-10 transition-all duration-700`}>
+        <header className={`mb-12 flex flex-col ${(phase === 'REFINERY' || phase === 'EXTRACTION') ? 'lg:flex-row' : 'md:flex-row'} md:items-end justify-between gap-6 border-b border-matrix/20 pb-8`}>
+          <div className={`space-y-2 ${(phase === 'REFINERY' || phase === 'EXTRACTION') ? 'bg-void border-2 border-matrix/40 p-6 grow-0 shrink-0 min-w-[320px] mb-0' : ''}`}>
             {!isSiphon && <div className="text-[10px] text-matrix/40 mb-2 tracking-[0.5em] animate-pulse">[ ESTABLISHED_CONNECTION: 0xFF129 ]</div>}
             <h1 className={`text-5xl md:text-7xl font-black ${isSiphon ? 'text-blue-500' : 'text-matrix'} tracking-tighter glow-text italic`}>
               {isSiphon ? 'RefineAI' : 'save-aichats.com'}
@@ -365,17 +365,25 @@ export default function CommandDeck() {
             </p>
           </div>
 
-          <div className="flex items-center gap-6">
-            <SecurityBanner />
-            <div className={`h-12 w-[1px] ${isSiphon ? 'bg-slate-800' : 'bg-matrix/20'}`} />
-            <div className="text-right">
-              <div className={`text-[10px] ${isSiphon ? 'text-slate-500' : 'text-matrix/40'} tracking-widest font-black mb-1`}>{isSiphon ? 'SYSTEM_UPLINK' : 'SYSTEM_NODE'}</div>
-              <div className={`text-sm ${isSiphon ? 'text-blue-500' : 'text-matrix'} font-black tabular-nums`}>{isSiphon ? 'STABLE' : 'VOID_ALPHA_0.1'}</div>
+          {(phase === 'REFINERY' || phase === 'EXTRACTION') ? (
+            <div className="flex-grow flex items-center justify-center border-2 border-matrix/40 bg-void p-4">
+              <div className="scale-90 md:scale-110">
+                <AdBanner />
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex items-center gap-6">
+              <SecurityBanner />
+              <div className={`h-12 w-[1px] ${isSiphon ? 'bg-slate-800' : 'bg-matrix/20'}`} />
+              <div className="text-right">
+                <div className={`text-[10px] ${isSiphon ? 'text-slate-500' : 'text-matrix/40'} tracking-widest font-black mb-1`}>{isSiphon ? 'SYSTEM_UPLINK' : 'SYSTEM_NODE'}</div>
+                <div className={`text-sm ${isSiphon ? 'text-blue-500' : 'text-matrix'} font-black tabular-nums`}>{isSiphon ? 'STABLE' : 'VOID_ALPHA_0.1'}</div>
+              </div>
+            </div>
+          )}
         </header>
 
-        <div className={`w-full max-w-7xl mx-auto ${isSiphon ? 'bg-slate-900/40 border-slate-800' : 'bg-void/40 border-matrix/10'} border backdrop-blur-xl rounded-sm shadow-2xl overflow-hidden relative`}>
+        <div className={`w-full ${(phase === 'REFINERY' || phase === 'EXTRACTION') ? '' : 'max-w-7xl mx-auto'} ${isSiphon ? 'bg-slate-900/40 border-slate-800' : 'bg-void/40 border-matrix/10'} border backdrop-blur-xl rounded-sm shadow-2xl overflow-hidden relative`}>
           <AnimatePresence mode="wait">
             {phase === 'BREACH' && (
               <motion.div key="breach" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-12">
@@ -389,7 +397,7 @@ export default function CommandDeck() {
 
                 <div
                   onClick={() => fileInputRef.current?.click()} onDragOver={handleDragOver} onDrop={onDrop}
-                  className={`border-2 border-dashed ${isSiphon ? 'border-slate-800 bg-slate-950/50 hover:border-blue-500/50' : 'border-matrix/20 bg-matrix/5 hover:border-matrix/40'} p-16 rounded-xl transition-all cursor-pointer group flex flex-col items-center justify-center gap-6 shadow-inner mb-12`}
+                  className={`border-2 border-dashed ${isSiphon ? 'border-slate-800 bg-slate-950/50 hover:border-blue-500/50' : 'border-matrix/20 bg-matrix/5 hover:border-matrix/40'} p-16 rounded-none transition-all cursor-pointer group flex flex-col items-center justify-center gap-6 shadow-inner mb-12`}
                 >
                   <Upload className={`w-12 h-12 ${isSiphon ? 'text-blue-500' : 'text-matrix'} opacity-40 group-hover:opacity-100 transition-opacity`} />
                   <div className="text-center">
@@ -523,158 +531,167 @@ export default function CommandDeck() {
             )}
 
             {(phase === 'REFINERY' || phase === 'EXTRACTION') && (
-              <motion.div key="telemetry" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col lg:flex-row gap-0 relative min-h-[900px] w-full overflow-hidden bg-void">
+              <motion.div key="telemetry" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col lg:flex-row gap-4 relative min-h-[800px] w-full overflow-hidden bg-void">
 
-                {/* 🔴 LEFT: FILE LIST LOCATION */}
-                <div className="w-full lg:w-[280px] shrink-0 bg-void border-2 border-[#FF0066] overflow-hidden flex flex-col shadow-2xl">
-                  <div className="p-3 border-b-2 border-[#FF0066] bg-void flex justify-between items-center font-black text-[10px] tracking-[0.3em] text-[#FF0066] uppercase">
-                    <span>File_List_Location</span>
-                  </div>
-                  <div className="flex-grow overflow-y-auto scrollbar-hide bg-black">
-                    {batchNames.map((name, i) => (
-                      <div key={i} className={`relative p-3 border-b border-matrix/10 transition-colors ${batchProgress[i] === 'PROCESSING' ? 'bg-voltage/5' : batchProgress[i] === 'COMPLETE' ? 'bg-matrix/10' : ''}`}>
-                        {batchProgress[i] === 'PROCESSING' && (
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${((15 - currentFileTimer) / 15) * 100}%` }}
-                            className="absolute inset-0 bg-voltage/10 z-0"
-                          />
-                        )}
-                        <div className="relative z-10 flex justify-between items-center">
-                          <div className="flex items-center gap-2">
-                            <span className={`text-[11px] font-black tabular-nums ${batchProgress[i] === 'COMPLETE' ? 'text-matrix' : batchProgress[i] === 'PROCESSING' ? 'text-voltage' : 'text-matrix/20'}`}>
-                              {String(i + 1).padStart(2, '0')}
-                            </span>
-                            <span className={`text-[10px] font-black uppercase tracking-tighter truncate max-w-[140px] ${batchProgress[i] === 'COMPLETE' ? 'text-matrix font-bold' : batchProgress[i] === 'PROCESSING' ? 'text-voltage animate-pulse' : 'text-matrix/40'}`}>
-                              {name}
-                            </span>
-                          </div>
-                          {batchProgress[i] === 'COMPLETE' && <CheckCircle2 className="w-3 h-3 text-matrix drop-shadow-[0_0_8px_rgba(0,255,65,0.4)]" />}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                {/* 🟡 RIGHT: THREE-ZONE STACK */}
-                <div className="flex-grow flex flex-col overflow-hidden">
-                  {showAdGate && !isSiphon && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col h-full bg-void">
-
-                      {/* 🟣 TOP: BANNER LOCATION */}
-                      <div className="w-full bg-void border-2 border-[#FF00FF] p-4 flex flex-col items-center justify-center min-h-[140px]">
-                        <div className="text-[10px] font-black text-[#FF00FF] tracking-[0.3em] uppercase mb-2">Banner_Location</div>
-                        <div className="scale-100 md:scale-125 origin-center">
-                          <AdBanner />
-                        </div>
-                      </div>
-                      {/* 🟢 MIDDLE: TERMINAL LOCATION + SYSTEM SPONSOR */}
-                      <div className="flex-grow flex flex-col lg:flex-row overflow-hidden border-2 border-[#00FF41]">
-                        {/* LEFT: TERMINAL */}
-                        <div className="flex-grow relative overflow-hidden flex flex-col bg-black p-4">
-                          <div className="absolute top-2 left-4 text-[10px] text-[#00FF41] font-black uppercase tracking-[0.3em] z-20 mb-2">
-                            Terminal_Location
-                          </div>
-                          <div ref={logContainerRef} className="flex-grow overflow-y-auto font-mono text-sm md:text-base space-y-2 pt-8 scrollbar-hide">
-                            {telemetry.slice(-30).map((log, i) => (
-                              <div key={i} className="flex gap-3 leading-relaxed border-l-2 border-transparent hover:border-matrix/40 pl-3 transition-all">
-                                <span className="text-matrix/20 text-[9px] whitespace-nowrap pt-0.5 bg-void/20 px-1 rounded font-black">[{new Date().toLocaleTimeString([], { hour12: false })}]</span>
-                                <p className={`text-sm ${log.type === 'warn' ? 'text-hazard font-black' : log.type === 'success' ? 'text-[#00FF41] font-bold drop-shadow-[0_0_12px_rgba(0,255,65,0.5)]' : 'text-matrix/50'}`}>
-                                  {log.msg.toUpperCase()}
-                                </p>
-                              </div>
-                            ))}
-                            {progress < 100 && (
-                              <div className="flex items-center gap-3 pt-3">
-                                <motion.div animate={{ opacity: [0, 1] }} transition={{ repeat: Infinity, duration: 0.5 }} className="w-3 h-5 bg-matrix opacity-40 shadow-[0_0_10px_rgba(0,255,65,0.4)]" />
-                                <span className="text-sm text-matrix/20 animate-pulse font-black tracking-wider uppercase">Syncing...</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        {/* RIGHT: SYSTEM SPONSOR */}
-                        <div className="w-full lg:w-[320px] shrink-0 bg-void border-l-2 border-[#00FF41] p-4 flex flex-col items-center justify-center">
-                          <div className="text-[10px] font-black text-[#00FF41] tracking-[0.3em] uppercase mb-3">System_Sponsor</div>
-                          <div className="w-full flex justify-center">
-                            <AdBanner />
-                          </div>
-                        </div>
-                      </div>
-                      {/* 🟡 BOTTOM: ADVERTISMENT LOCATION + STATUS */}
-                      <div className="w-full bg-void border-2 border-[#FFD700] p-4">
-                        <div className="text-[10px] font-black text-[#FFD700] tracking-[0.3em] uppercase mb-3 text-center">Advertisment_Location</div>
-                        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                          <div className="flex items-center gap-6">
-                            <div className="flex flex-col">
-                              <span className="text-[9px] font-black text-voltage tracking-widest uppercase mb-1">Batch</span>
-                              <span className="text-3xl font-black text-matrix tabular-nums tracking-tighter">
-                                {Math.floor((progress / 100) * 20)} / 20
+                {/* LEFT: FILE STACK + BATCH STATUS */}
+                <div className="w-full lg:w-[320px] shrink-0 flex flex-col gap-4">
+                  {/* FILE LIST */}
+                  <div className="flex-grow bg-void border-2 border-matrix/40 overflow-hidden flex flex-col">
+                    <div className="p-3 border-b-2 border-matrix/40 bg-matrix/5 flex justify-between items-center font-black text-[10px] tracking-[0.3em] text-matrix uppercase">
+                      <span>Forensic_Stack</span>
+                    </div>
+                    <div className="flex-grow overflow-y-auto scrollbar-hide bg-black/40">
+                      {batchNames.map((name, i) => (
+                        <div key={i} className={`relative p-3 border-b border-matrix/10 transition-colors ${batchProgress[i] === 'PROCESSING' ? 'bg-voltage/5' : batchProgress[i] === 'COMPLETE' ? 'bg-matrix/10' : ''}`}>
+                          {batchProgress[i] === 'PROCESSING' && (
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${((15 - currentFileTimer) / 15) * 100}%` }}
+                              className="absolute inset-0 bg-voltage/10 z-0"
+                            />
+                          )}
+                          <div className="relative z-10 flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                              <span className={`text-[11px] font-black tabular-nums ${batchProgress[i] === 'COMPLETE' ? 'text-matrix' : batchProgress[i] === 'PROCESSING' ? 'text-voltage' : 'text-matrix/20'}`}>
+                                {String(i + 1).padStart(2, '0')}
+                              </span>
+                              <span className={`text-[10px] font-black uppercase tracking-tighter truncate max-w-[150px] ${batchProgress[i] === 'COMPLETE' ? 'text-matrix font-bold' : batchProgress[i] === 'PROCESSING' ? 'text-voltage animate-pulse' : 'text-matrix/40'}`}>
+                                {name}
                               </span>
                             </div>
-                            <div className="w-[1px] h-12 bg-matrix/20" />
-                            <div className="scale-[0.6] origin-center">
-                              <AnalogCycle progress={progress < 100 ? (15 - currentFileTimer) * (100 / 15) : 100} />
-                            </div>
+                            {batchProgress[i] === 'COMPLETE' && <CheckCircle2 className="w-3 h-3 text-matrix drop-shadow-[0_0_8px_rgba(0,255,65,0.4)]" />}
                           </div>
-                          <div className="flex-1 max-w-[450px]">
-                            <AdBanner />
-                          </div>
-                          <AnimatePresence>
-                            {progress === 100 && (
-                              <motion.button
-                                initial={{ scale: 0.9, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                id="collect-payload-btn"
-                                onClick={async () => {
-                                  if ((window as any).show_monetag_vignette) {
-                                    (window as any).show_monetag_vignette();
-                                  }
-                                  setShowAdGate(false);
-                                  executePayloadDownload();
-                                }}
-                                className="px-12 py-6 bg-matrix text-void font-black text-lg tracking-[0.4em] uppercase hover:bg-[#00FF41] transition-all border-b-[6px] border-matrix/50 shadow-2xl active:border-b-0 active:translate-y-2 whitespace-nowrap"
-                              >
-                                COLLECT
-                              </motion.button>
-                            )}
-                          </AnimatePresence>
                         </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* BATCH STATUS BOX */}
+                  <div className="h-[180px] bg-void border-2 border-matrix/40 p-4 flex flex-col justify-between">
+                    <div className="flex justify-between items-start">
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-black text-matrix/40 tracking-[0.2em] uppercase mb-1">Batch_Progress</span>
+                        <span className="text-4xl font-black text-matrix tabular-nums tracking-tighter">
+                          {Math.floor((progress / 100) * 20)} / 20
+                        </span>
                       </div>
-                    </motion.div>
-                  )}
-                  {/* Fallback display for Extraction phase when gate is closed */}
-                  {phase === 'EXTRACTION' && !showAdGate && (
-                    <div className="flex-grow flex flex-col overflow-hidden bg-void/20">
-                      <header className="p-4 border-b border-matrix/10 flex justify-between items-center text-[10px] font-black opacity-30 uppercase tracking-[0.3em] bg-matrix/5">
-                        <div className="flex items-center gap-2"><CheckCircle2 className="w-3 h-3 text-matrix" /> DATA_VAULT_OPEN</div>
-                        <div className="tabular-nums">STRIKE_SUCCESS // {startIndex + 1}-{startIndex + 20}</div>
-                      </header>
-                      <div className="flex-grow overflow-y-auto p-4 scrollbar-hide">
-                        <ConversationDisplay messages={refinedMessages} fileName={file?.name || "payload.json"} selectedPrompt={null} globalOptions={{ includeCode: true, includeThoughts: options.include_thoughts }} />
+                      <div className="scale-[0.5] origin-top-right">
+                        <AnalogCycle progress={progress < 100 ? (15 - currentFileTimer) * (100 / 15) : 100} />
                       </div>
-                      <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="p-8 border-t border-matrix/20 bg-matrix/5 backdrop-blur-md">
-                        <div className="max-w-3xl mx-auto flex flex-col md:flex-row items-center justify-between gap-10">
-                          <div className="space-y-4 text-left">
-                            <h2 className="text-3xl font-black italic tracking-tighter text-matrix uppercase">Refined_Payload_Ready</h2>
-                            <div className="bg-void border border-matrix/20 p-4 rounded shadow-inner">
-                              <p className="text-[11px] text-matrix/60 font-bold uppercase tracking-widest leading-loose">
-                                BATCH_SUCCESS: {startIndex + 1} TO {startIndex + 20}<br />
-                                TOTAL_CAPACITY: {batchRanges.length * 20}+ CHATS DETECTED.<br />
-                                <span className="text-voltage mt-1 block">PROTOCOL: SELECT BATCH {Math.floor(startIndex / 20) + 2} IN COMMAND_DECK.</span>
+                    </div>
+
+                    <AnimatePresence>
+                      {progress === 100 && (
+                        <motion.button
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          id="collect-payload-btn"
+                          onClick={async () => {
+                            if ((window as any).show_monetag_vignette) {
+                              (window as any).show_monetag_vignette();
+                            }
+                            setShowAdGate(false);
+                            executePayloadDownload();
+                          }}
+                          className="w-full py-3 bg-matrix text-void font-black text-xs tracking-[0.4em] uppercase hover:bg-[#00FF41] transition-all border-b-4 border-matrix/50 active:border-b-0 active:translate-y-1"
+                        >
+                          COLLECT_STRIKE
+                        </motion.button>
+                      )}
+                    </AnimatePresence>
+
+                    <div className="flex justify-between items-center text-[8px] font-black opacity-30 tracking-widest uppercase mt-2">
+                      <span>Status: {progress === 100 ? 'SUCCESS' : 'ACTIVE_REFINEMENT'}</span>
+                      <div className={`w-2 h-2 rounded-full ${progress === 100 ? 'bg-matrix' : 'bg-voltage animate-pulse'}`} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* RIGHT: TERMINAL AREA + FOOTER AD */}
+                <div className="flex-grow flex flex-col gap-4 overflow-hidden">
+                  {showAdGate && !isSiphon ? (
+                    <div className="flex-grow flex flex-col gap-4 overflow-hidden">
+                      {/* THE TERMINAL */}
+                      <div className="flex-grow relative bg-black border-2 border-matrix/40 flex flex-col overflow-hidden">
+                        <div className="p-3 border-b border-matrix/10 bg-matrix/5 flex justify-between items-center z-20">
+                          <div className="text-[10px] text-matrix font-black uppercase tracking-[0.3em]">
+                            Terminal_Location
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 bg-matrix rounded-full animate-pulse shadow-[0_0_8px_#00FF41]" />
+                            <span className="text-[8px] font-bold text-matrix/40 uppercase tracking-widest">Live_Feed_Active</span>
+                          </div>
+                        </div>
+
+                        <div ref={logContainerRef} className="flex-grow overflow-y-auto font-mono text-base md:text-xl space-y-4 p-8 scrollbar-hide">
+                          {telemetry.slice(-30).map((log, i) => (
+                            <div key={i} className="flex gap-4 leading-relaxed border-l-4 border-transparent hover:border-matrix/40 pl-4 transition-all">
+                              <span className="text-matrix/20 text-[10px] whitespace-nowrap pt-1 bg-void/20 px-1.5 rounded font-black">[{new Date().toLocaleTimeString([], { hour12: false })}]</span>
+                              <p className={`${log.type === 'warn' ? 'text-hazard font-black' : log.type === 'success' ? 'text-[#00FF41] font-bold drop-shadow-[0_0_15px_rgba(0,255,65,0.5)]' : 'text-matrix/50'}`}>
+                                {log.msg.toUpperCase()}
                               </p>
                             </div>
-                          </div>
-                          <div className="flex flex-col gap-4 min-w-[300px]">
-                            <button onClick={executePayloadDownload}
-                              className="py-6 bg-matrix text-void font-black text-xl tracking-[0.5em] uppercase hover:bg-[#00FF41] shadow-[0_0_30px_rgba(0,255,65,0.2)] transition-all">
-                              <Download className="inline-block mr-3 w-8 h-8" /> DOWNLOAD
-                            </button>
-                            <button onClick={resetConsole} className="text-[10px] font-black opacity-40 hover:opacity-100 uppercase tracking-[0.5em] underline underline-offset-8">INIT_NEW_MISSION</button>
+                          ))}
+                          {progress < 100 && (
+                            <div className="flex items-center gap-4 pt-4">
+                              <motion.div animate={{ opacity: [0, 1] }} transition={{ repeat: Infinity, duration: 0.5 }} className="w-4 h-6 bg-matrix opacity-40 shadow-[0_0_10px_rgba(0,255,65,0.4)]" />
+                              <span className="text-base text-matrix/20 animate-pulse font-black tracking-widest uppercase">Syncing...</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* SYSTEM SPONSOR (FOOTER AD) */}
+                      <div className="h-[200px] border-2 border-matrix/40 bg-void flex flex-col items-center justify-center p-4">
+                        <div className="text-[10px] font-black text-matrix/40 tracking-[0.3em] uppercase mb-4 w-full text-center border-b border-matrix/10 pb-2">
+                          System_Sponsor
+                        </div>
+                        <div className="flex-grow flex items-center justify-center w-full">
+                          <div className="scale-90 md:scale-110">
+                            <AdBanner />
                           </div>
                         </div>
-                      </motion.div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex-grow flex flex-col gap-4 overflow-hidden">
+                      {/* Fallback display for Extraction phase when gate is closed */}
+                      {phase === 'EXTRACTION' && (
+                        <div className="flex-grow flex flex-col overflow-hidden bg-void border-2 border-matrix/40">
+                          <header className="p-4 border-b border-matrix/10 flex justify-between items-center text-[10px] font-black opacity-30 uppercase tracking-[0.3em] bg-matrix/5">
+                            <div className="flex items-center gap-2"><CheckCircle2 className="w-3 h-3 text-matrix" /> DATA_VAULT_OPEN</div>
+                            <div className="tabular-nums">STRIKE_SUCCESS // {startIndex + 1}-{startIndex + 20}</div>
+                          </header>
+                          <div className="flex-grow overflow-y-auto p-4 scrollbar-hide bg-black/20">
+                            <ConversationDisplay messages={refinedMessages} fileName={file?.name || "payload.json"} selectedPrompt={null} globalOptions={{ includeCode: true, includeThoughts: options.include_thoughts }} />
+                          </div>
+                          <div className="p-8 border-t border-matrix/20 bg-matrix/5 backdrop-blur-md">
+                            <div className="max-w-3xl mx-auto flex flex-col md:flex-row items-center justify-between gap-10">
+                              <div className="space-y-4 text-left">
+                                <h2 className="text-3xl font-black italic tracking-tighter text-matrix uppercase">Payload_Extracted</h2>
+                                <div className="bg-void border border-matrix/20 p-4 rounded shadow-inner">
+                                  <p className="text-[11px] text-matrix/60 font-bold uppercase tracking-widest leading-loose">
+                                    BATCH_SUCCESS: {startIndex + 1} TO {startIndex + 20}<br />
+                                    TOTAL_CAPACITY: {batchRanges.length * 20}+ CHATS DETECTED.<br />
+                                    <span className="text-voltage mt-1 block">PROTOCOL: SELECT NEXT BATCH IN COMMAND_DECK.</span>
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex flex-col gap-4 min-w-[300px]">
+                                <button onClick={executePayloadDownload}
+                                  className="py-6 bg-matrix text-void font-black text-xl tracking-[0.5em] uppercase hover:bg-[#00FF41] shadow-[0_0_30px_rgba(0,255,65,0.2)] transition-all">
+                                  <Download className="inline-block mr-3 w-8 h-8" /> DOWNLOAD
+                                </button>
+                                <button onClick={resetConsole} className="text-[10px] font-black opacity-40 hover:opacity-100 uppercase tracking-[0.5em] underline underline-offset-8">INIT_NEW_MISSION</button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
+
                 {tetherError && <div className="fixed inset-0 z-[200] bg-void/90 flex items-center justify-center p-10"><div className="bg-hazard/20 border-2 border-hazard/40 p-12 text-hazard font-black text-2xl text-center animate-shake uppercase shadow-[0_0_100px_rgba(255,36,0,0.3)]">{tetherError}</div></div>}
               </motion.div>
             )}

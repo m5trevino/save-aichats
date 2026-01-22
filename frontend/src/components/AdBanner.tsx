@@ -11,8 +11,8 @@ export const AdBanner: React.FC = () => {
 
   return (
     <div className="w-full flex flex-col items-center justify-center my-6 z-10 relative">
-      <div className="bg-slate-900/50 border border-sky-900/30 p-2 rounded-lg backdrop-blur-md shadow-lg max-w-full overflow-hidden">
-        <p className="text-[9px] text-sky-700 text-center mb-1 uppercase tracking-[0.2em] font-mono">
+      <div className="bg-void border border-matrix/40 p-2 rounded-none backdrop-blur-md max-w-full overflow-hidden">
+        <p className="text-[9px] text-matrix/40 text-center mb-1 uppercase tracking-[0.2em] font-mono">
           System Sponsor
         </p>
 
