@@ -66,6 +66,7 @@ export default function CommandDeck() {
   const [processedFileNames, setProcessedFileNames] = useState<string[]>(Array(20).fill(""));
   const [batchNames, setBatchNames] = useState<string[]>(Array(20).fill("AWAITING_TAG..."));
   const [currentFileTimer, setCurrentFileTimer] = useState(15);
+  const [adModalOpen, setAdModalOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -208,6 +209,7 @@ export default function CommandDeck() {
     setProgress(0);
     setTetherError(null);
     setShowAdGate(!isSiphon);
+    setAdModalOpen(!isSiphon);
 
     setCurrentFileTimer(15);
     setProcessedFileNames(Array(20).fill(""));
@@ -608,7 +610,34 @@ export default function CommandDeck() {
                 </div>
 
                 {/* RIGHT: TERMINAL AREA + FOOTER AD */}
-                <div className="flex-grow flex flex-col gap-4 overflow-hidden">
+                <div className="flex-grow flex flex-col gap-4 overflow-hidden relative">
+                  <AnimatePresence>
+                    {adModalOpen && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-8"
+                      >
+                        <div className="bg-void border border-matrix p-6 max-w-md w-full shadow-[0_0_50px_rgba(0,255,65,0.1)] flex flex-col items-center gap-6">
+                          <h3 className="text-xl font-black text-matrix uppercase tracking-widest animate-pulse">Incoming Transmission</h3>
+                          <div className="w-full bg-black border border-matrix/20 p-2">
+                            <AdBanner />
+                          </div>
+                          <p className="text-[10px] text-matrix/40 uppercase tracking-widest text-center">
+                            Watch generic sponsor message to access terminal.
+                          </p>
+                          <button
+                            onClick={() => setAdModalOpen(false)}
+                            className="px-8 py-3 bg-matrix text-void font-black text-xs tracking-[0.2em] uppercase hover:bg-white transition-all shadow-[0_0_20px_rgba(0,255,65,0.4)]"
+                          >
+                            Access Terminal
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
                   {showAdGate && !isSiphon ? (
                     <div className="flex-grow flex flex-col gap-4 overflow-hidden">
                       {/* THE TERMINAL */}

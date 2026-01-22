@@ -10,6 +10,9 @@ const jbMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "THE WASHHOUSE | AI LOG REFINERY",
   description: "High-fidelity AI conversation log extraction and refinement.",
+  other: {
+    "coinzilla": "8a95edce0669039c30b73d226c3aa715"
+  }
 };
 
 export default function RootLayout({
