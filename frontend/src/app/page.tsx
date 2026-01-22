@@ -67,6 +67,22 @@ export default function CommandDeck() {
   const [batchNames, setBatchNames] = useState<string[]>(Array(20).fill("AWAITING_TAG..."));
   const [currentFileTimer, setCurrentFileTimer] = useState(15);
   const [adModalOpen, setAdModalOpen] = useState(false);
+  const [uplinkKey, setUplinkKey] = useState(0);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [hasVerifiedOnce, setHasVerifiedOnce] = useState(false);
+
+  // THE HUSTLE: Active Engagement Logic
+  const verifyUplink = () => {
+    setIsVerifying(true);
+    // Refresh the ad
+    setUplinkKey(prev => prev + 1);
+
+    setTimeout(() => {
+      setIsVerifying(false);
+      setHasVerifiedOnce(true);
+      // Optional: Play a sound or show success toast
+    }, 1500);
+  };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -619,20 +635,59 @@ export default function CommandDeck() {
                         exit={{ opacity: 0 }}
                         className="absolute inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-8"
                       >
-                        <div className="bg-void border border-matrix p-6 max-w-md w-full shadow-[0_0_50px_rgba(0,255,65,0.1)] flex flex-col items-center gap-6">
-                          <h3 className="text-xl font-black text-matrix uppercase tracking-widest animate-pulse">Incoming Transmission</h3>
-                          <div className="w-full bg-black border border-matrix/20 p-2">
-                            <AdBanner />
+                        <div className="bg-void border-2 border-matrix p-6 max-w-md w-full shadow-[0_0_50px_rgba(0,255,65,0.1)] flex flex-col items-center gap-6 relative overflow-hidden">
+                          {/* BG EFFECTS */}
+                          <div className="absolute inset-0 bg-matrix/5 pointer-events-none" />
+                          <div className="absolute top-0 left-0 w-full h-[2px] bg-matrix/20 animate-scanline" />
+
+                          <div className="z-10 text-center space-y-2">
+                            <h3 className="text-2xl font-black text-matrix uppercase tracking-widest drop-shadow-[0_0_10px_rgba(0,255,65,0.6)]">
+                              Security Warning
+                            </h3>
+                            <p className="text-[10px] text-matrix/60 font-bold uppercase tracking-[0.2em]">
+                              Unverified Uplink Detected
+                            </p>
                           </div>
-                          <p className="text-[10px] text-matrix/40 uppercase tracking-widest text-center">
-                            Watch generic sponsor message to access terminal.
-                          </p>
-                          <button
-                            onClick={() => setAdModalOpen(false)}
-                            className="px-8 py-3 bg-matrix text-void font-black text-xs tracking-[0.2em] uppercase hover:bg-white transition-all shadow-[0_0_20px_rgba(0,255,65,0.4)]"
-                          >
-                            Access Terminal
-                          </button>
+
+                          {/* 300x250 VIDEO CONTAINER PLACEHOLDER */}
+                          <div className="w-[300px] h-[250px] bg-black border-2 border-matrix/30 shadow-inner relative flex items-center justify-center group overflow-hidden">
+                            {/* SCANLINES */}
+                            <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] z-20 pointer-events-none background-size-[100%_2px,3px_100%]" />
+
+                            {/* THE AD UNIT - Controlled by uplinkKey for forced refresh */}
+                            <div className="w-full h-full relative z-10">
+                              <AdBanner key={uplinkKey} refreshInterval={60} />
+                            </div>
+
+                            {/* CORNER MARKERS */}
+                            <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-matrix z-20" />
+                            <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-matrix z-20" />
+                            <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-matrix z-20" />
+                            <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-matrix z-20" />
+                          </div>
+
+                          <div className="z-10 flex flex-col items-center gap-4 w-full">
+                            <p className="text-[9px] text-matrix/40 uppercase tracking-widest text-center max-w-[280px]">
+                              Establish visual confirmation of sponsor transmission to enable secure tunnel.
+                            </p>
+
+                            <button
+                              onClick={verifyUplink}
+                              className="group relative px-8 py-4 bg-void border border-matrix text-matrix font-black text-xs tracking-[0.3em] uppercase transition-all hover:bg-matrix hover:text-void shadow-[0_0_20px_rgba(0,255,65,0.2)] hover:shadow-[0_0_40px_rgba(0,255,65,0.6)] active:scale-95"
+                            >
+                              <span className={isVerifying ? "animate-pulse" : ""}>
+                                {isVerifying ? "VERIFYING_SIGNAL..." : "VERIFY_UPLINK"}
+                              </span>
+                              {/* Button Glitch Effect */}
+                              <div className="absolute inset-0 bg-white/20 translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
+                            </button>
+
+                            {hasVerifiedOnce && (
+                              <button onClick={() => setAdModalOpen(false)} className="text-[9px] text-matrix/30 hover:text-matrix/80 uppercase tracking-widest underline decoration-dotted underline-offset-4">
+                                Dismiss Warning (Unsafe)
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </motion.div>
                     )}
