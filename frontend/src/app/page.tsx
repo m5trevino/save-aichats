@@ -523,17 +523,16 @@ export default function CommandDeck() {
             )}
 
             {(phase === 'REFINERY' || phase === 'EXTRACTION') && (
-              <motion.div key="telemetry" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col lg:flex-row gap-6 relative min-h-[850px] w-full p-4 md:p-8 overflow-hidden bg-void">
+              <motion.div key="telemetry" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col lg:flex-row gap-0 relative min-h-[900px] w-full overflow-hidden bg-void">
 
-                {/* 🟢 THE GREEN BOX: FIXED SIDEBAR (FORENSIC STACK) */}
-                <div className="w-full lg:w-[320px] shrink-0 bg-void/50 border border-matrix/20 overflow-hidden flex flex-col shadow-2xl z-10">
-                  <div className="p-4 border-b border-matrix/20 bg-matrix/5 flex justify-between items-center font-black text-[12px] tracking-widest text-matrix/40">
-                    <span>TARGET_BATCH</span>
-                    <span>STATUS</span>
+                {/* 🔴 LEFT: FILE LIST LOCATION */}
+                <div className="w-full lg:w-[280px] shrink-0 bg-void border-2 border-[#FF0066] overflow-hidden flex flex-col shadow-2xl">
+                  <div className="p-3 border-b-2 border-[#FF0066] bg-void flex justify-between items-center font-black text-[10px] tracking-[0.3em] text-[#FF0066] uppercase">
+                    <span>File_List_Location</span>
                   </div>
-                  <div className="flex-grow overflow-y-auto scrollbar-hide">
+                  <div className="flex-grow overflow-y-auto scrollbar-hide bg-black">
                     {batchNames.map((name, i) => (
-                      <div key={i} className={`relative p-4 border-b border-matrix/10 transition-colors ${batchProgress[i] === 'PROCESSING' ? 'bg-voltage/5' : batchProgress[i] === 'COMPLETE' ? 'bg-matrix/10' : ''}`}>
+                      <div key={i} className={`relative p-3 border-b border-matrix/10 transition-colors ${batchProgress[i] === 'PROCESSING' ? 'bg-voltage/5' : batchProgress[i] === 'COMPLETE' ? 'bg-matrix/10' : ''}`}>
                         {batchProgress[i] === 'PROCESSING' && (
                           <motion.div
                             initial={{ width: 0 }}
@@ -542,81 +541,88 @@ export default function CommandDeck() {
                           />
                         )}
                         <div className="relative z-10 flex justify-between items-center">
-                          <div className="flex items-center gap-3">
-                            <span className={`text-[12px] font-black tabular-nums ${batchProgress[i] === 'COMPLETE' ? 'text-matrix' : batchProgress[i] === 'PROCESSING' ? 'text-voltage' : 'text-matrix/20'}`}>
+                          <div className="flex items-center gap-2">
+                            <span className={`text-[11px] font-black tabular-nums ${batchProgress[i] === 'COMPLETE' ? 'text-matrix' : batchProgress[i] === 'PROCESSING' ? 'text-voltage' : 'text-matrix/20'}`}>
                               {String(i + 1).padStart(2, '0')}
                             </span>
-                            <span className={`text-[11px] font-black uppercase tracking-tighter truncate max-w-[150px] ${batchProgress[i] === 'COMPLETE' ? 'text-matrix font-bold' : batchProgress[i] === 'PROCESSING' ? 'text-voltage animate-pulse' : 'text-matrix/40'}`}>
+                            <span className={`text-[10px] font-black uppercase tracking-tighter truncate max-w-[140px] ${batchProgress[i] === 'COMPLETE' ? 'text-matrix font-bold' : batchProgress[i] === 'PROCESSING' ? 'text-voltage animate-pulse' : 'text-matrix/40'}`}>
                               {name}
                             </span>
                           </div>
-                          {batchProgress[i] === 'COMPLETE' && <CheckCircle2 className="w-4 h-4 text-matrix drop-shadow-[0_0_8px_rgba(0,255,65,0.4)]" />}
+                          {batchProgress[i] === 'COMPLETE' && <CheckCircle2 className="w-3 h-3 text-matrix drop-shadow-[0_0_8px_rgba(0,255,65,0.4)]" />}
                         </div>
                       </div>
                     ))}
                   </div>
                 </div>
-
-                {/* 🔴 THE RED BOX: MAIN INTERSTITIAL HUB (THE SANDWICH) */}
-                <div className="flex-grow relative bg-matrix/5 border border-matrix/20 shadow-2xl overflow-hidden flex flex-col">
+                {/* 🟡 RIGHT: THREE-ZONE STACK */}
+                <div className="flex-grow flex flex-col overflow-hidden">
                   {showAdGate && !isSiphon && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 z-[100] flex flex-col bg-void/90 backdrop-blur-2xl">
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col h-full bg-void">
 
-                      {/* TOP SLICE: MASSIVE AD */}
-                      <div className="w-full bg-void border-b border-matrix/20 p-6 flex justify-center items-center">
-                        <div className="scale-110 md:scale-[1.6] origin-center">
+                      {/* 🟣 TOP: BANNER LOCATION */}
+                      <div className="w-full bg-void border-2 border-[#FF00FF] p-4 flex flex-col items-center justify-center min-h-[140px]">
+                        <div className="text-[10px] font-black text-[#FF00FF] tracking-[0.3em] uppercase mb-2">Banner_Location</div>
+                        <div className="scale-100 md:scale-125 origin-center">
                           <AdBanner />
                         </div>
                       </div>
-
-                      {/* MEAT: FORENSIC TERMINAL */}
-                      <div className="flex-grow relative overflow-hidden flex flex-col group bg-void/40">
-                        <div className="absolute top-4 right-6 text-[11px] text-matrix/20 font-black animate-pulse uppercase tracking-[0.3em] flex items-center gap-3 z-20">
-                          <div className="w-2.5 h-2.5 bg-voltage rounded-full shadow-[0_0_15px_#FFD700]" /> LIVE_UPLINK_DATA
+                      {/* 🟢 MIDDLE: TERMINAL LOCATION + SYSTEM SPONSOR */}
+                      <div className="flex-grow flex flex-col lg:flex-row overflow-hidden border-2 border-[#00FF41]">
+                        {/* LEFT: TERMINAL */}
+                        <div className="flex-grow relative overflow-hidden flex flex-col bg-black p-4">
+                          <div className="absolute top-2 left-4 text-[10px] text-[#00FF41] font-black uppercase tracking-[0.3em] z-20 mb-2">
+                            Terminal_Location
+                          </div>
+                          <div ref={logContainerRef} className="flex-grow overflow-y-auto font-mono text-sm md:text-base space-y-2 pt-8 scrollbar-hide">
+                            {telemetry.slice(-30).map((log, i) => (
+                              <div key={i} className="flex gap-3 leading-relaxed border-l-2 border-transparent hover:border-matrix/40 pl-3 transition-all">
+                                <span className="text-matrix/20 text-[9px] whitespace-nowrap pt-0.5 bg-void/20 px-1 rounded font-black">[{new Date().toLocaleTimeString([], { hour12: false })}]</span>
+                                <p className={`text-sm ${log.type === 'warn' ? 'text-hazard font-black' : log.type === 'success' ? 'text-[#00FF41] font-bold drop-shadow-[0_0_12px_rgba(0,255,65,0.5)]' : 'text-matrix/50'}`}>
+                                  {log.msg.toUpperCase()}
+                                </p>
+                              </div>
+                            ))}
+                            {progress < 100 && (
+                              <div className="flex items-center gap-3 pt-3">
+                                <motion.div animate={{ opacity: [0, 1] }} transition={{ repeat: Infinity, duration: 0.5 }} className="w-3 h-5 bg-matrix opacity-40 shadow-[0_0_10px_rgba(0,255,65,0.4)]" />
+                                <span className="text-sm text-matrix/20 animate-pulse font-black tracking-wider uppercase">Syncing...</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <div ref={logContainerRef} className="flex-grow overflow-y-auto font-mono text-base md:text-xl space-y-4 p-8 scrollbar-hide pt-12">
-                          {telemetry.slice(-30).map((log, i) => (
-                            <div key={i} className="flex gap-4 leading-relaxed border-l-4 border-transparent hover:border-matrix/40 pl-4 transition-all hover:bg-matrix/5">
-                              <span className="text-matrix/20 text-[10px] whitespace-nowrap pt-1 bg-void/20 px-1.5 rounded font-black">[{new Date().toLocaleTimeString([], { hour12: false })}]</span>
-                              <p className={`${log.type === 'warn' ? 'text-hazard font-black' : log.type === 'success' ? 'text-[#00FF41] font-bold drop-shadow-[0_0_15px_rgba(0,255,65,0.5)]' : 'text-matrix/50'}`}>
-                                {log.msg.toUpperCase()}
-                              </p>
-                            </div>
-                          ))}
-                          {progress < 100 && (
-                            <div className="flex items-center gap-4 pt-4">
-                              <motion.div animate={{ opacity: [0, 1] }} transition={{ repeat: Infinity, duration: 0.5 }} className="w-4 h-6 bg-matrix opacity-40 shadow-[0_0_10px_rgba(0,255,65,0.4)]" />
-                              <span className="text-base text-matrix/20 animate-pulse font-black tracking-widest uppercase">Syncing_with_refinery...</span>
-                            </div>
-                          )}
+                        {/* RIGHT: SYSTEM SPONSOR */}
+                        <div className="w-full lg:w-[320px] shrink-0 bg-void border-l-2 border-[#00FF41] p-4 flex flex-col items-center justify-center">
+                          <div className="text-[10px] font-black text-[#00FF41] tracking-[0.3em] uppercase mb-3">System_Sponsor</div>
+                          <div className="w-full flex justify-center">
+                            <AdBanner />
+                          </div>
                         </div>
                       </div>
-
-                      {/* BOTTOM SLICE: AD + STATUS */}
-                      <div className="w-full bg-void border-t border-matrix/20 p-6">
-                        <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-                          <div className="flex items-center gap-8">
+                      {/* 🟡 BOTTOM: ADVERTISMENT LOCATION + STATUS */}
+                      <div className="w-full bg-void border-2 border-[#FFD700] p-4">
+                        <div className="text-[10px] font-black text-[#FFD700] tracking-[0.3em] uppercase mb-3 text-center">Advertisment_Location</div>
+                        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                          <div className="flex items-center gap-6">
                             <div className="flex flex-col">
-                              <span className="text-[10px] font-black text-voltage tracking-widest uppercase mb-1">BATCH_REFINEMENT</span>
-                              <span className="text-4xl font-black text-matrix tabular-nums tracking-tighter shadow-matrix/20">
+                              <span className="text-[9px] font-black text-voltage tracking-widest uppercase mb-1">Batch</span>
+                              <span className="text-3xl font-black text-matrix tabular-nums tracking-tighter">
                                 {Math.floor((progress / 100) * 20)} / 20
                               </span>
                             </div>
-                            <div className="w-[1px] h-16 bg-matrix/20" />
-                            <div className="scale-75 origin-center">
+                            <div className="w-[1px] h-12 bg-matrix/20" />
+                            <div className="scale-[0.6] origin-center">
                               <AnalogCycle progress={progress < 100 ? (15 - currentFileTimer) * (100 / 15) : 100} />
                             </div>
                           </div>
-
-                          <div className="flex-1 max-w-[400px]">
+                          <div className="flex-1 max-w-[450px]">
                             <AdBanner />
                           </div>
-
                           <AnimatePresence>
                             {progress === 100 && (
                               <motion.button
-                                initial={{ y: 20, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
+                                initial={{ scale: 0.9, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
                                 id="collect-payload-btn"
                                 onClick={async () => {
                                   if ((window as any).show_monetag_vignette) {
@@ -625,18 +631,16 @@ export default function CommandDeck() {
                                   setShowAdGate(false);
                                   executePayloadDownload();
                                 }}
-                                className="px-16 py-8 bg-matrix text-void font-black text-xl tracking-[0.4em] uppercase hover:bg-[#00FF41] transition-all border-b-[8px] border-matrix/50 shadow-2xl active:border-b-0 active:translate-y-2 whitespace-nowrap"
+                                className="px-12 py-6 bg-matrix text-void font-black text-lg tracking-[0.4em] uppercase hover:bg-[#00FF41] transition-all border-b-[6px] border-matrix/50 shadow-2xl active:border-b-0 active:translate-y-2 whitespace-nowrap"
                               >
-                                COLLECT_PAYLOAD
+                                COLLECT
                               </motion.button>
                             )}
                           </AnimatePresence>
                         </div>
                       </div>
-
                     </motion.div>
                   )}
-
                   {/* Fallback display for Extraction phase when gate is closed */}
                   {phase === 'EXTRACTION' && !showAdGate && (
                     <div className="flex-grow flex flex-col overflow-hidden bg-void/20">
@@ -671,7 +675,6 @@ export default function CommandDeck() {
                     </div>
                   )}
                 </div>
-
                 {tetherError && <div className="fixed inset-0 z-[200] bg-void/90 flex items-center justify-center p-10"><div className="bg-hazard/20 border-2 border-hazard/40 p-12 text-hazard font-black text-2xl text-center animate-shake uppercase shadow-[0_0_100px_rgba(255,36,0,0.3)]">{tetherError}</div></div>}
               </motion.div>
             )}
