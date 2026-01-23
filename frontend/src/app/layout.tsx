@@ -22,6 +22,32 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        {/* GATEKEEPER PRIVACY & CMP */}
+        <script data-cfasync="false" src="https://cmp.gatekeeperconsent.com/min.js"></script>
+        <script data-cfasync="false" src="https://the.gatekeeperconsent.com/cmp.min.js"></script>
+
+        {/* EZOIC AD HEADER */}
+        <script async src="//www.ezojs.com/ezoic/sa.min.js"></script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.ezstandalone = window.ezstandalone || {};
+              ezstandalone.cmd = ezstandalone.cmd || [];
+              ezstandalone.cmd.push(function() {
+                ezstandalone.config({
+                  anchorAdPosition: 'bottom',
+                  anchorAdExpansion: true,
+                  vignetteDesktop: true,
+                  vignetteMobile: true,
+                  vignetteTablet: true,
+                  limitCookies: false // Set to true if precise privacy control needed
+                });
+              });
+            `,
+          }}
+        />
+      </head>
       <body className={`${jbMono.variable} font-mono antialiased matrix-grid min-h-screen relative`}>
         {/* THE HUSTLE: Adsterra / PopAds / Monetag Global Scripts */}
         {/* <script src="..." /> */}

@@ -36,8 +36,11 @@ type Phase = 'BREACH' | 'CALIBRATION' | 'REFINERY' | 'EXTRACTION';
 const DEFAULT_PERSONAS: Persona[] = [
   { id: 'verbatim', name: 'VERBATIM_EXTRACTOR', instructions: 'Clean, raw extraction with zero alteration.' },
   { id: 'architect', name: 'SYSTEM_ARCHITECT', instructions: 'Focus on code structure, technical debt, and architectural decisions.' },
-  { id: 'forensic', name: 'FORENSIC_AUDITOR', instructions: 'Highlight security vulnerabilities, logic gaps, and edge cases.' }
+  { id: 'forensic', name: 'FORENSIC_AUDITOR', instructions: 'Highlight security vulnerabilities, logic gaps, and edge cases.' },
+  { id: 'nexus', name: 'NEXUS_INTELLIGENCE', instructions: 'Strategic Blueprint Generation. Distills chat into pure Project DNA for Spark.' }
 ];
+
+const PEACOCK_ENGINE_URL = "http://localhost:3099/v1/strike";
 
 export default function CommandDeck() {
   const [mounted, setMounted] = useState(false);
@@ -57,8 +60,9 @@ export default function CommandDeck() {
   const [refinedMessages, setRefinedMessages] = useState<Message[]>([]);
   const [startIndex, setStartIndex] = useState(0);
   const [tetherError, setTetherError] = useState<string | null>(null);
-  const [showAdGate, setShowAdGate] = useState(false);
+  const [showAdGate, setShowAdGate] = useState(false); // DISABLED FOR PERSONAL
   const [personality, setPersonality] = useState<'SIPHON' | 'TOLL'>('TOLL');
+  // DEFAULT TO TOLL (PUBLIC)
   const [mountedTime, setMountedTime] = useState("");
   const [batchRanges, setBatchRanges] = useState<{ start: number, end: number }[]>([]);
 
@@ -70,6 +74,9 @@ export default function CommandDeck() {
   const [uplinkKey, setUplinkKey] = useState(0);
   const [isVerifying, setIsVerifying] = useState(false);
   const [hasVerifiedOnce, setHasVerifiedOnce] = useState(false);
+  const [strikeTargets, setStrikeTargets] = useState<{ path: string, skeleton: string, directives: string }[]>([]);
+  const [strikeResults, setStrikeResults] = useState<Record<string, string>>({});
+  const [activeStrikePath, setActiveStrikePath] = useState<string | null>(null);
 
   // THE HUSTLE: Active Engagement Logic
   const verifyUplink = () => {
@@ -109,6 +116,7 @@ export default function CommandDeck() {
         setPersonality(resp.data.personality);
       } catch (e) {
         console.error("IDENTITY_RESTORE_FAILED: Defaulting to TOLL doctrine.");
+        setPersonality('TOLL');
       }
     };
     fetchConfig();
@@ -167,8 +175,9 @@ export default function CommandDeck() {
       else if (data.chunkedPrompt) count = 1;
 
       const ranges = [];
-      for (let i = 0; i < Math.min(count, 500); i += 20) {
-        ranges.push({ start: i, end: Math.min(i + 20, count) });
+      const batchSize = isSiphon ? 999999 : 20; // Effectively no limit for SIPHON
+      for (let i = 0; i < Math.min(count, 5000); i += batchSize) {
+        ranges.push({ start: i, end: Math.min(i + batchSize, count) });
       }
       setBatchRanges(ranges);
       setStartIndex(0);
@@ -322,6 +331,9 @@ export default function CommandDeck() {
       }
 
       setRefinedMessages(allMessages);
+      if (options.persona_id === 'nexus') {
+        parseEagleOutput(allMessages);
+      }
       setPhase('EXTRACTION');
       setIsProcessing(false);
 
@@ -361,8 +373,73 @@ export default function CommandDeck() {
     setFile(null);
     setFileContent("");
     setProgress(0);
+    setStrikeTargets([]);
+    setStrikeResults({});
     addTelemetry(isSiphon ? "[🧹] CACHE_CLEARED" : "[🧹] MEMORY_PURGED");
     setShowAdGate(false);
+  };
+
+  const parseEagleOutput = (messages: Message[]) => {
+    const fullText = messages.map(m => m.text).join("\n");
+    const targets: { path: string, skeleton: string, directives: string }[] = [];
+
+    // Simple regex to find EOF blocks. Adjust as needed for EAGLE's specific output style.
+    // Expected: cat << 'EOF' > path/to/file\n[SKELETON]\nEOF
+    const eofRegex = /cat << 'EOF' > ([\w\/\.-]+)\n([\s\S]*?)\nEOF/g;
+    let match;
+
+    // Also look for DIRECTIVES section
+    const directiveMatch = fullText.match(/# DIRECTIVES:?([\s\S]*?)(?=cat << 'EOF'|$)/i);
+    const globalDirectives = directiveMatch ? directiveMatch[1].trim() : "No specific directives found.";
+
+    while ((match = eofRegex.exec(fullText)) !== null) {
+      targets.push({
+        path: match[1],
+        skeleton: match[2],
+        directives: globalDirectives // For now, apply global directives to all. We could refine this to per-file if EAGLE is smarter.
+      });
+    }
+    setStrikeTargets(targets);
+  };
+
+  const handlePeacockStrike = async (target: { path: string, skeleton: string, directives: string }) => {
+    setActiveStrikePath(target.path);
+    addTelemetry(`[🦅] INITIATING_OWL_STRIKE: ${target.path.toUpperCase()}`, "info");
+
+    const owlPrompt = `
+Act as OWL, code fixer. Your mission is to flesh out the following skeleton into full, production-ready code.
+Follow the EAGLE DIRECTIVES exactly. Output ONLY the EOF overwrite block.
+
+# EAGLE DIRECTIVES:
+${target.directives}
+
+# SKELETON:
+cat << 'EOF' > ${target.path}
+${target.skeleton}
+EOF
+
+# OUTPUT REQUIREMENT:
+Provide the full code in this format:
+cat << 'EOF' > ${target.path}
+[FULL CODE HERE]
+EOF
+`.trim();
+
+    try {
+      const response = await axios.post(PEACOCK_ENGINE_URL, {
+        modelId: "google/gemini-2.0-flash-001", // Default to high-cap Gemini
+        prompt: owlPrompt,
+        temp: 0.2 // Lower temp for code precision
+      });
+
+      const result = response.data.content || response.data.text || "STRIKE_RESULT_EMPTY";
+      setStrikeResults(prev => ({ ...prev, [target.path]: result }));
+      addTelemetry(`[✅] OWL_STRIKE_SUCCESS: ${target.path.toUpperCase()}`, "success");
+    } catch (e) {
+      addTelemetry(`[❌] OWL_STRIKE_FAILED: ${target.path.toUpperCase()}`, "warn");
+    } finally {
+      setActiveStrikePath(null);
+    }
   };
 
   if (!mounted) return <div className="min-h-screen bg-void" />;
@@ -383,14 +460,19 @@ export default function CommandDeck() {
             </p>
           </div>
 
-          {(phase === 'REFINERY' || phase === 'EXTRACTION') ? (
+          {(phase === 'REFINERY' || phase === 'EXTRACTION') && (
             <div className="flex-grow flex items-center justify-center border-2 border-matrix/40 bg-void p-4">
-              <div className="scale-90 md:scale-110">
-                <AdBanner />
-              </div>
+              {isSiphon ? (
+                <div className="text-matrix/20 font-black uppercase tracking-widest text-xs">SIPHON_MODE: SILENT_INGEST</div>
+              ) : (
+                <AdBanner placeholderId={101} refreshInterval={60} />
+              )}
             </div>
-          ) : (
+          )}
+
+          {!(phase === 'REFINERY' || phase === 'EXTRACTION') && (
             <div className="flex items-center gap-6">
+              {!isSiphon && <AdBanner placeholderId={103} refreshInterval={0} showSystemSponsor={false} />}
               <SecurityBanner />
               <div className={`h-12 w-[1px] ${isSiphon ? 'bg-slate-800' : 'bg-matrix/20'}`} />
               <div className="text-right">
@@ -656,7 +738,7 @@ export default function CommandDeck() {
 
                             {/* THE AD UNIT - Controlled by uplinkKey for forced refresh */}
                             <div className="w-full h-full relative z-10">
-                              <AdBanner key={uplinkKey} refreshInterval={60} />
+                              <AdBanner placeholderId={103} key={uplinkKey} refreshInterval={0} showSystemSponsor={false} />
                             </div>
 
                             {/* CORNER MARKERS */}
@@ -718,24 +800,19 @@ export default function CommandDeck() {
                           ))}
                           {progress < 100 && (
                             <div className="flex items-center gap-4 pt-4">
-                              <motion.div animate={{ opacity: [0, 1] }} transition={{ repeat: Infinity, duration: 0.5 }} className="w-4 h-6 bg-matrix opacity-40 shadow-[0_0_10px_rgba(0,255,65,0.4)]" />
+                              <motion.div animate={{ opacity: [0, 1] }} transition={{ repeat: Infinity, duration: 0.5 }} className="w-4 h-6 bg-matrix opacity-40 shadow-[0_0_100px_rgba(255,36,0,0.4)]" />
                               <span className="text-base text-matrix/20 animate-pulse font-black tracking-widest uppercase">Syncing...</span>
                             </div>
                           )}
                         </div>
                       </div>
 
-                      {/* SYSTEM SPONSOR (FOOTER AD) */}
-                      <div className="h-[200px] border-2 border-matrix/40 bg-void flex flex-col items-center justify-center p-4">
-                        <div className="text-[10px] font-black text-matrix/40 tracking-[0.3em] uppercase mb-4 w-full text-center border-b border-matrix/10 pb-2">
-                          System_Sponsor
+                      {/* SYSTEM SPONSOR */}
+                      {!isSiphon && (
+                        <div className="h-[100px] bg-void border-2 border-matrix/40 flex items-center justify-center">
+                          <AdBanner placeholderId={102} refreshInterval={30} />
                         </div>
-                        <div className="flex-grow flex items-center justify-center w-full">
-                          <div className="scale-90 md:scale-110">
-                            <AdBanner />
-                          </div>
-                        </div>
-                      </div>
+                      )}
                     </div>
                   ) : (
                     <div className="flex-grow flex flex-col gap-4 overflow-hidden">
@@ -744,20 +821,88 @@ export default function CommandDeck() {
                         <div className="flex-grow flex flex-col overflow-hidden bg-void border-2 border-matrix/40">
                           <header className="p-4 border-b border-matrix/10 flex justify-between items-center text-[10px] font-black opacity-30 uppercase tracking-[0.3em] bg-matrix/5">
                             <div className="flex items-center gap-2"><CheckCircle2 className="w-3 h-3 text-matrix" /> DATA_VAULT_OPEN</div>
-                            <div className="tabular-nums">STRIKE_SUCCESS // {startIndex + 1}-{startIndex + 20}</div>
+                            <div className="tabular-nums">STRIKE_SUCCESS // {isSiphon ? 'FULL_ARCHIVE' : `${startIndex + 1}-${startIndex + 20}`}</div>
                           </header>
+
                           <div className="flex-grow overflow-y-auto p-4 scrollbar-hide bg-black/20">
-                            <ConversationDisplay messages={refinedMessages} fileName={file?.name || "payload.json"} selectedPrompt={null} globalOptions={{ includeCode: true, includeThoughts: options.include_thoughts }} />
+                            {options.persona_id === 'nexus' && strikeTargets.length > 0 ? (
+                              <div className="space-y-8 p-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                  {strikeTargets.map((target, i) => (
+                                    <div key={i} className={`p-6 border-2 transition-all relative group shadow-[0_0_15px_rgba(0,0,0,0.5)] ${activeStrikePath === target.path ? 'border-voltage animate-pulse' : strikeResults[target.path] ? 'border-matrix shadow-[0_0_20px_rgba(0,255,65,0.1)]' : 'border-matrix/20 bg-void/40'}`}>
+                                      <div className="flex justify-between items-start mb-4">
+                                        <div className="flex items-center gap-2 text-matrix/60">
+                                          <FileJson className="w-4 h-4" />
+                                          <span className="text-[10px] font-black uppercase tracking-widest truncate max-w-[120px]">{target.path.split('/').pop()}</span>
+                                        </div>
+                                        {strikeResults[target.path] ? <CheckCircle2 className="w-4 h-4 text-matrix" /> : activeStrikePath === target.path ? <RefreshCcw className="w-4 h-4 text-voltage animate-spin" /> : <div className="w-4 h-4 border border-matrix/20 rounded-full" />}
+                                      </div>
+
+                                      <p className="text-[9px] text-matrix/40 font-bold uppercase mb-6 truncate">{target.path}</p>
+
+                                      <div className="space-y-3">
+                                        <button
+                                          onClick={() => handlePeacockStrike(target)}
+                                          disabled={!!activeStrikePath}
+                                          className={`w-full py-2 font-black text-[10px] tracking-[0.3em] uppercase transition-all ${strikeResults[target.path] ? 'bg-matrix text-void hover:bg-[#00FF41]' : 'border-2 border-matrix/50 text-matrix hover:bg-matrix/10'}`}
+                                        >
+                                          {strikeResults[target.path] ? 'RE-STRIKE' : 'INIT_STRIKE'}
+                                        </button>
+
+                                        {strikeResults[target.path] && (
+                                          <button
+                                            onClick={() => {
+                                              const el = document.createElement('textarea');
+                                              el.value = strikeResults[target.path];
+                                              document.body.appendChild(el);
+                                              el.select();
+                                              document.execCommand('copy');
+                                              document.body.removeChild(el);
+                                              addTelemetry(`[📋] COPIED_OVERWRITE: ${target.path.toUpperCase()}`, "success");
+                                            }}
+                                            className="w-full py-2 bg-void border border-matrix/20 text-matrix/60 font-black text-[9px] tracking-[0.2em] uppercase hover:border-matrix/60 hover:text-matrix transition-all"
+                                          >
+                                            COPY_OVERWRITE
+                                          </button>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+
+                                {Object.keys(strikeResults).length > 0 && (
+                                  <div className="mt-12 p-8 border-2 border-matrix/40 bg-void shadow-2xl">
+                                    <h3 className="text-xl font-black text-matrix uppercase tracking-widest mb-6 glow-text italic">Active_Payload_Vault</h3>
+                                    <div className="grid grid-cols-1 gap-6">
+                                      {Object.entries(strikeResults).map(([path, code]) => (
+                                        <div key={path} className="space-y-2">
+                                          <div className="flex justify-between items-center text-[10px] font-black text-matrix/40 uppercase tracking-widest">
+                                            <span>{path}</span>
+                                            <span className="text-matrix">OVERWRITE_BUFFER</span>
+                                          </div>
+                                          <pre className="p-4 bg-black border border-matrix/10 text-matrix text-xs overflow-x-auto selection:bg-matrix selection:text-void font-mono">
+                                            <code>{code}</code>
+                                          </pre>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <ConversationDisplay messages={refinedMessages} fileName={file?.name || "payload.json"} selectedPrompt={null} globalOptions={{ includeCode: true, includeThoughts: options.include_thoughts }} />
+                            )}
                           </div>
+
                           <div className="p-8 border-t border-matrix/20 bg-matrix/5 backdrop-blur-md">
                             <div className="max-w-3xl mx-auto flex flex-col md:flex-row items-center justify-between gap-10">
                               <div className="space-y-4 text-left">
                                 <h2 className="text-3xl font-black italic tracking-tighter text-matrix uppercase">Payload_Extracted</h2>
                                 <div className="bg-void border border-matrix/20 p-4 rounded shadow-inner">
                                   <p className="text-[11px] text-matrix/60 font-bold uppercase tracking-widest leading-loose">
-                                    BATCH_SUCCESS: {startIndex + 1} TO {startIndex + 20}<br />
-                                    TOTAL_CAPACITY: {batchRanges.length * 20}+ CHATS DETECTED.<br />
-                                    <span className="text-voltage mt-1 block">PROTOCOL: SELECT NEXT BATCH IN COMMAND_DECK.</span>
+                                    {isSiphon ? 'SIPHON_MISSION: FULL_DATA_RECOVERY_SUCCESSFUL' : `BATCH_SUCCESS: ${startIndex + 1} TO ${startIndex + 20}`}<br />
+                                    {isSiphon ? `TOTAL_ASSETS: ${refinedMessages.length} ENTRIES` : `TOTAL_CAPACITY: ${batchRanges.length * 20}+ CHATS DETECTED.`}<br />
+                                    <span className="text-voltage mt-1 block">PROTOCOL: {options.persona_id === 'nexus' ? 'EXECUTE_OWL_STRIKES_FOR_CODE_FLESH_OUT.' : 'SELECT NEXT BATCH IN COMMAND_DECK.'}</span>
                                   </p>
                                 </div>
                               </div>

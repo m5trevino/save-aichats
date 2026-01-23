@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm run update-ads && next build",
+    "update-ads": "curl -L https://srv.adstxtmanager.com/19390/save-aichats.com > public/ads.txt",
     "start": "next start",
     "lint": "next lint"
   },

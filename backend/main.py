@@ -32,6 +32,7 @@ class RefineryOptions(BaseModel):
     include_bot: bool = True
     include_thoughts: bool = False
     output_format: str = "md"
+    persona_id: str = "verbatim"
     base_filename: str = "WASHHOUSE_PAYLOAD"
 
 # --- ASCII ART ASSETS ---
@@ -219,13 +220,15 @@ async def refine_stream(request: Request, file: UploadFile = File(...), options_
             print("DEBUG: STREAM_STARTING...")
             batch = []
             if isinstance(raw_data, list) and len(raw_data) > 0 and "mapping" in raw_data[0]:
-                # ChatGPT Logic: 20-chat batching
-                batch = raw_data[start_index : start_index + 20]
+                # ChatGPT Logic: 20-chat batching (TOLL) or Full (SIPHON)
+                end_limit = start_index + 20 if SITE_PERSONALITY == "TOLL" else len(raw_data)
+                batch = raw_data[start_index : end_limit]
                 brand_handler = handle_chatgpt
                 brand_name = "ChatGPT"
             elif isinstance(raw_data, list) and len(raw_data) > 0 and "chat_messages" in raw_data[0]:
-                # Claude Logic: 20-chat batching
-                batch = raw_data[start_index : start_index + 20]
+                # Claude Logic: 20-chat batching (TOLL) or Full (SIPHON)
+                end_limit = start_index + 20 if SITE_PERSONALITY == "TOLL" else len(raw_data)
+                batch = raw_data[start_index : end_limit]
                 brand_handler = handle_claude
                 brand_name = "Claude"
             elif isinstance(raw_data, dict) and "chunkedPrompt" in raw_data:
@@ -243,7 +246,21 @@ async def refine_stream(request: Request, file: UploadFile = File(...), options_
                 batch_names.append(name)
 
             yield f"data: {json.dumps({'status': 'start', 'total': total_in_batch, 'batch_names': batch_names})}\n\n"
+            yield f"data: {json.dumps({'status': 'start', 'total': total_in_batch, 'batch_names': batch_names})}\n\n"
             print("DEBUG: START_PACKET_YIELDED_WITH_NAMES")
+            
+            # --- NEXUS INJECTION ---
+            if options.persona_id == "nexus":
+                # Inject the Nexus Blueprint Prompt as a separate "System Message" or Preface
+                nexus_prompt_path = os.path.join(os.path.dirname(__file__), "..", "nexus", "nexus_prompt_v1.md")
+                nexus_content = ""
+                if os.path.exists(nexus_prompt_path):
+                    with open(nexus_prompt_path, "r", encoding="utf-8") as f:
+                        nexus_content = f.read()
+                else:
+                    nexus_content = "ERROR: NEXUS_PROMPT_NOT_FOUND"
+
+                yield f"data: {json.dumps({'status': 'welded', 'index': 0, 'total': total_in_batch, 'name': 'NEXUS_PRIME_DIRECTIVE', 'messages': [{'role': 'system', 'text': nexus_content}], 'msg_count': 1})}\n\n"
             
             # THE TOLL: Elastic Dwell Time (Scales 1m to 5m) - ONLY ENABLED IN TOLL MODE
             if SITE_PERSONALITY == "TOLL":
@@ -305,11 +322,13 @@ async def refine_payload(file: UploadFile = File(...), options_json: str = Form(
         refined_files = []
         
         if isinstance(raw_data, list) and len(raw_data) > 0 and "mapping" in raw_data[0]:
-            batch = raw_data[start_index : start_index + 20]
+            end_limit = start_index + 20 if SITE_PERSONALITY == "TOLL" else len(raw_data)
+            batch = raw_data[start_index : end_limit]
             for conv in batch:
                 refined_files.append({"name": conv.get("title") or "ChatGPT_Chat", "content": handle_chatgpt(conv, options)})
         elif isinstance(raw_data, list) and len(raw_data) > 0 and "chat_messages" in raw_data[0]:
-            batch = raw_data[start_index : start_index + 20]
+            end_limit = start_index + 20 if SITE_PERSONALITY == "TOLL" else len(raw_data)
+            batch = raw_data[start_index : end_limit]
             for chat in batch:
                 refined_files.append({"name": chat.get("name") or "Claude_Chat", "content": handle_claude(chat, options)})
         elif isinstance(raw_data, dict) and "chunkedPrompt" in raw_data:

@@ -16,10 +16,31 @@ const App: React.FC = () => {
   const [activeFileIndex, setActiveFileIndex] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<'chat' | 'artifacts'>('chat');
   const [selectedPrompt, setSelectedPrompt] = useState<Prompt | null>(null);
-  
+
   // Global Export Settings
   const [includeCode, setIncludeCode] = useState(true);
   const [includeThoughts, setIncludeThoughts] = useState(false);
+  const [personality, setPersonality] = useState<'SIPHON' | 'TOLL'>('TOLL');
+  const [apiBase, setApiBase] = useState("");
+
+  React.useEffect(() => {
+    const base = process.env.NEXT_PUBLIC_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:8000' : 'https://save-aichats-backend.onrender.com');
+    setApiBase(base);
+
+    const fetchConfig = async () => {
+      try {
+        const axios = (await import('axios')).default;
+        const resp = await axios.get(`${base}/config`);
+        setPersonality(resp.data.personality);
+      } catch (e) {
+        console.error("IDENTITY_RESTORE_FAILED: Defaulting to TOLL doctrine.");
+        setPersonality('TOLL'); // ACTUALLY SET IT
+      }
+    };
+    fetchConfig();
+  }, []);
+
+  const isSiphon = personality === 'SIPHON';
 
   const sanitizeFileName = (name: string): string => {
     let clean = name.toLowerCase().replace(/\.[^/.]+$/, "");
@@ -32,14 +53,14 @@ const App: React.FC = () => {
     // Support Google chunkedPrompt OR standard chat structures (adapters logic)
     // This uses your existing logic logic for chunkedPrompt as priority
     let chunks = data?.chunkedPrompt?.chunks;
-    
+
     // Quick adapter for ChatGPT/Claude if chunkedPrompt is missing
     if (!chunks) {
-        // Simple fallback to prevent crash if wrong file type
-        // In a full prod version we would add the specific parsers here
-        // For now, we assume the user uploads the correct Google format or your backend handles conversion
-        // But since this is client-side React, we stick to the provided logic:
-        if (!chunks || !Array.isArray(chunks)) throw new Error("Invalid structure. (Requires JSON with chunkedPrompt)");
+      // Simple fallback to prevent crash if wrong file type
+      // In a full prod version we would add the specific parsers here
+      // For now, we assume the user uploads the correct Google format or your backend handles conversion
+      // But since this is client-side React, we stick to the provided logic:
+      if (!chunks || !Array.isArray(chunks)) throw new Error("Invalid structure. (Requires JSON with chunkedPrompt)");
     }
 
     const extracted: Message[] = [];
@@ -125,15 +146,19 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-200 flex flex-col p-4 md:p-8">
-      
+
       {/* HEADER SECTION */}
       <div className="text-center mb-4">
         <h1 className="text-4xl md:text-6xl font-bold text-sky-400 tracking-tighter uppercase mb-2">Save-AI Chats</h1>
         <p className="text-slate-500 font-mono text-sm tracking-[0.2em] uppercase">Humanize & Extract Your Logs</p>
       </div>
 
-      {/* AD SLOT 1: TOP BANNER */}
-      <AdBanner />
+      {/* AD SLOT 1 */}
+      {!isSiphon && (
+        <div className="max-w-4xl mx-auto w-full mb-8">
+          <AdBanner placeholderId={101} refreshInterval={60} />
+        </div>
+      )}
 
       <PromptManager selectedPromptId={selectedPrompt?.id || null} onSelect={setSelectedPrompt} />
       <FileUpload onFilesSelect={handleFilesSelect} onClear={handleClear} isProcessing={isProcessing} hasFiles={batchItems.length > 0} />
@@ -144,7 +169,7 @@ const App: React.FC = () => {
             <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
               Queue: {batchItems.length} Logs
             </h2>
-            
+
             <div className="flex items-center gap-4">
               {/* Batch Toggles */}
               <div className="flex items-center gap-2 bg-slate-900/50 px-3 py-1.5 rounded-lg border border-slate-700">
@@ -158,7 +183,7 @@ const App: React.FC = () => {
               {/* Action Buttons */}
               <div className="flex gap-1">
                 {(['json', 'md', 'txt', 'html'] as ExportFormat[]).map(fmt => (
-                  <button 
+                  <button
                     key={fmt}
                     onClick={() => handleBatchDownload(fmt)}
                     disabled={isProcessing || !batchItems.some(i => i.status === 'completed')}
@@ -170,11 +195,11 @@ const App: React.FC = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="max-h-60 overflow-y-auto divide-y divide-slate-700/50">
             {batchItems.map((item, idx) => (
-              <div 
-                key={item.id} 
+              <div
+                key={item.id}
                 onClick={() => !isProcessing && item.status === 'completed' && setActiveFileIndex(idx)}
                 className={`flex items-center justify-between p-3 hover:bg-slate-700/30 transition-colors cursor-pointer ${activeFileIndex === idx ? 'bg-sky-900/20' : ''}`}
               >
@@ -189,27 +214,29 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* AD SLOT 2: BEFORE CONTENT */}
-      {activeItem?.messages && (
-        <AdBanner />
+      {/* AD SLOT 2 */}
+      {!isSiphon && (
+        <div className="max-w-4xl mx-auto w-full mb-8">
+          <AdBanner placeholderId={102} refreshInterval={30} />
+        </div>
       )}
 
       {activeItem?.messages && (
         <div className="space-y-6">
           <div className="w-full max-w-4xl mx-auto flex justify-center space-x-3">
-              <button onClick={() => setViewMode('chat')} className={`px-8 py-2 rounded-xl font-bold border ${viewMode === 'chat' ? 'bg-sky-600 text-white' : 'bg-slate-800 text-slate-400'}`}>Inspect</button>
-              <button onClick={() => setViewMode('artifacts')} className={`px-8 py-2 rounded-xl font-bold border ${viewMode === 'artifacts' ? 'bg-sky-600 text-white' : 'bg-slate-800 text-slate-400'}`}>Artifacts</button>
+            <button onClick={() => setViewMode('chat')} className={`px-8 py-2 rounded-xl font-bold border ${viewMode === 'chat' ? 'bg-sky-600 text-white' : 'bg-slate-800 text-slate-400'}`}>Inspect</button>
+            <button onClick={() => setViewMode('artifacts')} className={`px-8 py-2 rounded-xl font-bold border ${viewMode === 'artifacts' ? 'bg-sky-600 text-white' : 'bg-slate-800 text-slate-400'}`}>Artifacts</button>
           </div>
           <div className={viewMode === 'chat' ? 'block' : 'hidden'}>
-              <ConversationDisplay 
-                messages={activeItem.messages!} 
-                fileName={activeItem.sanitizedName} 
-                selectedPrompt={selectedPrompt}
-                globalOptions={{ includeCode, includeThoughts }}
-              />
+            <ConversationDisplay
+              messages={activeItem.messages!}
+              fileName={activeItem.sanitizedName}
+              selectedPrompt={selectedPrompt}
+              globalOptions={{ includeCode, includeThoughts }}
+            />
           </div>
           <div className={viewMode === 'artifacts' ? 'block' : 'hidden'}>
-              <ArtifactsDisplay fileGroups={parseCommands(activeItem.messages!)} />
+            <ArtifactsDisplay fileGroups={parseCommands(activeItem.messages!)} />
           </div>
         </div>
       )}

@@ -12,6 +12,58 @@ export interface Chunk {
   parts?: { text: string; thought?: boolean }[];
 }
 
+// --- EZOIC TYPES ---
+declare global {
+  interface Window {
+    ezstandalone: EzoicStandalone;
+    ez_js_debugger?: number;
+    ezRewardedAds?: EzoicRewardedAds;
+  }
+}
+
+export interface EzoicStandalone {
+  cmd: Function[];
+  showAds: (...args: (number | any[])[]) => void;
+  destroyPlaceholders: (...ids: number[]) => void;
+  destroyAll: () => void;
+  refreshAds: (...ids: number[]) => void;
+  setEzoicAnchorAd: (show: boolean) => void;
+  hasAnchorAdBeenClosed: () => boolean;
+  config: (options: EzoicConfig) => void;
+  initRewardedAds: (config?: any) => void;
+  isEzoicUser: (percent?: number) => boolean;
+  displayMore: () => void;
+}
+
+export interface EzoicConfig {
+  limitCookies?: boolean;
+  anchorAdPosition?: 'top' | 'bottom';
+  anchorAdExpansion?: boolean;
+  disableInterstitial?: boolean;
+  vignetteDesktop?: boolean;
+  vignetteMobile?: boolean;
+  vignetteTablet?: boolean;
+  [key: string]: any;
+}
+
+export interface EzoicRewardedAds {
+  cmd: Function[];
+  requestAndShow: (callback: (result: EzoicRewardResult) => void, config?: any) => void;
+  requestWithOverlay: (callback: (result: EzoicRewardResult) => void, text?: any, config?: any) => void;
+  contentLocker: (action: string | Function, config?: any) => void;
+  ready?: boolean;
+}
+
+export interface EzoicRewardResult {
+  status: boolean;
+  reward: boolean;
+  msg: string;
+  adInfo?: {
+    id: string;
+    estimatedPayout: number;
+  };
+}
+
 export interface JsonData {
   chunkedPrompt?: {
     chunks?: Chunk[];

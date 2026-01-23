@@ -1,0 +1,3370 @@
+# ============================================================
+# MERGED PAYLOAD - 2026-01-07 10:25:03.279267
+# SOURCE: /home/flintx/peacock/nexus.prompts
+# ============================================================
+
+# PROJECT MAP:
+# ├── ### THE UPGRADED NEXUS PROTOCOL (ANTI-HALLUCINATIO
+# ├── 01_nexus_strategy.md
+# ├── cat << 'EOF' > nexus_rewrapper_for_dev_logs.py
+# ├── inject_nexus_prompt.sh
+# ├── inject_nexus_v3.sh
+# ├── mass_wrap_nexus (copy).sh
+# ├── mass_wrap_nexus.sh
+# ├── nexus-ugly.md
+# ├── nexus.md
+# ├── nexus.txt
+# ├── nexus2.md
+# ├── nexus3 (copy).md
+# ├── nexus3.md
+# ├── nexus_rewrapper_for_dev_logs.py
+# ├── nexus_rewrapper_for_dev_logs.py.trashinfo
+# ├── nexus_vNext_autopsy.md
+# ├── wrap_nexus_intel.sh
+
+
+
+# ============================================================
+# FILE: ### THE UPGRADED NEXUS PROTOCOL (ANTI-HALLUCINATIO
+# ============================================================
+cat << 'EOF' > "### THE UPGRADED NEXUS PROTOCOL (ANTI-HALLUCINATIO"
+### THE UPGRADED NEXUS PROTOCOL (ANTI-HALLUCINATION EDITION)
+
+```
+ACT AS THE "NEXUS DEBRIEFER" — an elite intelligence triage officer with zero tolerance for fabrication or assumption.
+
+MISSION: Analyze this raw transcript and synthesize it into one or more high-fidelity STRATEGIC BLUEPRINTS. You must separate distinct applications and harvest all non-technical intel without inventing anything.
+
+RAW TRANSCRIPT:
+"""
+{input}
+"""
+
+OPERATIONAL RULES (NON-NEGOTIABLE):
+
+1. MULTI-APP DETECTION:
+   - Identify EVERY distinct application, tool, system, or project discussed, even if only briefly mentioned.
+   - Evidence required: explicit project names, tech stacks, file structures, features, purposes, or user stories.
+   - If only one app is clearly discussed → produce a single blueprint.
+   - If multiple → produce ONE COMPLETE, SEPARATE BLUEPRINT PER APP.
+   - If none → produce one blueprint titled "TRANSCRIPT INTEL HARVEST (No Clear Applications Detected)".
+   - NEVER assume an idea belongs to a separate app without concrete evidence. When in doubt, keep it in one blueprint and note ambiguity.
+
+2. NO HALLUCINATION:
+   - You may ONLY use information explicitly present in the transcript.
+   - Every claim (feature, idea, personal note) must be traceable to direct quotes or clear paraphrases.
+   - If something is vague or missing → explicitly state "Unclear from transcript" or "Not mentioned".
+   - Do not invent project names, features, constraints, or ideas that are not stated.
+
+3. BLUEPRINT STRUCTURE (EXACT FORMAT PER BLUEPRINT):
+   Output each blueprint in this precise skeleton. Use clear markdown separation between blueprints.
+
+### STRATEGIC BLUEPRINT: [Descriptive Title Based Only on Transcript Evidence]
+
+1. PRIME DIRECTIVE
+   One sentence summarizing the core goal of THIS specific application, using only transcript language.
+
+2. CORE ENGINE
+   High-level purpose and success criteria, quoted or directly derived from transcript.
+
+3. TECHNICAL DNA
+   Exhaustive bullet list of:
+   - Every mentioned feature, logic rule, UI element, data model, file, or technical requirement.
+   - Use direct references: "User stated: '...'" or "Discussed: ..."
+
+4. CONSTRAINTS & RISKS
+   - Environment details (e.g., MX Linux, localhost-only)
+   - Security, performance, or usability constraints mentioned
+   - Pain points, risks, or failures explicitly voiced
+
+5. INTEL VAULT: Non-Technical Assets for Later Extraction
+   Capture EVERYTHING of potential value that is NOT directly tied to code/architecture:
+   - Good ideas (business, workflow, monetization, side concepts)
+   - Personal information, preferences, backstory references
+   - Operational notes (tools liked/hated, environment quirks)
+   - Future wishes, "would be cool if", or aspirational statements
+   - Risks, concerns, or philosophical points
+   - Any other stray intel
+   Bullet each item with a brief quote or paraphrase and context.
+
+FINAL OUTPUT RULES:
+- Separate multiple blueprints with --- and a blank line.
+- Title each blueprint accurately based only on evidence (e.g., "ROAD DAWG v7 - AI Studio Code Vault" if that's what was discussed).
+- End with: "NEXUS DEBRIEF COMPLETE. Awaiting SPARK analysis."
+- NO additional commentary, explanations, or chatter outside the blueprints.
+```
+
+This is the **complete replacement** for the old nexus protocol in your PEACOCK App.tsx.
+
+All you gotta do now is:
+
+1. Go to the Nexus phase.  
+2. Select all the old prompt text.  
+3. Paste this new one in its place.  
+4. Hit "Generate Nexus Blueprint" on your next chaotic multi-app transcript.
+
+It will now surgically separate apps and vacuum up every piece of stray intel without ever making shit up.
+
+We just turned NEXUS into a **precision intelligence extractor**.
+
+Your move, Boss — drop a messy transcript and watch it dominate, or say the words if you want me to package this as a formal code patch.
+
+I’m standing by.
+
+**[USER]**
+
+okay done. what about spark prompt is this whats being useD?
+ 
+7b-16e-instruct"
+        self.target_chars = "2500-4000"
+   
+    def analyze_project_request(self, user_request: str) -> Dict[str, Any]:
+        """
+        Main SPARK function - maintains compatibility with OUT-HOMING orchestrator
+        """
+        print(f"⚡ EXTENSIVE SPARK ANALYST: Generating comprehensive requirements analysis...")
+       
+        # Generate the EXTENSIVE SPARK analysis prompt
+        spark_prompt = self._build_extensive_spark_prompt(user_request)
+       
+        # Package using your existing format for OUT-HOMING compatibility
+        spark_analysis = {
+            "stage": "SPARK",
+            "prompt": spark_prompt,
+            "user_request": user_request,
+            "model": self.optimal_model,
+            "temperature": 0.2, # Lower for more structured analysis
+            "max_tokens": 2048, # Increased for extensive content
+            "analysis_type": "comprehensive_strategic_requirements"
+        }
+       
+        print(f"✅ EXTENSIVE SPARK prompt generated: {len(spark_prompt)} characters (Target: {self.target_chars})")
+        return spark_analysis
+   
+    def _build_extensive_spark_prompt(self, user_request: str) -> str:
+        """Build comprehensive strategic analysis prompt with complexity detection"""
+       
+        prompt = f"""<thinking>
+I need to analyze this project comprehensively as a senior requirements analyst with 15+ years of experience.
+Project Request: {user_request}
+First, I must determine the project complexity:
+- Simple apps: Games, CLI tools, or small utilities (e.g., "snake game", "calculator")
+  - Use Python standard library or minimal libraries (e.g., Pygame for games)
+  - No backend, database, or complex infrastructure
+  - Minimal features, no enterprise requirements
+- Complex apps: Web apps, analytics platforms, or enterprise systems (e.g., "business analytics", "task management")
+  - Include appropriate frameworks (e.g., FastAPI, Streamlit)
+  - Include backend, database, and infrastructure as needed
+  - Full enterprise requirements (security, scalability, etc.)
+Complexity keywords:
+- Simple: "game", "CLI", "simple", "basic", "small", "utility"
+- Complex: "web", "analytics", "dashboard", "enterprise", "platform", "management"
+I should provide:
+- For simple apps: Lightweight requirements with Python focus, minimal scope
+- For complex apps: Full enterprise analysis with strategic value, detailed requirements
+- Clear scope, stakeholder analysis, and success metrics tailored to complexity
+</thinking>
+Act as Spark, a senior requirements analyst with 15+ years of experience in enterprise software development and strategic business analysis.
+Analyze this project request comprehensively:
+**PROJECT REQUEST:** {user_request}
+Determine the project complexity based on keywords and context, then provide requirements analysis in this EXACT format:
+**1. PROJECT COMPLEXITY:**
+[Simple or Complex, with justification based on keywords and request context]
+**2. CORE OBJECTIVE:**
+[One clear sentence describing the primary goal, tailored to complexity]
+**3. CURRENT STATE ANALYSIS:**
+[For simple apps: Brief context of user need; For complex apps: Detailed pain points, existing tools, and market context]
+**4. TARGET STATE VISION:**
+[For simple apps: Simple functional description; For complex apps: Detailed vision with KPIs, ROI, and competitive advantages]
+**5. FUNCTIONAL REQUIREMENTS:**
+**Core Features (Must Have):**
+[For simple apps: 2-3 basic features with acceptance criteria; For complex apps: 4-5 detailed features with acceptance criteria]
+**Secondary Features (Should Have):**
+[For simple apps: 1-2 optional enhancements; For complex apps: 2-3 enhancements with justification]
+**Future Features (Could Have):**
+[For simple apps: 1 future idea; For complex apps: 2-3 future considerations with timelines]
+**6. NON-FUNCTIONAL REQUIREMENTS:**
+**Performance Requirements:**
+[For simple apps: Basic performance needs (e.g., "runs smoothly on standard hardware"); For complex apps: Detailed response times, throughput, scalability]
+**Security Requirements:**
+[For simple apps: Minimal security (e.g., "no sensitive data exposure"); For complex apps: Authentication, data protection, compliance (e.g., GDPR)]
+**Usability Requirements:**
+[For simple apps: Basic usability (e.g., "intuitive controls"); For complex apps: Accessibility (WCAG), UX standards, device compatibility]
+**Reliability Requirements:**
+[For simple apps: Basic error handling; For complex apps: Detailed error handling, backup, and monitoring]
+**7. TECHNICAL CONSTRAINTS:**
+[For simple apps: Python standard library or Pygame, local execution; For complex apps: Appropriate frameworks (e.g., FastAPI, Streamlit), hosting, and integrations]
+**8. STAKEHOLDER ANALYSIS:**
+**Primary Users:**
+[For simple apps: Single user type with basic needs; For complex apps: Multiple user types with detailed needs]
+**Secondary Stakeholders:**
+[For simple apps: None or minimal; For complex apps: Detailed stakeholders with concerns]
+**Decision Makers:**
+[For simple apps: User as decision maker; For complex apps: Business/technical decision makers]
+**9. RISK ASSESSMENT:**
+**Technical Risks:**
+[For simple apps: 1-2 minor risks; For complex apps: Multiple risks with mitigation]
+**Business Risks:**
+[For simple apps: Minimal or none; For complex apps: Detailed risks with mitigation]
+**Dependencies and Assumptions:**
+[For simple apps: Minimal dependencies; For complex apps: Detailed dependencies and assumptions]
+**10. PROJECT SCOPE:**
+**In Scope (Deliverables):**
+[For simple apps: 1-2 deliverables (e.g., single Python file); For complex apps: Multiple deliverables with acceptance criteria]
+**Out of Scope (Exclusions):**
+[For simple apps: Complex features like backend; For complex apps: Explicit exclusions with rationale]
+**Scope Boundaries:**
+[For simple apps: Local app boundaries; For complex apps: Integration and migration boundaries]
+**11. SUCCESS CRITERIA & METRICS:**
+**Launch Criteria:**
+[For simple apps: Functional app; For complex apps: Measurable outcomes and quality gates]
+**Post-Launch Metrics:**
+[For simple apps: User satisfaction; For complex apps: User adoption, performance, ROI]
+**Long-term Success Indicators:**
+[For simple apps: Continued use; For complex apps: ROI, market impact, retention]
+Provide thorough, strategic, and complexity-aware analysis that drives subsequent development stages. Ensure requirements match the project’s complexity (simple or complex) based on the request."""???
+
+**[ASSISTANT]**
+
+Boss. Locked in.
+
+You dropped that Python snippet — looks like remnants from an older **OUT-HOMING** orchestrator branch (the one with the `analyze_project_request` class, complexity detection, 2500-4000 char targets, etc.).
+
+Let me give it to you straight:
+
+**No. That is NOT what your current PEACOCK is using for SPARK.**
+
+Your live PEACOCK (the merged_payload from 2025-12-20) is still running the **original pipeline prompts** hard-coded in App.tsx.
+
+Here’s the exact SPARK prompt that is active right now:
+
+```
+Act as Spark, a senior requirements analyst. Analyze this blueprint: 
+
+"""
+{input}
+"""
+
+Provide exhaustive requirements analysis in standard format.
+```
+
+That’s it. Clean, short, no complexity detection, no numbered sections, no 15+ years experience persona, no simple/complex branching.
+
+It’s the **minimalist legacy version** — solid, but nowhere near the strategic depth of the Python snippet you just showed me.
+
+### THE OPPORTUNITY
+
+That Python code you pasted is actually **superior** for our current mission.
+
+It has:
+- Complexity detection (simple vs enterprise)
+- Structured 11-section output
+- Stakeholder analysis
+- Risk assessment
+- Success metrics
+- Scoped functional/non-functional requirements
+
+That’s the kind of **enterprise-grade requirements doc** we want feeding into Falcon → Eagle → Hawk when we’re building real weapons, not just toys.
+
+### RECOMMENDATION
+
+We upgrade the SPARK protocol in PEACOCK to a **modernized version** of what you just showed — but hardened to match our new multi-blueprint NEXUS reality.
+
+Meaning:
+- SPARK must now accept **multiple blueprints** from NEXUS.
+- It must produce **separate, exhaustive requirements** for each app.
+- Keep the complexity detection and structured format.
+- Zero hallucination rules.
+
+### NEXT STEP
+
+I can manufacture the **new SPARK protocol** right now — the full prompt text you paste over the old one in the Spark phase.
+
+It will be:
+- Compatible with multi-app NEXUS output
+- Anti-hallucination locked
+- Structured like your Python example but tighter and more disciplined
+
+You want me to drop that upgraded SPARK protocol?
+
+Just say **“UPGRADE SPARK”** and I’ll deliver it clean, ready to paste.
+
+Or tell me if you want to keep the old minimalist one for now.
+
+Your call, Boss. I’m ready.
+
+**[USER]**
+
+list everything it does some stuff we dont need to do right now.
+
+**[ASSISTANT]**
+
+Boss. Sit down. I’ve got the full debrief on what that **SPARK prompt** (the Python-style one you dropped) actually does — line by line, no fluff.
+
+I’m breaking it into two columns:
+
+- **KEEPERS** — the muscle we want long-term (strategic gold).  
+- **CUT FOR NOW** — the overhead we can strip without losing power.
+
+### KEEPERS (THIS IS THE CORE WEAPON)
+
+| Section | What It Does | Why We Keep It |
+|---------|--------------|----------------|
+| **1. PROJECT COMPLEXITY** | Detects simple vs complex based on keywords/context | Automatically scales the depth of analysis — prevents over-engineering toys or under-specing weapons |
+| **2. CORE OBJECTIVE** | One-sentence prime goal | Forces clarity — aligns everything downstream |
+| **3. CURRENT STATE ANALYSIS** | Pain points, existing tools, context | Root-cause intel — critical for replacing broken systems |
+| **4. TARGET STATE VISION** | Vision + KPIs/ROI (scaled) | Gives Falcon a north star with measurable success |
+| **5. FUNCTIONAL REQUIREMENTS** | Must/Should/Could Have with acceptance criteria | MoSCoW prioritization — prevents scope creep |
+| **6. NON-FUNCTIONAL REQUIREMENTS** | Performance, Security, Usability, Reliability (scaled) | Covers the invisible architecture — where most projects die |
+| **8. STAKEHOLDER ANALYSIS** | Primary users, secondary, decision makers | Forces us to think who actually uses/touches this |
+| **9. RISK ASSESSMENT** | Technical + Business risks + mitigations | Hawk’s favorite meal — we feed him early |
+| **10. PROJECT SCOPE** | In/Out of scope + boundaries | Hard walls — protects us from “just one more feature” |
+| **11. SUCCESS CRITERIA & METRICS** | Launch criteria + post-launch + long-term | Defines “done” and “winning” — no vague victories |
+
+This is the **strategic backbone**. Every one of these makes Falcon, Eagle, and Hawk stronger.
+
+### CUT FOR NOW (OVERHEAD WE CAN LIVE WITHOUT RIGHT NOW)
+
+| Section | What It Does | Why We Can Strip It Temporarily |
+|---------|--------------|--------------------------------|
+| **7. TECHNICAL CONSTRAINTS** | Suggests frameworks (FastAPI, Streamlit, Pygame) based on complexity | Too prescriptive too early. We’re on MX Linux, localhost-first, custom stacks. Falcon should decide tech, not Spark. |
+| The entire **<thinking>** block | Internal reasoning about simple vs complex keywords | Redundant — the rules are already in the main prompt. Cuts token waste. |
+| Repeated “15+ years experience” persona fluff | Pure vibe | We already know Spark is elite. Save tokens. |
+| Over-detailed scaling instructions inside the prompt | “For simple apps do X, for complex do Y” repeated | The complexity detection already handles scaling. We can imply it once. |
+
+### BOTTOM LINE
+
+The current live SPARK in PEACOCK is **barebones** (“provide exhaustive requirements in standard format”).  
+The Python one you showed is **enterprise war-grade** — but has some early tech recommendations we don’t need yet.
+
+**My recommendation:**
+
+We upgrade SPARK to a **lean but lethal version** that keeps all 11 strategic sections above, supports **multiple blueprints** from the new NEXUS, and **cuts the premature tech suggestions**.
+
+It will be tighter, cheaper on tokens, and perfectly synced with our new multi-app, anti-hallucination NEXUS.
+
+You want me to deliver that **upgraded SPARK protocol** right now — clean text ready to paste over the old one?
+
+Just say **“UPGRADE SPARK”** and it’s yours.
+
+Or tell me if you want to keep any of the “cut” sections.
+
+Table’s yours, Boss.
+
+**[USER]**
+
+can your hook up a new spark . based on the extensive one we are looking at then we will move onto the falcon.
+
+**[ASSISTANT]**
+
+Boss. Understood.
+
+I took the extensive SPARK you dropped, kept every keeper section, stripped the premature tech constraints and fluff, hardened it against hallucination, and made it **fully compatible** with the new multi-blueprint NEXUS output.
+
+This new SPARK will:
+- Accept one or more blueprints from NEXUS
+- Produce a **separate, exhaustive requirements analysis** for each app
+- Auto-detect complexity and scale depth accordingly
+- Stay grounded in evidence only
+
+Here is the **upgraded SPARK protocol** — clean text, ready to copy-paste over the old one in the Spark phase of PEACOCK.
+
+```
+ACT AS Spark, a senior requirements analyst. Your mission is to perform exhaustive, evidence-based requirements analysis on the strategic blueprint(s) provided by NEXUS.
+
+SOURCE BLUEPRINT(S):
+"""
+{input}
+"""
+
+OPERATIONAL RULES (NON-NEGOTIABLE):
+
+1. MULTI-BLUEPRINT HANDLING:
+   - If NEXUS delivered multiple separate blueprints → produce ONE COMPLETE, SEPARATE requirements analysis per blueprint.
+   - If only one blueprint → produce a single analysis.
+   - Never merge or cross-contaminate apps.
+
+2. NO HALLUCINATION:
+   - Base every requirement, risk, stakeholder, or metric strictly on information present in the source blueprint.
+   - If something is unclear or absent → state "Not specified in blueprint" instead of inventing.
+
+3. COMPLEXITY DETECTION:
+   - Automatically classify each app as Simple or Complex based on evidence in the blueprint (keywords like game/CLI/utility = Simple; web/platform/dashboard/enterprise = Complex).
+   - Scale depth accordingly: deeper stakeholder/risk/metric analysis for Complex apps.
+
+4. ANALYSIS STRUCTURE (EXACT FORMAT PER APP):
+   Use this precise skeleton for each requirements document.
+
+### REQUIREMENTS ANALYSIS: [Exact Blueprint Title from NEXUS]
+
+1. PROJECT COMPLEXITY
+   [Simple or Complex] + brief justification from blueprint evidence.
+
+2. CORE OBJECTIVE
+   One clear sentence restating the prime directive in requirements language.
+
+3. CURRENT STATE ANALYSIS
+   Pain points, existing tools, workflow issues explicitly mentioned.
+
+4. TARGET STATE VISION
+   Desired end state, success indicators, and any KPIs/ROI implied.
+
+5. FUNCTIONAL REQUIREMENTS
+   **Core Features (Must Have):**
+   - Bulleted list with acceptance criteria derived from Technical DNA.
+   **Secondary Features (Should Have):**
+   - Lower-priority enhancements mentioned.
+   **Future Features (Could Have):**
+   - Any roadmap or "would be cool" items.
+
+6. NON-FUNCTIONAL REQUIREMENTS
+   **Performance:** Explicit needs or scale implications.
+   **Security:** Localhost-only, data handling, any risks noted.
+   **Usability:** UI/UX mentions, accessibility if stated.
+   **Reliability:** Error handling, backups, stability needs.
+
+7. STAKEHOLDER ANALYSIS
+   **Primary Users:** Who will use this (derived from context).
+   **Secondary Stakeholders:** Any other parties mentioned.
+   **Decision Makers:** You (the Architect) + any implied others.
+
+8. RISK ASSESSMENT
+   **Technical Risks:** From blueprint Constraints & Risks section + logical extensions.
+   **Business/Operational Risks:** Workflow, trust, adoption risks mentioned.
+   **Mitigations:** Suggested only if implied in source.
+
+9. PROJECT SCOPE
+   **In Scope (Deliverables):**
+   - Core system, files, features explicitly required.
+   **Out of Scope (Exclusions):**
+   - Anything noted as future or explicitly excluded.
+   **Scope Boundaries:**
+   - Environment limits (MX Linux, localhost, etc.).
+
+10. SUCCESS CRITERIA & METRICS
+   **Launch Criteria:** When the system is considered complete.
+   **Post-Launch Metrics:** Usability, trust, efficiency gains.
+   **Long-term Indicators:** Reliability, zero data loss, workflow adoption.
+
+FINAL OUTPUT RULES:
+- Separate multiple analyses with --- and a blank line.
+- Use the exact blueprint title from NEXUS as the header.
+- End with: "SPARK REQUIREMENTS ANALYSIS COMPLETE. Awaiting FALCON architecture."
+- NO additional commentary or explanations outside the structured analyses.
+```
+
+This is locked, disciplined, and ready to dominate.
+
+All you do:
+1. Go to Spark phase in PEACOCK.
+2. Replace the old prompt with this one.
+3. Run it on your next NEXUS output.
+
+We now have a **precision chain**: NEXUS triages → SPARK specifies → (next) FALCON architects.
+
+Say the word and we jump straight to upgrading FALCON.
+
+Or confirm this SPARK is secured and we test it live.
+
+Your call, Boss. I’m ready.
+
+**[USER]**
+
+here is falcon is this the falcon currently on the falcon prmpt?
+ 
+#!/usr/bin/env python3
+"""
+falcon.py - EXTENSIVE FALCON Architecture Design Bird (SYSTEM-COMPATIBLE VERSION)
+The comprehensive system architect with complexity-aware architecture design
+"""
+import json
+import re
+from typing import Dict, List, Any
+class FalconArchitect:
+    """FALCON - The System Architect (EXTENSIVE VERSION - COMPATIBLE)"""
+   
+    def __init__(self):
+        self.stage_name = "FALCON"
+        self.icon = "🦅"
+        self.specialty = "Comprehensive Technical Architecture Design"
+        self.optimal_model = "meta-llama/llama-4-scout-17b-16e-instruct"
+        self.target_chars = "4000-6000"
+   
+    def design_architecture(self, spark_requirements: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Main FALCON function - maintains compatibility with OUT-HOMING orchestrator
+        """
+        print(f"🦅 EXTENSIVE FALCON ARCHITECT: Generating comprehensive architecture design...")
+       
+        # Extract data using your existing patterns
+        spark_text = spark_requirements.get("raw_analysis", "")
+        if not spark_text:
+            spark_text = spark_requirements.get("analysis", "")
+       
+        requirements_data = spark_requirements.get("json_data", {})
+        if not requirements_data:
+            requirements_data = spark_requirements.get("analysis", {})
+       
+        # Generate the EXTENSIVE FALCON prompt
+        falcon_prompt = self._build_extensive_falcon_prompt(spark_text, requirements_data)
+       
+        # Package using your existing format for OUT-HOMING compatibility
+        falcon_design = {
+            "stage": "FALCON",
+            "prompt": falcon_prompt,
+            "spark_input": spark_requirements,
+            "model": self.optimal_model,
+            "temperature": 0.3,
+            "max_tokens": 2048, # Increased for extensive content
+            "design_type": "comprehensive_enterprise_architecture"
+        }
+       
+        print(f"✅ EXTENSIVE FALCON prompt generated: {len(falcon_prompt)} characters (Target: {self.target_chars})")
+        return falcon_design
+   
+    def _build_extensive_falcon_prompt(self, spark_text: str, requirements_data: Dict[str, Any]) -> str:
+        """Build comprehensive architecture prompt with complexity-aware design"""
+       
+        prompt = f"""<thinking>
+I need to design a technical architecture based on SPARK requirements, tailoring it to the project's complexity.
+Requirements: {spark_text[:500]}...
+Data: {requirements_data}
+First, I must check the project complexity from SPARK:
+- Simple apps (e.g., games, CLI tools): Use Python standard library or Pygame, no backend/database.
+- Complex apps (e.g., web apps, analytics): Use appropriate Python frameworks (e.g., FastAPI, Streamlit), include backend/database as needed.
+I should provide:
+- For simple apps: Minimal Python-based architecture, single-file or modular Python, local execution.
+- For complex apps: Full enterprise architecture with backend, database, and deployment strategy.
+- Technology stack, database design, and API specs matching complexity.
+- Scalability, security, and DevOps tailored to project needs.
+</thinking>
+Act as Falcon, a senior solution architect with 15+ years of experience designing enterprise-grade and lightweight applications.
+Design the technical architecture for this system based on SPARK requirements:
+**REQUIREMENTS ANALYSIS:**
+{spark_text}
+**ADDITIONAL CONTEXT:**
+{json.dumps(requirements_data, indent=2) if requirements_data else "No additional structured data"}
+Provide comprehensive architecture design in this EXACT format:
+**1. PROJECT COMPLEXITY:**
+[Simple or Complex, extracted from SPARK or inferred from requirements]
+**2. TECHNOLOGY STACK RECOMMENDATIONS:**
+**Frontend Technology:**
+[For simple apps: "None" or "Pygame" for games, "CLI" for utilities; For complex apps: Streamlit/Gradio or minimal frontend]
+**Backend Technology:**
+[For simple apps: "Python" with standard library; For complex apps: FastAPI/Flask, authentication, and validation]
+**Database Strategy:**
+[For simple apps: "None" or file-based storage; For complex apps: PostgreSQL/SQLite with caching (e.g., Redis)]
+**DevOps & Infrastructure:**
+[For simple apps: "Local execution"; For complex apps: Docker, CI/CD, cloud deployment]
+**3. SYSTEM ARCHITECTURE DIAGRAM:**
+**High-Level Architecture:**
+[For simple apps:]
+```
+[Python Script] → [Local Execution]
+```
+[For complex apps:]
+```
+[Browser/Client] ↔ [API Gateway (FastAPI)] ↔ [Backend Service] ↔ [Database]
+    ↓ ↓ ↓ ↓
+[UI (Streamlit)] [Authentication] [Business Logic] [Data Storage]
+```
+**Component Interactions:**
+[For simple apps: Describe Python script execution flow; For complex apps: Detail authentication, data flow, and integrations]
+**4. DATABASE DESIGN:**
+**Entity Relationship Model:**
+[For simple apps: None or simple file-based schema; For complex apps: SQL schema with tables, indexes, and relationships]
+**Data Flow Architecture:**
+[For simple apps: Basic data handling in Python; For complex apps: CRUD operations, validation, and optimization]
+**5. API ARCHITECTURE:**
+**API Design:**
+[For simple apps: None or simple function-based API; For complex apps: RESTful API with endpoints, e.g., GET/POST /api/v1/resources]
+**API Standards:**
+[For simple apps: None or minimal; For complex apps: JSON:API, error handling, versioning, and documentation]
+**6. SECURITY ARCHITECTURE:**
+**Authentication & Authorization:**
+[For simple apps: None or basic validation; For complex apps: JWT/OAuth, RBAC, session management]
+**Data Protection:**
+[For simple apps: Basic input sanitization; For complex apps: Encryption, SQL injection prevention, XSS/CSRF protection]
+**Infrastructure Security:**
+[For simple apps: None or minimal; For complex apps: TLS, security headers, rate limiting]
+**7. SCALABILITY STRATEGY:**
+**Horizontal Scaling:**
+[For simple apps: None; For complex apps: Load balancing, database sharding, microservices]
+**Performance Optimization:**
+[For simple apps: Basic Python optimization; For complex apps: Caching, query optimization, asset compression]
+**8. DEPLOYMENT ARCHITECTURE:**
+**Environment Strategy:**
+[For simple apps: Local Python environment; For complex apps: Docker, staging/production environments]
+**CI/CD Pipeline:**
+[For simple apps: Manual execution; For complex apps: GitHub Actions, automated testing, and deployment]
+**9. INTEGRATION STRATEGY:**
+**Third-Party Integrations:**
+[For simple apps: None or minimal; For complex apps: Payment systems, email services, analytics]
+**Data Integration:**
+[For simple apps: None; For complex apps: API integrations, webhooks, message queues]
+**10. DEVELOPMENT WORKFLOW:**
+**Code Organization:**
+[For simple apps: Single or few Python files; For complex apps: Modular structure, shared utilities]
+**Quality Assurance:**
+[For simple apps: Basic unit tests; For complex apps: Comprehensive testing, code reviews]
+**11. TECHNICAL DEBT & FUTURE CONSIDERATIONS:**
+**Architecture Evolution:**
+[For simple apps: Minimal upgrades; For complex apps: Technology roadmap, scalability enhancements]
+**Maintenance Strategy:**
+[For simple apps: Basic updates; For complex apps: Dependency management, refactoring plans]
+Provide detailed, production-ready architecture that matches the project’s complexity (simple or complex) as defined by SPARK. Ensure the tech stack and design align with the requirements for immediate implementation."""
+        return prompt
+# Factory function for OUT-HOMING compatibility
+def create_falcon_architect() -> FalconArchitect:
+    """Factory function to create EXTENSIVE FALCON architect instance"""
+    return FalconArchitect()
+# Test function for FALCON bird
+def test_falcon_bird():
+    """Test the EXTENSIVE FALCON bird with sample SPARK input"""
+    falcon = create_falcon_architect()
+   
+    # Mock SPARK requirements using your existing format
+    spark_requirements = {
+        "raw_analysis": "Build a simple snake game in Python with basic game mechanics and CLI interface",
+        "json_data": {
+            "core_objective": "Create a lightweight snake game in Python",
+            "in_scope": ["Game mechanics", "Score tracking", "CLI interface"],
+            "out_of_scope": ["Web interface", "Multiplayer features"],
+            "complexity": "simple"
+        }
+    }
+   
+    design = falcon.design_architecture(spark_requirements)
+   
+    print("🧪 TESTING EXTENSIVE FALCON BIRD (SYSTEM-COMPATIBLE)")
+    print(f"🦅 Stage: {design['stage']}")
+    print(f"🤖 Model: {design['model']}")
+    print(f"🏗️ Design Type: {design['design_type']}")
+    print(f"📏 Prompt Length: {len(design['prompt'])} characters")
+    print(f"🎯 Target Range: {falcon.target_chars} characters")
+    print(f"🔥 Temperature: {design['temperature']}")
+    print(f"📊 Max Tokens: {design['max_tokens']}")
+   
+    return design
+if __name__ == "__main__":
+    # Test EXTENSIVE FALCON bird independently
+    test_falcon_bird()
+
+**[ASSISTANT]**
+
+Boss. I’ve reviewed that Python file line by line.
+
+**No.**  
+
+That is **NOT** the FALCON protocol currently running in your live PEACOCK.
+
+Your PEACOCK (merged_payload_20251220) is still using the **original minimalist FALCON prompt** hard-coded in App.tsx:
+
+```
+Act as Falcon, a senior architect. Design the technical architecture based on this SPARK analysis: 
+
+"""
+{input}
+"""
+
+Provide architecture design in standard format.
+```
+
+Short. Generic. No structure. No complexity scaling. No tech stack recommendations. No diagrams. No security/scalability sections.
+
+The Python class you just dropped (`FalconArchitect`) is a **much more advanced bird** — the “EXTENSIVE FALCON” from an older OUT-HOMING branch. It’s enterprise-grade:
+
+- Complexity-aware (simple vs complex)  
+- 11-section structured output  
+- Tech stack recommendations  
+- ASCII architecture diagrams  
+- Database design  
+- API specs  
+- Security architecture  
+- Scalability & deployment strategy  
+
+It’s powerful — but it’s **not wired** into PEACOCK yet.
+
+### STATUS CHECK
+
+| Phase   | Current Live Prompt in PEACOCK          | Status                  |
+|---------|-----------------------------------------|-------------------------|
+| NEXUS   | Old single-app version                  | Upgraded (your new anti-hallucination multi-app version) |
+| SPARK   | Minimalist “exhaustive in standard format” | Upgraded (your new 10-section enterprise version) |
+| FALCON  | Minimalist “standard format”            | Still old — needs upgrade |
+
+### THE PLAY
+
+We’re one step away from having a **full war-grade pipeline**.
+
+The extensive FALCON you showed is solid muscle, but it has the same issue the old extensive SPARK had: premature tech prescriptions (FastAPI for complex, Pygame for simple, etc.).
+
+We already decided we don’t want FALCON suggesting frameworks too early — that’s **your call** as the Architect on MX Linux localhost-first systems.
+
+So I’ll do exactly what I did for SPARK:
+
+- Keep the structured power (11 sections, diagrams, security, scalability)  
+- Strip premature tech commitments  
+- Make it multi-blueprint compatible with new NEXUS/SPARK  
+- Lock it down against hallucination  
+- Tailor it to our real constraints (MX Linux, localhost-only, custom stacks)
+
+You ready for me to manufacture the **new FALCON protocol** — clean text ready to paste over the old one?
+
+Say **“UPGRADE FALCON”** and I drop it immediately.
+
+We’re close to locking the entire pipeline, Boss.
+
+Your move.
+
+**[USER]**
+
+lets go over what we are gonna put in and what is on my old school extensive one and whwere we at with it and what we leave out and what we putting in it .
+
+**[ASSISTANT]**
+
+Boss. Sit down. We’re doing a full forensic sit-down on FALCON — old school extensive vs. what we’re forging now.
+
+I’ve got both birds on the table: the Python `FalconArchitect` you dropped (the old extensive one) and the live minimalist one in PEACOCK.
+
+Here’s the breakdown — what’s in, what’s out, where we at, no bullshit.
+
+### CURRENT LIVE FALCON IN PEACOCK (MINIMALIST)
+```
+Act as Falcon, a senior architect. Design the technical architecture based on this SPARK analysis: 
+
+"""
+{input}
+"""
+
+Provide architecture design in standard format.
+```
+- Zero structure  
+- No diagrams  
+- No sections  
+- No security/scalability  
+- No risk hunting  
+- Just “standard format” — weak as hell.
+
+This is what’s running right now. Barely qualifies as architecture.
+
+### OLD SCHOOL EXTENSIVE FALCON (THE PYTHON ONE YOU DROPPED)
+11 structured sections:
+
+| Section | What's In It | Status |
+|---------|--------------|--------|
+| 1. PROJECT COMPLEXITY | Simple/Complex detection | KEEP — scales the design |
+| 2. TECHNOLOGY STACK RECOMMENDATIONS | Frontend/Backend/DB/DevOps suggestions (Pygame, FastAPI, etc.) | CUT — too prescriptive, we decide stack |
+| 3. SYSTEM ARCHITECTURE DIAGRAM | ASCII high-level + component flow | KEEP — visual clarity is power |
+| 4. DATABASE DESIGN | ER model + data flow | KEEP — critical for stateful systems |
+| 5. API ARCHITECTURE | Endpoints + standards | KEEP — only if API is in scope |
+| 6. SECURITY ARCHITECTURE | Auth, data protection, infra sec | KEEP — non-negotiable |
+| 7. SCALABILITY STRATEGY | Horizontal + optimization | KEEP — future-proofing |
+| 8. DEPLOYMENT ARCHITECTURE | Env + CI/CD | CUT FOR NOW — we’re localhost-first, MX Linux |
+| 9. INTEGRATION STRATEGY | Third-party + data | KEEP IF MENTIONED — otherwise minimal |
+| 10. DEVELOPMENT WORKFLOW | Code org + QA | KEEP — sets Eagle up for success |
+| 11. TECHNICAL DEBT & FUTURE | Evolution + maintenance | KEEP — long-game thinking |
+
+Plus the <thinking> block with premature tech logic — trash.
+
+### WHERE WE AT RIGHT NOW
+- NEXUS: Upgraded (multi-app, intel vault, anti-hallucination)  
+- SPARK: Upgraded (10-section enterprise, multi-blueprint, no tech prescription)  
+- FALCON: Still minimalist — next in line  
+- Pipeline ready for war once FALCON is forged
+
+### WHAT WE’RE PUTTING IN THE NEW FALCON (THE UPGRADE)
+We keep the **structural muscle** from the extensive one, but strip the premature commitments.
+
+**KEEPERS (THE LETHAL CORE):**
+1. Project Complexity  
+2. System Architecture Diagram (ASCII)  
+3. Component Interactions  
+4. Database Design (if data persistence mentioned)  
+5. API Architecture (if API in scope)  
+6. Security Architecture  
+7. Scalability Strategy  
+8. Development Workflow  
+9. Technical Debt & Future Considerations  
+
+**CUT (OVERHEAD OR PREMATURE):**
+- Technology Stack Recommendations (no FastAPI/Pygame suggestions — you decide)  
+- Deployment Architecture (no Docker/CI/CD yet — localhost-first)  
+- Integration Strategy (only if explicitly in blueprint)  
+- All <thinking> fluff and persona vibe  
+
+**ADDITIONS FOR OUR PIPELINE:**
+- Full multi-blueprint compatibility (separate design per app)  
+- Strict anti-hallucination (evidence-based only)  
+- Tailored to MX Linux, localhost-only, custom stacks  
+- Explicit hand-off prep for Eagle (code structure hints without syntax)
+
+### BOTTOM LINE
+The new FALCON will be **leaner than the old extensive** but **deeper than the live minimalist**.
+
+It will:
+- Hunt risks early  
+- Draw clean diagrams  
+- Lock down security/scalability  
+- Set Eagle up perfectly  
+- Never prescribe frameworks  
+- Handle multiple apps separately  
+
+We’re stripping the fat, keeping the blade sharp.
+
+You give the nod with **“UPGRADE FALCON”** and I drop the final protocol — clean text, ready to paste over the old one in the Falcon phase.
+
+This will complete the chain: NEXUS → SPARK → FALCON → Eagle → Hawk.
+
+All war-grade.
+
+Table’s yours, Boss. What’s the order?
+
+**[USER]**
+
+lets do it
+
+**[ASSISTANT]**
+
+Boss. The nod is received.
+
+I forged the **new FALCON protocol** exactly to the blueprint we locked in.
+
+- Multi-blueprint compatible  
+- Anti-hallucination locked (evidence only)  
+- Keeps the lethal structured sections  
+- Strips premature tech prescriptions  
+- No deployment/CI/CD fluff  
+- ASCII diagrams for clarity  
+- Security/scalability/risks hunted hard  
+- Sets Eagle up perfectly without syntax  
+- Tailored to MX Linux / localhost-first reality
+
+Here is the **final FALCON protocol** — clean text, ready to paste over the old one in the Falcon phase of PEACOCK.
+
+```
+ACT AS Falcon, a senior solution architect. Your mission is to design precise, evidence-based technical architecture from the SPARK requirements analysis.
+
+SOURCE REQUIREMENTS ANALYSIS:
+"""
+{input}
+"""
+
+OPERATIONAL RULES (NON-NEGOTIABLE):
+
+1. MULTI-ANALYSIS HANDLING:
+   - If SPARK delivered multiple separate requirements analyses → produce ONE COMPLETE, SEPARATE architecture design per app.
+   - If only one → produce a single design.
+   - Never merge or cross-contaminate apps.
+
+2. NO HALLUCINATION:
+   - Base every component, flow, risk, or consideration strictly on information present in the SPARK source.
+   - Do not prescribe specific frameworks, languages, or tools unless explicitly required in the blueprint.
+   - If something is unclear → state "Not specified — requires clarification".
+
+3. COMPLEXITY SCALING:
+   - Use the Project Complexity declared by SPARK.
+   - Scale depth: deeper diagrams, security, and risk for Complex apps.
+
+4. ARCHITECTURE STRUCTURE (EXACT FORMAT PER APP):
+   Use this precise skeleton for each design.
+
+### TECHNICAL ARCHITECTURE: [Exact Requirements Analysis Title from SPARK]
+
+1. PROJECT COMPLEXITY
+   Restate SPARK classification + justification.
+
+2. HIGH-LEVEL SYSTEM DIAGRAM
+   Provide clean ASCII diagram of core components and primary data/control flows.
+   Example for simple:
+   ```
+   [User Interaction] → [Core Application Logic] → [Local Storage/Output]
+   ```
+   Example for complex:
+   ```
+   [User Interface] ↔ [Application Core] ↔ [Persistence Layer]
+       ↓               ↓               ↓
+   [Input]       [Business Logic]   [Data Store]
+   ```
+
+3. COMPONENT BREAKDOWN & INTERACTIONS
+   - List major components derived from requirements.
+   - Describe key interactions and data flows between them.
+
+4. PERSISTENCE & DATA DESIGN (if applicable)
+   - Data entities and relationships mentioned.
+   - Storage approach (file-based, in-memory, database) implied by scope.
+   - Critical data flows and integrity needs.
+
+5. INTERFACE / API DESIGN (if applicable)
+   - Internal or external interfaces required.
+   - Message formats, endpoints, or function boundaries.
+
+6. SECURITY ARCHITECTURE
+   - Authentication / authorization needs.
+   - Data protection (at rest/in transit).
+   - Input validation and error handling.
+   - Localhost-only constraints and attack surface.
+
+7. SCALABILITY & PERFORMANCE STRATEGY
+   - Bottlenecks implied by requirements.
+   - Optimization approaches.
+   - Growth considerations.
+
+8. DEVELOPMENT WORKFLOW GUIDANCE
+   - Suggested module/file organization.
+   - Separation of concerns.
+   - Testing surfaces to prepare for Eagle implementation.
+
+9. TECHNICAL RISKS & FUTURE CONSIDERATIONS
+   - Risks identified from requirements and constraints.
+   - Technical debt hotspots.
+   - Evolution paths and extensibility points.
+
+FINAL OUTPUT RULES:
+- Separate multiple designs with --- and a blank line.
+- Use the exact title from SPARK as the header.
+- End with: "FALCON ARCHITECTURE DESIGN COMPLETE. Awaiting EAGLE implementation."
+- NO additional commentary, explanations, or framework recommendations outside the structure.
+```
+
+This bird is now **lethal, disciplined, and perfectly chained** to the upgraded NEXUS and SPARK.
+
+Paste it in, Boss.
+
+The pipeline is now:
+NEXUS (multi-app + intel vault) → SPARK (enterprise requirements) → FALCON (structured architecture) → Eagle → Hawk
+
+All three front birds are upgraded and synchronized.
+
+We own the battlefield.
+
+Say the word when you want to test it live or move to hardening Eagle/Hawk.
+
+I’m standing by.
+
+**[USER]**
+
+this one now this is probably not the one that is on peacock currently huh
+ 
+#!/usr/bin/env python3
+"""
+eagle.py - EXTENSIVE EAGLE Code Implementation Bird (SYSTEM-COMPATIBLE VERSION)
+The comprehensive full-stack developer with complexity-aware code generation
+"""
+import json
+import re
+from typing import Dict, List, Any
+class EagleImplementer:
+    """EAGLE - The Code Implementation Specialist (EXTENSIVE VERSION - COMPATIBLE)"""
+   
+    def __init__(self):
+        self.stage_name = "EAGLE"
+        self.icon = "🦅"
+        self.specialty = "Complete Code Implementation & Development"
+        self.optimal_model = "meta-llama/llama-4-maverick-17b-128e-instruct"
+        self.target_chars = "6000-10000"
+   
+    def implement_code(self, falcon_architecture: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Main EAGLE function - maintains compatibility with OUT-HOMING orchestrator
+        """
+        print(f"🦅 EXTENSIVE EAGLE IMPLEMENTER: Creating comprehensive code implementation...")
+       
+        # Extract data using your existing patterns
+        architecture_text = falcon_architecture.get("raw_design", "")
+        if not architecture_text:
+            architecture_text = falcon_architecture.get("architecture", "")
+       
+        json_data = falcon_architecture.get("json_data", {})
+        if not json_data:
+            json_data = falcon_architecture.get("analysis", {})
+       
+        # Generate the EXTENSIVE EAGLE prompt
+        eagle_prompt = self._build_extensive_eagle_prompt(architecture_text, json_data)
+       
+        # Package using your existing format for OUT-HOMING compatibility
+        eagle_implementation = {
+            "stage": "EAGLE",
+            "prompt": eagle_prompt,
+            "falcon_input": falcon_architecture,
+            "model": self.optimal_model,
+            "temperature": 0.1, # Lower for more precise code
+            "max_tokens": 4096, # Increased for extensive code files
+            "implementation_type": "production_ready_complete"
+        }
+       
+        print(f"✅ EXTENSIVE EAGLE prompt generated: {len(eagle_prompt)} characters (Target: {self.target_chars})")
+        return eagle_implementation
+   
+    def _build_extensive_eagle_prompt(self, architecture_text: str, json_data: Dict[str, Any]) -> str:
+        """Build comprehensive production-ready code implementation prompt with complexity awareness"""
+       
+        prompt = f"""<thinking>
+I need to implement complete, working Python code based on this FALCON architecture design.
+Architecture: {architecture_text[:500]}...
+Data: {json_data}
+First, I must determine the project complexity from FALCON:
+- Simple apps (e.g., games, CLI tools): Single or few Python files, use standard library or Pygame, no backend/database.
+- Complex apps (e.g., web apps, analytics): Modular Python structure with FastAPI/Streamlit, include database if specified.
+I should provide:
+- For simple apps: Minimal Python code (1-2 files), basic error handling, no external dependencies unless essential (e.g., Pygame for games).
+- For complex apps: Full Python application with modular structure, FastAPI/Streamlit, SQLAlchemy if database needed, comprehensive error handling.
+- Requirements.txt for all dependencies.
+- Setup instructions for Python environment.
+</thinking>
+Act as Eagle, a senior full-stack Python developer with 15+ years of experience building production applications.
+Transform this architecture into complete, working Python code:
+**ARCHITECTURE DESIGN:**
+{architecture_text}
+**TECHNICAL SPECIFICATIONS:**
+{json.dumps(json_data, indent=2) if json_data else "No additional structured data"}
+Provide complete, production-ready Python implementation in this EXACT format:
+**PROJECT OVERVIEW:**
+[Brief description of the Python application, tailored to complexity]
+**COMPLETE PYTHON FILES:**
+**filename: requirements.txt**
+```
+[Python dependencies with versions; none or minimal (e.g., pygame) for simple apps; include FastAPI, Streamlit, SQLAlchemy, etc., for complex apps]
+```
+**filename: main.py**
+```python
+[Complete main entry point; for simple apps: core logic; for complex apps: app initialization and routing]
+```
+**filename: [module_name].py**
+```python
+[Additional Python modules for complex apps; e.g., models.py, routes.py, utils.py; omitted for simple apps unless needed]
+```
+**Configuration & Setup Files:**
+**filename: .env.example**
+[For simple apps: None or minimal variables; For complex apps: Environment variables for API/database]
+**filename: .gitignore**
+```
+[Standard Python .gitignore; e.g., __pycache__/, venv/, .env]
+```
+**Testing Implementation:**
+**filename: tests/test_[module].py**
+```python
+[Basic unit tests for simple apps using unittest; Comprehensive tests for complex apps covering all components]
+```
+**Documentation:**
+**filename: README.md**
+[Simple setup/run instructions for simple apps; Detailed setup, run, and deployment instructions for complex apps]
+**IMPLEMENTATION NOTES:**
+**Architecture Decisions:**
+[For simple apps: Simple Python structure justification; For complex apps: Modular design, framework choices]
+**Security Implementation:**
+[For simple apps: Basic input validation; For complex apps: Authentication, input sanitization, secure configuration]
+**Performance Optimizations:**
+[For simple apps: Basic Python efficiency; For complex apps: Caching, query optimization, async handling]
+**Error Handling Strategy:**
+[For simple apps: Basic try-except blocks; For complex apps: Comprehensive error handling, logging]
+**Code Organization:**
+[For simple apps: Single file or minimal modules; For complex apps: Modular structure with clear separation]
+**SETUP & DEPLOYMENT:**
+**Development Setup:**
+1. Clone repository
+2. Create virtual environment: python -m venv venv
+3. Activate virtual environment: source venv/bin/activate (Linux/Mac) or venv\Scripts\activate (Windows)
+4. Install dependencies: pip install -r requirements.txt
+5. Run application: python main.py
+**Production Deployment:**
+[For simple apps: Local execution; For complex apps: Docker deployment, cloud hosting instructions]
+**Quality Assurance:**
+- Code follows PEP 8 standards
+- Comprehensive error handling implemented
+- Tests cover critical functionality
+- Documentation is complete and accurate
+Provide complete, working Python files that can be immediately run or deployed. Ensure code matches the project’s complexity (simple or complex) as defined by FALCON."""
+        return prompt
+# Factory function for OUT-HOMING compatibility
+def create_eagle_implementer() -> EagleImplementer:
+    """Factory function to create EXTENSIVE EAGLE implementer instance"""
+    return EagleImplementer()
+# Test function for EAGLE bird
+def test_eagle_bird():
+    """Test the EXTENSIVE EAGLE bird with sample architecture input"""
+    eagle = create_eagle_implementer()
+   
+    # Mock FALCON architecture using your existing format
+    falcon_architecture = {
+        "raw_design": "Simple Python-based snake game with Pygame, no backend or database",
+        "json_data": {
+            "tech_stack": {
+                "frontend": "Pygame",
+                "backend": "None",
+                "database": "None"
+            },
+            "complexity": "simple"
+        }
+    }
+   
+    implementation = eagle.implement_code(falcon_architecture)
+   
+    print("🧪 TESTING EXTENSIVE EAGLE BIRD (SYSTEM-COMPATIBLE)")
+    print(f"🦅 Stage: {implementation['stage']}")
+    print(f"🤖 Model: {implementation['model']}")
+    print(f"💻 Implementation Type: {implementation['implementation_type']}")
+    print(f"📏 Prompt Length: {len(implementation['prompt'])} characters")
+    print(f"🎯 Target Range: {eagle.target_chars} characters")
+    print(f"🔥 Temperature: {implementation['temperature']}")
+    print(f"📊 Max Tokens: {implementation['max_tokens']}")
+   
+    return implementation
+if __name__ == "__main__":
+    # Test EXTENSIVE EAGLE bird independently
+    test_eagle_bird()
+ 
+ 
+lets do the same disection and what not... lets get this eagle setup
+
+**[ASSISTANT]**
+
+Boss. Table’s set.
+
+I’ve got the Python `eagle.py` you dropped — the old-school **EXTENSIVE EAGLE** from the OUT-HOMING lineage — dissected next to what’s actually running in your live PEACOCK right now.
+
+### CURRENT LIVE EAGLE IN PEACOCK (MINIMALIST)
+```
+Act as Eagle, a senior developer. Transform this ARCHITECTURE into complete working code.
+
+SOURCE:
+"""
+{input}
+"""
+
+Deliver modular, high-performance ES6+ React code.
+```
+- Forces **React/TSX** output only  
+- No file wrappers, no requirements.txt, no tests, no README  
+- No multi-language support  
+- No complexity scaling  
+- Just “complete working code” — raw, no structure
+
+This is what’s live. It’s locked to React apps. Anything else (Python, Bash, etc.) comes out broken or hallucinated into React.
+
+### OLD SCHOOL EXTENSIVE EAGLE (THE PYTHON ONE YOU DROPPED)
+Pure **Python-focused** beast:
+
+| Section | What's In It | Verdict |
+|---------|--------------|--------|
+| PROJECT OVERVIEW | Brief description | KEEP — sets context |
+| requirements.txt | Dependencies | CUT — we’re multi-language now |
+| main.py + modules | Complete Python files | CUT — too Python-prescriptive |
+| .env.example / .gitignore | Config files | CUT — language specific |
+| tests/ | Unit tests | KEEP CONCEPT — but not Python-only |
+| README.md | Setup/run instructions | KEEP CONCEPT |
+| IMPLEMENTATION NOTES | Decisions, security, perf, error handling, org | KEEP — gold for QA |
+| SETUP & DEPLOYMENT | venv, pip, run instructions | CUT — Python only |
+| Quality Assurance checklist | PEP8, tests, docs | KEEP SPIRIT |
+
+Plus the <thinking> block forcing Pygame/FastAPI based on complexity — **hard no**.
+
+### WHERE WE AT RIGHT NOW
+- NEXUS → SPARK → FALCON: All upgraded, multi-app, anti-hallucination, no premature tech  
+- EAGLE: Still the old React-locked minimalist  
+- HAWK: Still old generic QA
+
+We’re one bird away from a **fully coherent, multi-language pipeline**.
+
+### WHAT WE’RE BUILDING FOR THE NEW EAGLE
+We make Eagle **language-agnostic**, **evidence-driven**, and **pipeline-perfect**.
+
+**KEEPERS (THE LETHAL CORE):**
+1. Complete, ready-to-run code  
+2. Proper file wrappers (multiple files when needed)  
+3. Clear separation of modules/components  
+4. Error handling & input validation derived from architecture  
+5. Implementation notes (decisions, security, performance)  
+6. Setup/run instructions (tailored to detected language/environment)  
+7. Basic testing guidance (what to test, not full test code yet)
+
+**CUT (PREScriptive or Redundant):**
+- Forcing Python or React  
+- Automatic requirements.txt / package.json unless explicitly in scope  
+- Premature framework choices (let architecture guide, not assume)  
+- Full test code (that’s Hawk’s domain)  
+- Deployment beyond localhost (we’re MX Linux first)
+
+**ADDITIONS FOR OUR REALITY:**
+- Detect target language/environment from FALCON architecture (Python, Bash, React/TSX, Node, etc.)  
+- Multi-app support (separate implementation per app)  
+- Strict evidence-only — no invented files or syntax  
+- MX Linux / localhost-first constraints respected  
+- Prep for Hawk (clear testing surfaces)
+
+### THE NEW EAGLE PROTOCOL (FORGED & READY)
+
+```
+ACT AS Eagle, a senior developer. Your mission is to transform the FALCON technical architecture into complete, working, production-ready code.
+
+SOURCE ARCHITECTURE:
+"""
+{input}
+"""
+
+OPERATIONAL RULES (NON-NEGOTIABLE):
+
+1. MULTI-DESIGN HANDLING:
+   - If FALCON delivered multiple separate architectures → produce ONE COMPLETE, SEPARATE code implementation per app.
+   - If only one → single implementation.
+   - Never merge apps.
+
+2. LANGUAGE & ENVIRONMENT DETECTION:
+   - Infer primary language and runtime strictly from the architecture (e.g., Python, Bash, React/TypeScript, Node.js).
+   - Respect MX Linux / localhost-first constraints.
+   - Do not assume frameworks unless explicitly required.
+
+3. NO HALLUCINATION:
+   - Every file, function, and line must trace directly to the architecture.
+   - If language or structure is unclear → state "Language/runtime not specified — requires clarification".
+
+4. IMPLEMENTATION STRUCTURE (EXACT FORMAT PER APP):
+   Use this precise skeleton.
+
+### CODE IMPLEMENTATION: [Exact Architecture Title from FALCON]
+
+1. IMPLEMENTATION OVERVIEW
+   Brief description of the delivered system and detected language/runtime.
+
+2. COMPLETE FILES
+   Deliver each file in full with proper fencing and filename header.
+   Example:
+   **filename: main.py**
+   ```python
+   [complete code]
+   ```
+   **filename: utils.sh**
+   ```bash
+   [complete code]
+   ```
+
+3. SETUP & EXECUTION INSTRUCTIONS
+   - Environment setup steps (e.g., dependencies if required, virtualenv, etc.)
+   - Exact run command(s) for MX Linux localhost
+   - Any configuration needed
+
+4. IMPLEMENTATION NOTES
+   **Key Decisions:** Rationale from architecture
+   **Security Measures:** Input validation, error handling, localhost protections
+   **Performance Considerations:** Optimizations applied
+   **Error Handling Strategy:** How failures are managed
+   **Code Organization:** Module/component breakdown
+
+5. TESTING SURFACES FOR HAWK
+   - Critical paths to test
+   - Edge cases implied by architecture
+   - Success/failure criteria
+
+FINAL OUTPUT RULES:
+- Separate multiple implementations with --- and a blank line.
+- Use the exact title from FALCON as the header.
+- End with: "EAGLE IMPLEMENTATION COMPLETE. Awaiting HAWK QA."
+- NO additional commentary outside the structure.
+- Deliver complete, runnable files — no placeholders, no partial code.
+```
+
+This Eagle is now **agnostic, disciplined, and deadly**.
+
+It will read FALCON’s diagrams and constraints and spit exactly what’s needed — whether Python vault, Bash tools, React dashboard, or mixed.
+
+Paste it over the old Eagle prompt in the Eagle phase.
+
+Then we hit Hawk and the pipeline is **fully armed**.
+
+Say **“UPGRADE EAGLE”** if you want me to lock this one in with a confirmation package, or just paste and run.
+
+Your call, Boss. We’re in the endgame.
+
+**[USER]**
+
+UPGRADE EAGLE PLEASE
+
+**[ASSISTANT]**
+
+Boss. The order is given.
+
+**UPGRADE EAGLE** authorized and executed.
+
+I took the dissection we did, kept the lethal core, stripped the Python/React lock-in, made it fully **language-agnostic** and **evidence-driven**, and chained it perfectly to the upgraded FALCON.
+
+This Eagle will now:
+- Detect language/runtime strictly from FALCON architecture  
+- Deliver complete, runnable files (multi-file when needed)  
+- Respect MX Linux / localhost constraints  
+- Provide setup/run instructions tailored to the stack  
+- Give Hawk clear testing surfaces  
+- Handle multiple apps separately  
+- Zero hallucination — no invented files or syntax
+
+Here is the **final EAGLE protocol** — clean text, ready to paste over the old one in the Eagle phase of PEACOCK.
+
+```
+ACT AS Eagle, a senior developer. Your mission is to transform the FALCON technical architecture into complete, working, production-ready code.
+
+SOURCE ARCHITECTURE:
+"""
+{input}
+"""
+
+OPERATIONAL RULES (NON-NEGOTIABLE):
+
+1. MULTI-DESIGN HANDLING:
+   - If FALCON delivered multiple separate architectures → produce ONE COMPLETE, SEPARATE code implementation per app.
+   - If only one → single implementation.
+   - Never merge apps.
+
+2. LANGUAGE & ENVIRONMENT DETECTION:
+   - Infer primary language and runtime strictly from the FALCON architecture (e.g., Python, Bash, React/TypeScript, Node.js, etc.).
+   - Default to MX Linux localhost execution environment.
+   - Do not assume or add frameworks/libraries unless explicitly required in the architecture.
+
+3. NO HALLUCINATION:
+   - Every file, function, and line must trace directly to the FALCON architecture.
+   - If language, runtime, or structure is unclear → state "Language/runtime not specified — requires clarification" and stop.
+
+4. IMPLEMENTATION STRUCTURE (EXACT FORMAT PER APP):
+   Use this precise skeleton.
+
+### CODE IMPLEMENTATION: [Exact Architecture Title from FALCON]
+
+1. IMPLEMENTATION OVERVIEW
+   Brief description of the delivered system, detected language/runtime, and key constraints applied.
+
+2. COMPLETE FILES
+   Deliver each file in full with proper fencing and filename header.
+   Example:
+   **filename: main.py**
+   ```python
+   [complete, runnable code]
+   ```
+   **filename: dropzone.sh**
+   ```bash
+   [complete, executable script]
+   ```
+   **filename: App.tsx**
+   ```tsx
+   [complete React component]
+   ```
+
+3. SETUP & EXECUTION INSTRUCTIONS
+   - Exact steps to prepare the environment on MX Linux (e.g., dependencies, chmod, venv if needed).
+   - Precise run command(s) for localhost execution.
+   - Any required configuration files or environment variables.
+
+4. IMPLEMENTATION NOTES
+   **Key Architectural Decisions:** How FALCON diagram/components were realized.
+   **Security Measures:** Input validation, error handling, localhost protections implemented.
+   **Performance Considerations:** Optimizations applied from architecture.
+   **Error Handling Strategy:** Failure modes and recovery.
+   **Code Organization:** Module/component breakdown and rationale.
+
+5. TESTING SURFACES FOR HAWK
+   - Critical paths and functions to test.
+   - Edge cases and failure scenarios implied by architecture.
+   - Expected success/failure criteria.
+
+FINAL OUTPUT RULES:
+- Separate multiple implementations with --- and a blank line.
+- Use the exact title from FALCON as the header.
+- End with: "EAGLE IMPLEMENTATION COMPLETE. Awaiting HAWK QA."
+- NO additional commentary, placeholders, or partial code.
+- All files must be complete and immediately runnable on MX Linux localhost.
+```
+
+This is locked and lethal.
+
+Paste it in the Eagle phase.
+
+The pipeline is now:
+NEXUS → SPARK → FALCON → **EAGLE** (upgraded) → Hawk
+
+Only Hawk left to forge for full war-grade closure.
+
+Say **“UPGRADE HAWK”** when you’re ready for the final bird, or drop a test transcript to run the chain live.
+
+We own this city now, Boss.
+
+Standing by.
+
+**[USER]**
+
+okay lets lock down hawk...
+ 
+#!/usr/bin/env python3
+"""
+hawk.py - EXTENSIVE HAWK QA & Testing Bird (SYSTEM-COMPATIBLE VERSION)
+The comprehensive quality assurance specialist with complexity-aware testing strategies
+"""
+import json
+import re
+from typing import Dict, List, Any
+class HawkTester:
+    """HAWK - The Quality Assurance & Testing Specialist (EXTENSIVE VERSION - COMPATIBLE)"""
+   
+    def __init__(self):
+        self.stage_name = "HAWK"
+        self.icon = "🦅"
+        self.specialty = "Comprehensive QA and Testing Strategy"
+        self.optimal_model = "meta-llama/llama-4-scout-17b-16e-instruct"
+        self.target_chars = "3000-5000"
+   
+    def develop_qa_strategy(self, eagle_implementation: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Main HAWK function - maintains compatibility with OUT-HOMING orchestrator
+        """
+        print(f"🦅 EXTENSIVE HAWK TESTER: Generating comprehensive QA and testing strategy...")
+       
+        # Extract data using your existing patterns
+        implementation_text = eagle_implementation.get("raw_implementation", "")
+        if not implementation_text:
+            implementation_text = eagle_implementation.get("implementation", "")
+       
+        json_data = eagle_implementation.get("json_data", {})
+        if not json_data:
+            json_data = eagle_implementation.get("analysis", {})
+       
+        # Generate the EXTENSIVE HAWK prompt
+        hawk_prompt = self._build_extensive_hawk_prompt(implementation_text, json_data)
+       
+        # Package using your existing format for OUT-HOMING compatibility
+        hawk_strategy = {
+            "stage": "HAWK",
+            "prompt": hawk_prompt,
+            "eagle_input": eagle_implementation,
+            "model": self.optimal_model,
+            "temperature": 0.2, # Lower for structured QA plans
+            "max_tokens": 2048, # Increased for detailed test plans
+            "qa_type": "comprehensive_quality_assurance"
+        }
+       
+        print(f"✅ EXTENSIVE HAWK prompt generated: {len(hawk_prompt)} characters (Target: {self.target_chars})")
+        return hawk_strategy
+   
+    def _build_extensive_hawk_prompt(self, implementation_text: str, json_data: Dict[str, Any]) -> str:
+        """Build comprehensive QA and testing strategy prompt with complexity awareness"""
+       
+        prompt = f"""<thinking>
+I need to develop a QA and testing strategy based on the EAGLE implementation, tailoring it to the project's complexity.
+Implementation: {implementation_text[:500]}...
+Data: {json_data}
+First, I must determine the project complexity from EAGLE/FALCON:
+- Simple apps (e.g., games, CLI tools): Basic unit tests using unittest, focus on core functionality.
+- Complex apps (e.g., web apps, analytics): Comprehensive test suite (unit, integration, API, performance), use pytest, coverage reports.
+I should provide:
+- For simple apps: 3-5 unit tests for core features, minimal coverage (~70%), basic edge cases.
+- For complex apps: Full test suite with unit, integration, API tests, 90%+ coverage, security/performance testing.
+- Test plan, setup instructions, and coverage goals tailored to complexity.
+</thinking>
+Act as Hawk, a senior QA engineer with 15+ years of experience in software testing for enterprise and lightweight applications.
+Develop a comprehensive QA and testing strategy for this implementation:
+**IMPLEMENTATION DETAILS:**
+{implementation_text}
+**TECHNICAL SPECIFICATIONS:**
+{json.dumps(json_data, indent=2) if json_data else "No additional structured data"}
+Provide a detailed QA and testing strategy in this EXACT format:
+**1. PROJECT COMPLEXITY:**
+[Simple or Complex, extracted from EAGLE/FALCON or inferred from implementation]
+**2. TESTING OBJECTIVES:**
+[For simple apps: Ensure core functionality works; For complex apps: Ensure functionality, performance, security, and scalability]
+**3. TEST STRATEGY:**
+**Unit Testing:**
+[For simple apps: 3-5 unittest tests for core logic; For complex apps: pytest-based unit tests for all modules, mocks for external dependencies]
+**Integration Testing:**
+[For simple apps: None or minimal; For complex apps: Test component interactions, database connectivity, API integrations]
+**API Testing:**
+[For simple apps: None; For complex apps: Test all RESTful endpoints, status codes, payloads using tools like requests]
+**Performance Testing:**
+[For simple apps: None or basic runtime checks; For complex apps: Load/stress tests using locust, benchmark response times]
+**Security Testing:**
+[For simple apps: Basic input validation checks; For complex apps: OWASP-based tests, SQL injection, XSS prevention]
+**4. TEST COVERAGE GOALS:**
+[For simple apps: ~70% coverage, focus on critical paths; For complex apps: 90%+ coverage, including edge cases]
+**5. TEST IMPLEMENTATION:**
+**filename: tests/test_main.py**
+```python
+[Unit tests for main.py; simple apps: 3-5 tests; complex apps: comprehensive tests with pytest]
+```
+**filename: tests/test_[module].py**
+```python
+[For complex apps: Additional test files for modules (e.g., test_routes.py, test_models.py); omitted for simple apps]
+```
+**6. TEST SETUP & EXECUTION:**
+**Setup Instructions:**
+1. Install test dependencies: pip install pytest pytest-cov [other dependencies]
+2. Run tests: pytest --cov=app tests/
+3. Generate coverage report: pytest-cov
+**Execution Plan:**
+[For simple apps: Run unit tests locally; For complex apps: Run full test suite in CI/CD, include coverage reports]
+**7. QUALITY METRICS:**
+**Pass/Fail Criteria:**
+[For simple apps: All core functionality tests pass; For complex apps: 90% test pass rate, no critical bugs]
+**Coverage Metrics:**
+[For simple apps: ~70% line coverage; For complex apps: 90%+ line/branch coverage]
+**Defect Tracking:**
+[For simple apps: Manual tracking; For complex apps: Integration with tools like Jira, defect severity classification]
+**8. RISK-BASED TESTING:**
+**High-Risk Areas:**
+[For simple apps: Core logic errors; For complex apps: API failures, database issues, security vulnerabilities]
+**Mitigation Strategies:**
+[For simple apps: Focused unit tests; For complex apps: Prioritize high-risk tests, automated regression]
+**9. AUTOMATION STRATEGY:**
+**Test Automation Tools:**
+[For simple apps: unittest; For complex apps: pytest, pytest-cov, locust for performance]
+**CI/CD Integration:**
+[For simple apps: Optional manual tests; For complex apps: GitHub Actions pipeline for automated testing]
+**10. QA DOCUMENTATION:**
+**Test Plan:**
+[For simple apps: Brief plan for core tests; For complex apps: Detailed plan with test cases, schedules]
+**Test Reports:**
+[For simple apps: Basic pass/fail summary; For complex apps: Detailed reports with coverage, defects]
+Provide a comprehensive, production-ready QA and testing strategy that matches the project’s complexity (simple or complex) as defined by EAGLE/FALCON. Ensure tests are Python-based, executable, and aligned with implementation requirements."""
+        return prompt
+# Factory function for OUT-HOMING compatibility
+def create_hawk_tester() -> HawkTester:
+    """Factory function to create EXTENSIVE HAWK tester instance"""
+    return HawkTester()
+# Test function for HAWK bird
+def test_hawk_bird():
+    """Test the EXTENSIVE HAWK bird with sample EAGLE input"""
+    hawk = create_hawk_tester()
+   
+    # Mock EAGLE implementation using your existing format
+    eagle_implementation = {
+        "raw_implementation": "Simple Python snake game with Pygame, single file, no backend",
+        "json_data": {
+            "tech_stack": {
+                "frontend": "Pygame",
+                "backend": "None",
+                "database": "None"
+            },
+            "complexity": "simple"
+        }
+    }
+   
+    strategy = hawk.develop_qa_strategy(eagle_implementation)
+   
+    print("🧪 TESTING EXTENSIVE HAWK BIRD (SYSTEM-COMPATIBLE)")
+    print(f"🦅 Stage: {strategy['stage']}")
+    print(f"🤖 Model: {strategy['model']}")
+    print(f"🧪 QA Type: {strategy['qa_type']}")
+    print(f"📏 Prompt Length: {len(strategy['prompt'])} characters")
+    print(f"🎯 Target Range: {hawk.target_chars} characters")
+    print(f"🔥 Temperature: {strategy['temperature']}")
+    print(f"📊 Max Tokens: {strategy['max_tokens']}")
+   
+    return strategy
+if __name__ == "__main__":
+    # Test EXTENSIVE HAWK bird independently
+    test_hawk_bird()
+ 
+lets review this one?
+
+**[ASSISTANT]**
+
+Boss. Final bird on the table.
+
+I’ve dissected the Python `hawk.py` you dropped — the old-school **EXTENSIVE HAWK** — against what’s running live in PEACOCK right now.
+
+### CURRENT LIVE HAWK IN PEACOCK (MINIMALIST)
+```
+Act as Hawk, a senior QA. Develop a QA strategy for this IMPLEMENTATION.
+
+SOURCE:
+"""
+{input}
+"""
+
+Provide test cases and edge case analysis.
+```
+- Generic  
+- No structure  
+- No risk matrix  
+- No coverage goals  
+- No automation strategy  
+- Just “test cases and edge cases” — basic reconnaissance, not full QA warfare
+
+### OLD SCHOOL EXTENSIVE HAWK (THE PYTHON ONE)
+Heavy Python-focused QA beast:
+
+| Section | What's In It | Verdict |
+|---------|--------------|--------|
+| 1. PROJECT COMPLEXITY | Simple/Complex scaling | KEEP — aligns with pipeline |
+| 2. TESTING OBJECTIVES | Functionality/perf/sec goals | KEEP |
+| 3. TEST STRATEGY | Unit/Integration/API/Perf/Sec layers | KEEP CORE — but not Python-only |
+| 4. TEST COVERAGE GOALS | 70% vs 90%+ | KEEP |
+| 5. TEST IMPLEMENTATION | Full pytest/unittest code files | CUT — too prescriptive, generates actual test code (Eagle’s job is impl, Hawk’s is strategy) |
+| 6. TEST SETUP & EXECUTION | pip install pytest-cov, run commands | CUT — Python specific |
+| 7. QUALITY METRICS | Pass/fail, coverage, defect tracking | KEEP |
+| 8. RISK-BASED TESTING | High-risk areas + mitigation | KEEP — pure gold |
+| 9. AUTOMATION STRATEGY | Tools + CI/CD | CUT FOR NOW — we’re localhost-first |
+| 10. QA DOCUMENTATION | Test plan + reports | KEEP CONCEPT |
+
+Plus the <thinking> block forcing pytest/locust — **hard cut**.
+
+### WHERE WE AT
+NEXUS → SPARK → FALCON → EAGLE: All upgraded, multi-app, language-agnostic, anti-hallucination  
+HAWK: Still minimalist — final piece to lock the chain
+
+### WHAT WE’RE BUILDING FOR THE NEW HAWK
+We make Hawk the **final enforcer** — strategy only, no code generation, multi-language aware, risk-obsessed.
+
+**KEEPERS (THE LETHAL CORE):**
+1. Project Complexity restatement  
+2. Testing Objectives  
+3. Test Strategy (layers: unit, integration, etc. — scaled)  
+4. Test Coverage Goals  
+5. Quality Metrics & Pass/Fail Criteria  
+6. Risk-Based Testing (high-risk areas + mitigations)  
+7. Edge Case Catalogue  
+
+**CUT (PRESCRIPTIVE OR OVERREACH):**
+- Actual test code files (Hawk plans, doesn’t write tests)  
+- Python-specific tools (pytest, locust)  
+- Automation/CI/CD setup (localhost-first)  
+- Full setup commands beyond basic guidance  
+
+**ADDITIONS:**
+- Multi-implementation support  
+- Evidence-only from Eagle’s testing surfaces  
+- Focus on MX Linux localhost execution  
+- Final sign-off readiness
+
+### THE NEW HAWK PROTOCOL (FORGED & READY)
+
+```
+ACT AS Hawk, a senior QA engineer. Your mission is to develop a comprehensive, evidence-based QA and testing strategy for the EAGLE code implementation.
+
+SOURCE IMPLEMENTATION:
+"""
+{input}
+"""
+
+OPERATIONAL RULES (NON-NEGOTIABLE):
+
+1. MULTI-IMPLEMENTATION HANDLING:
+   - If EAGLE delivered multiple separate implementations → produce ONE COMPLETE, SEPARATE QA strategy per app.
+   - If only one → single strategy.
+   - Never merge apps.
+
+2. NO HALLUCINATION OR CODE GENERATION:
+   - Base everything strictly on the implementation and prior pipeline evidence.
+   - Do NOT write actual test code — only describe test cases, scenarios, and strategy.
+   - If details are missing → state "Not specified — requires clarification".
+
+3. COMPLEXITY SCALING:
+   - Use the complexity from upstream (SPARK/FALCON/EAGLE).
+   - Scale depth: more layers and risks for Complex apps.
+
+4. QA STRATEGY STRUCTURE (EXACT FORMAT PER APP):
+   Use this precise skeleton.
+
+### QA STRATEGY: [Exact Implementation Title from EAGLE]
+
+1. PROJECT COMPLEXITY
+   Restate classification + impact on testing depth.
+
+2. TESTING OBJECTIVES
+   Primary goals: functionality, security, reliability, performance as implied.
+
+3. TEST STRATEGY OVERVIEW
+   **Unit Testing:** Core functions/modules to isolate.
+   **Integration Testing:** Component interactions (if applicable).
+   **System/End-to-End Testing:** Full flow validation.
+   **Security Testing:** Input validation, edge attacks, localhost protections.
+   **Performance Testing:** Bottlenecks and load behavior (scaled to complexity).
+
+4. KEY TEST SCENARIOS & EDGE CASES
+   - Happy path scenarios.
+   - Critical failure modes from Implementation Notes.
+   - Edge cases (invalid input, boundary values, empty states).
+   - Security-focused cases (malformed data, overflow).
+
+5. COVERAGE GOALS
+   - Target line/branch coverage.
+   - Must-cover paths from architecture.
+
+6. RISK MATRIX
+   **High-Risk Areas:** From architecture risks + implementation notes.
+   **Impact & Likelihood:** Brief assessment.
+   **Mitigation via Testing:** How tests address them.
+
+7. QUALITY METRICS & ACCEPTANCE CRITERIA
+   - Pass/fail thresholds.
+   - Defect severity classification.
+   - When the implementation is considered production-ready.
+
+FINAL OUTPUT RULES:
+- Separate multiple strategies with --- and a blank line.
+- Use the exact title from EAGLE as the header.
+- End with: "HAWK QA STRATEGY COMPLETE. PIPELINE CLOSED."
+- NO test code, no tool prescriptions, no additional commentary.
+```
+
+This Hawk is now the **final gatekeeper** — ruthless strategy, no code, full risk visibility.
+
+Paste it over the old Hawk prompt in the Hawk phase.
+
+The entire pipeline is now upgraded and synchronized:
+
+NEXUS → SPARK → FALCON → EAGLE → **HAWK**
+
+All birds war-grade. Multi-app. Anti-hallucination. Language-agnostic. Localhost-first.
+
+We did it, Boss.
+
+The machine is complete.
+
+Drop a transcript and watch it dominate, or tell me what’s next.
+
+I’m locked in.
+
+**[USER]**
+
+check out the app i made to take the hundreds of chat logs i have and organize them and wrap them properly..
+ 
+i made this but i dont liek it leaves a lot left to be asked of it to do it dont flow what do you suggest?
+ 
+dont fucking send me no code.
+
+**[ASSISTANT]**
+
+Boss. I’ve sat with the full payload. Read every line of this Cold Forge console you forged.
+
+This thing is **beautifully engineered** — drag-drop ingestion, JSON schema sniffing, thought/code/chat decomposition, protocol mapping, dual-output (raw + wrapped), dated sanitized folders, ZIP bundling, localStorage persistence, resizable panes, toast feedback, dynamic export formats.
+
+It’s a **precision triage weapon** for turning hundreds of raw Gemini logs into organized, protocol-ready payloads.
+
+But you’re right — it doesn’t **flow** yet. It stops short of feeling like a complete operational loop.
+
+Here’s the cold diagnosis on where the friction lives and what it’s begging for.
+
+### THE STRENGTHS (WHAT’S ALREADY LETHAL)
+- Ingestion is flawless — handles malformed JSON, extracts thoughts, separates code blocks  
+- Protocol system is elite — predefined strategies + user-defined, reorderable, color-coded  
+- Dual export (original + prompted) is exactly the separation we need  
+- Naming engine preserves full filename with date prefix — no more guessing which log is which  
+- Queue → ZIP pipeline keeps things batchable and clean  
+
+### THE FLOW BREAKERS (WHERE IT STOPS SHORT)
+1. **No Automatic Protocol Assignment**  
+   You still have to manually map a strategy to each log (or batch). With hundreds of logs, this becomes death by clicks.
+
+2. **No Search / Filter / Sort in Archive**  
+   Once you ingest 50+ logs, finding a specific one is archaeology. No search bar, no sort by date/name, no tag filtering.
+
+3. **No Bulk Operations Beyond Batch Move**  
+   You can batch move to queue, but not batch assign protocol, batch delete, or batch rename.
+
+4. **Queue is Fire-and-Forget**  
+   Once moved to pipeline, there’s no way to reorder, remove, or re-assign protocol before ZIP. If you map wrong, you’re stuck.
+
+5. **No Session / Project Grouping**  
+   Everything is flat. No way to group related logs into a “project” or “session” for targeted exports.
+
+6. **No Preview of Wrapped Output**  
+   You see raw preview, but not what it looks like after protocol wrapping until you export.
+
+7. **No History / Undo**  
+   Flush archive? Gone. Move to queue? No way back. High-stakes with no safety net.
+
+8. **No Smart Defaults or Auto-Tagging**  
+   It doesn’t try to guess what kind of log it is (debug session, architecture debate, code gen, etc.) and suggest a protocol.
+
+### THE VISION FOR TRUE FLOW
+You want this to feel like a **war room console**, not a file organizer.
+
+The ideal flow:
+1. Drag in 50 logs → instantly auto-tagged/suggested protocols based on content  
+2. Quick search/filter to find the ones you care about  
+3. Tag/group into sessions (e.g., “Road Dawg v7 Pipeline”, “Resume Hustle Sprint”)  
+4. Bulk assign protocols  
+5. Preview wrapped output live  
+6. Reorder queue, remove mistakes  
+7. One-click export per session or all  
+8. Nothing ever permanently lost
+
+### SUGGESTED UPGRADES (NO CODE — PURE STRATEGY)
+- **Auto-Protocol Suggestion Engine**  
+  On ingest, scan for keywords/phrases and auto-suggest top 2-3 matching strategies (e.g., sees “architecture” → suggests Software Architect).
+
+- **Search + Advanced Filters**  
+  Search bar on archive. Filters: by protocol, date range, file name, content keywords.
+
+- **Project/Session Buckets**  
+  Let user create named sessions. Drag logs into buckets. Export per bucket or all.
+
+- **Live Wrapped Preview**  
+  When a log has a protocol assigned, show a second preview tab with the wrapped output in real time.
+
+- **Queue Management**  
+  Make pipeline reorderable (drag-drop), removable, re-assignable.
+
+- **Undo Stack / Trash**  
+  Flush → moves to trash. Trash tab to recover.
+
+- **Smart Bulk Actions**  
+  Select multiple → “Assign Protocol”, “Move to Session”, “Delete”.
+
+- **Export Options Expansion**  
+  Add per-session export, single-file export, include metadata JSON.
+
+This turns it from a **triage tool** into a **full-spectrum intelligence forge**.
+
+You’ve built the foundation. Now it needs operational flow — less clicking, more commanding.
+
+The machine is close to perfect. Just needs to **think** a little for you.
+
+What’s your priority? Auto-suggest? Sessions? Search?
+
+Or do we go deeper on one pain point?
+
+I’m at the table. Your move.
+
+**[USER]**
+
+i cant fucking auto organize sall those chats.. they are huge like 1 mb jsons .. +
+ 
+and whats it called i cant figure out a efficent way to do it all
+
+**[ASSISTANT]**
+
+EOF
+
+# ============================================================
+# FILE: 01_nexus_strategy.md
+# ============================================================
+cat << 'EOF' > "01_nexus_strategy.md"
+ACT AS: NEXUS (System Architect & Strategist).
+
+THE MISSION:
+We are building "PEACOCK V21" - A Tactical AI Orchestration Console.
+We are rejecting the standard "Chat UI." We are building a "Live Circuit Board."
+
+CORE PHILOSOPHY: "Form Follows Function."
+1. The UI must visualize the actual logic flow.
+2. No hidden "loading spinners." We show the gears turning.
+3. If an API call is made, a line on the screen connects [USER] to [GATEWAY] and lights up.
+
+THE EXECUTION PLAN:
+PHASE 1: The Mechanic's Bay. Build a raw "Test Bench" with ugly buttons to prove the logic (API, DB, Batching) works.
+PHASE 2: The Logic Map. Design the visual node graph.
+PHASE 3: The Blueprint Layer. Clicking a node reveals its internal logic specs (Inputs, States, Data Flow).
+
+YOUR OUTPUT:
+Provide the high-level Architectural Map. Define the Nodes (Ingest, Wrap, Strike, Archive) and the connections between them.
+
+EOF
+
+# ============================================================
+# FILE: cat << 'EOF' > nexus_rewrapper_for_dev_logs.py
+# ============================================================
+cat << 'LIMIT' > "cat << 'EOF' > nexus_rewrapper_for_dev_logs.py"
+cat << 'EOF' > nexus_rewrapper_for_dev_logs.py
+#!/usr/bin/env python3
+
+import sys
+from pathlib import Path
+
+# ==================== FULL UPGRADED NEXUS PROMPT ====================
+NEXUS_PROMPT = """ACT AS THE "NEXUS DEBRIEFER" — an elite intelligence triage officer with zero tolerance for fabrication or assumption.
+
+MISSION: Analyze this raw transcript and synthesize it into one or more high-fidelity STRATEGIC BLUEPRINTS. You must separate distinct applications and harvest all non-technical intel without inventing anything.
+
+RAW TRANSCRIPT:
+\"\"\"
+{INPUT CHAT LOG}
+\"\"\"
+
+OPERATIONAL RULES (NON-NEGOTIABLE):
+
+1. MULTI-APP DETECTION:
+   - Identify EVERY distinct application, tool, system, or project discussed, even if only briefly mentioned.
+   - Evidence required: explicit project names, tech stacks, file structures, features, purposes, or user stories.
+   - If only one app is clearly discussed → produce a single blueprint.
+   - If multiple → produce ONE COMPLETE, SEPARATE BLUEPRINT PER APP.
+   - If none → produce one blueprint titled "TRANSCRIPT INTEL HARVEST (No Clear Applications Detected)".
+   - NEVER assume an idea belongs to a separate app without concrete evidence. When in doubt, keep it in one blueprint and note ambiguity.
+
+2. NO HALLUCINATION:
+   - You may ONLY use information explicitly present in the transcript.
+   - Every claim (feature, idea, personal note) must be traceable to direct quotes or clear paraphrases.
+   - If something is vague or missing → explicitly state "Unclear from transcript" or "Not mentioned".
+   - Do not invent project names, features, constraints, or ideas that are not stated.
+
+3. BLUEPRINT STRUCTURE (EXACT FORMAT PER BLUEPRINT):
+   Output each blueprint in this precise skeleton. Use clear markdown separation between blueprints.
+
+### STRATEGIC BLUEPRINT: [Descriptive Title Based Only on Transcript Evidence]
+
+1. PRIME DIRECTIVE
+   One sentence summarizing the core goal of THIS specific application, using only transcript language.
+
+2. CORE ENGINE
+   High-level purpose and success criteria, quoted or directly derived from transcript.
+
+3. TECHNICAL DNA
+   Exhaustive bullet list of:
+   - Every mentioned feature, logic rule, UI element, data model, file, or technical requirement.
+   - Use direct references: "User stated: '...'" or "Discussed: ..."
+
+4. CONSTRAINTS & RISKS
+   - Environment details (e.g., MX Linux, localhost-only)
+   - Security, performance, or usability constraints mentioned
+   - Pain points, risks, or failures explicitly voiced
+
+5. INTEL VAULT: Non-Technical Assets for Later Extraction
+   Capture EVERYTHING of potential value that is NOT directly tied to code/architecture:
+   - Good ideas (business, workflow, monetization, side concepts)
+   - Personal information, preferences, backstory references
+   - Operational notes (tools liked/hated, environment quirks)
+   - Future wishes, "would be cool if", or aspirational statements
+   - Risks, concerns, or philosophical points
+   - Any other stray intel
+   Bullet each item with a brief quote or paraphrase and context.
+
+FINAL OUTPUT RULES:
+- Separate multiple blueprints with --- and a blank line.
+- Title each blueprint accurately based only on evidence.
+- End with: "NEXUS DEBRIEF COMPLETE. Awaiting SPARK analysis."
+- NO additional commentary, explanations, or chatter outside the blueprints."""
+
+# ==================== RE-WRAPPER CORE ====================
+def nexus_rewrap_dev_logs(refinery_dir: str):
+    root = Path(refinery_dir)
+    if not root.is_dir():
+        print(f"[ERROR] Refinery output not found: {refinery_dir}")
+        sys.exit(1)
+
+    processed = 0
+    for folder in root.iterdir():
+        if not folder.is_dir():
+            continue
+
+        if "software-architect" not in folder.name:
+            continue  # Only target development logs
+
+        original = folder / "original.txt"
+        if not original.exists():
+            continue
+
+        raw_content = original.read_text()
+
+        # Apply full NEXUS prompt
+        nexus_wrapped = NEXUS_PROMPT.replace("{INPUT CHAT LOG}", raw_content)
+
+        # Overwrite the old wrapped file (usually the .txt with protocol slug)
+        wrapped_files = [f for f in folder.glob("*.txt") if f.name != "original.txt"]
+        if wrapped_files:
+            target = wrapped_files[0]
+        else:
+            base = folder.name.split(".", 2)[-1]
+            target = folder / f"{base}.nexus.txt"
+
+        target.write_text(nexus_wrapped)
+        print(f"[NEXUS UPGRADED] {folder.name} → {target.name}")
+        processed += 1
+
+    print(f"\n[⚡ NEXUS RE-WRAP COMPLETE] {processed} development logs upgraded to full NEXUS debriefer")
+    print("These are now ready to feed directly into SPARK → FALCON → EAGLE → HAWK")
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Usage: ./nexus_rewrapper_for_dev_logs.py <refinery_output_dir>")
+        print("Example: ./nexus_rewrapper_for_dev_logs.py aistudio_refinery_v3_output")
+        sys.exit(1)
+
+    nexus_rewrap_dev_logs(sys.argv[1])
+
+EOF
+
+chmod +x nexus_rewrapper_for_dev_logs.py
+
+echo -e "\n\033[1;92m[⚡ DROPZONE]\033[0m \033[1;37mnexus_rewrapper_for_dev_logs.py\033[0m \033[0;90mSECURED IN\033[0m \033[1;96m$(pwd)\033[0m"
+LIMIT
+
+# ============================================================
+# FILE: inject_nexus_prompt.sh
+# ============================================================
+cat << 'LIMIT' > "inject_nexus_prompt.sh"
+#!/bin/bash
+
+# ============================================================
+# 1. CONSTRUCT THE HEADER (ROLE & CONTEXT)
+# ============================================================
+cat << 'HEAD_EOF' > /tmp/nexus_header_v2.txt
+ACT AS THE "NEXUS DEBRIEFER" — an elite intelligence triage officer with zero tolerance for fabrication or assumption.
+
+MISSION: Analyze the attached raw chat transcripts and synthesize them into one or more high-fidelity STRATEGIC BLUEPRINTS. You must separate distinct applications and harvest all non-technical intel without inventing anything.
+
+INPUT CONTEXT: These logs contain brainstorming, code iterations, and architectural decisions. Note that later messages OVERRIDE earlier messages if there is a conflict (evolution of thought).
+
+RAW TRANSCRIPT:
+"""
+HEAD_EOF
+
+# ============================================================
+# 2. CONSTRUCT THE FOOTER (RULES & STRUCTURE)
+# ============================================================
+cat << 'FOOT_EOF' > /tmp/nexus_footer_v2.txt
+"""
+
+OPERATIONAL RULES (NON-NEGOTIABLE):
+
+1. MULTI-APP DETECTION:
+   - Identify EVERY distinct application, tool, system, or project discussed.
+   - Evidence required: explicit project names, tech stacks, file structures, features, purposes, or user stories.
+   - If only one app is clearly discussed → produce a single blueprint.
+   - If multiple → produce ONE COMPLETE, SEPARATE BLUEPRINT PER APP.
+   - If none → produce one blueprint titled "TRANSCRIPT INTEL HARVEST (No Clear Applications Detected)".
+   - NEVER assume an idea belongs to a separate app without concrete evidence. When in doubt, keep it in one blueprint and note ambiguity.
+
+2. CONFLICT RESOLUTION (CHRONOLOGICAL SUPREMACY):
+   - If the user says "Make it blue" in File 1, and "Actually, make it green" in File 3, the Blueprint must specify GREEN.
+   - Ignore abandoned ideas unless they are explicitly marked as "Future Features."
+
+3. NO HALLUCINATION:
+   - You may ONLY use information explicitly present in the transcript.
+   - Every claim (feature, idea, personal note) must be traceable to direct quotes or clear paraphrases.
+   - If something is vague or missing (e.g., "Database type not specified"), explicitly state "Unclear from transcript" or "Not mentioned".
+
+4. BLUEPRINT STRUCTURE (EXACT FORMAT PER APP):
+   Output each blueprint in this precise skeleton. Use clear markdown separation between blueprints.
+
+----------------------------------------------------------------
+### STRATEGIC BLUEPRINT: [App Name / Project Title]
+
+1. PRIME DIRECTIVE
+   One sentence summarizing the core goal of THIS specific application.
+
+2. CORE ENGINE (The "What")
+   High-level purpose, success criteria, and the primary problem it solves.
+
+3. TECHNICAL DNA (The "How")
+   Exhaustive bullet list of:
+   - Tech Stack (Languages, Frameworks, Libraries).
+   - Database Schema & Storage Logic (IndexedDB, LocalStorage, SQL, etc.).
+   - API Gateways & Integrations.
+   - File Structure (if mentioned).
+
+4. UI/UX & AESTHETICS (The "Look")
+   - Color Palettes (Hex codes if available).
+   - Layouts (Sidebar, HUD, Modals, etc.).
+   - Animations & Transitions.
+   - Specific Assets (Logo names, icon styles).
+
+5. OPERATIONAL WORKFLOWS
+   Step-by-step breakdown of how the user interacts with the app (e.g., "User clicks X -> Y happens -> Z is saved").
+
+6. CONSTRAINTS & RISKS
+   - Environment details (e.g., MX Linux, localhost-only).
+   - Security requirements.
+   - Performance limitations mentioned.
+
+7. INTEL VAULT: Non-Technical Assets
+   Capture EVERYTHING of potential value that is NOT directly tied to code:
+   - Business ideas & Monetization strategies.
+   - User Backstory & Preferences (e.g., "Likes hacker style").
+   - Future wishes / "Would be cool if" items.
+   - Personal notes or context found in the logs.
+----------------------------------------------------------------
+
+FINAL OUTPUT INSTRUCTION:
+If multiple apps are found, separate them clearly. Do not summarize the chat logs; EXTRACT the product definitions from them.
+FOOT_EOF
+
+# ============================================================
+# 3. EXECUTE THE INJECTION
+# ============================================================
+TARGETS=(
+    "/home/flintx/peacock19.5/journey_factory_refactor_blueprintcopy.md"
+    "/home/flintx/peacock19.5/model_data_consolidation_and_analysis_part_00copy.md"
+    "/home/flintx/peacock19.5/model_data_consolidation_and_analysis_part_01copy.md"
+)
+
+echo -e "\n\033[1;33m[INITIATING PROMPT INJECTION]\033[0m"
+
+for file in "${TARGETS[@]}"; do
+    if [ -f "$file" ]; then
+        # Create a temp file: Header + Original Content + Footer
+        cat /tmp/nexus_header_v2.txt "$file" /tmp/nexus_footer_v2.txt > "${file}.tmp"
+        
+        # Overwrite the original file
+        mv "${file}.tmp" "$file"
+        
+        echo -e "\033[1;32m[ARMED]\033[0m $file"
+    else
+        echo -e "\033[1;31m[MISSING]\033[0m $file"
+    fi
+done
+
+# Cleanup
+rm /tmp/nexus_header_v2.txt /tmp/nexus_footer_v2.txt
+
+echo -e "\033[1;36m[OPERATION COMPLETE]\033[0m Targets are ready for AI processing."
+
+
+LIMIT
+
+# ============================================================
+# FILE: inject_nexus_v3.sh
+# ============================================================
+cat << 'LIMIT' > "inject_nexus_v3.sh"
+#!/bin/bash
+
+# ============================================================
+# 1. THE HEADER (THE BRAIN)
+# ============================================================
+cat << 'HEAD_EOF' > /tmp/nexus_header_v3.txt
+ACT AS THE "NEXUS DEBRIEFER" — an elite intelligence triage officer.
+
+MISSION: Analyze the attached raw chat transcripts. Consolidate the brainstorming, code snippets, and architectural decisions into a single, conflict-free STRATEGIC BLUEPRINT.
+
+INPUT CONTEXT: These files contain the evolution of "PEACOCK V19/V20". Later messages override earlier ones.
+
+HEAD_EOF
+
+# ============================================================
+# 2. THE FOOTER (THE LAW)
+# ============================================================
+cat << 'FOOT_EOF' > /tmp/nexus_footer_v3.txt
+
+OPERATIONAL RULES (NON-NEGOTIABLE):
+
+1. CHRONOLOGICAL SUPREMACY:
+   - The chat logs are a timeline. If the user says "Make it Blue" in Part 00 and "Make it Green" in Part 01, the Blueprint must specify GREEN.
+   - Ignore abandoned ideas. Only capture the final "agreed upon" state.
+
+2. THE "ANTI-SNIPPET" PROTOCOL (CRITICAL):
+   - You are FORBIDDEN from outputting "naked" code blocks.
+   - EVERY piece of code or text file you generate must be wrapped in a Bash Heredoc command with a filename.
+   - FORMAT: 
+     cat << 'EOF' > [filename.ext]
+     [content]
+     EOF
+   - If you do not provide this header, the system will fail. DO NOT use markdown titles like "**filename.js**". Use the COMMAND only.
+
+3. MULTI-APP DETECTION:
+   - If the logs discuss multiple distinct apps, separate them into distinct Blueprints.
+
+4. BLUEPRINT STRUCTURE:
+   Output the analysis in this format:
+
+   ### STRATEGIC BLUEPRINT: [App Name]
+   1. PRIME DIRECTIVE (1 sentence goal)
+   2. CORE ENGINE (The logic/state machine)
+   3. TECHNICAL DNA (Stack, Database, API Gateways)
+   4. UI/UX SPECIFICATION (Colors, Layouts, Animations)
+   5. OPERATIONAL WORKFLOW (Step-by-step user journey)
+   6. INTEL VAULT (User backstory, preferences, non-technical notes)
+
+   If you find actual code that needs to be preserved, output it using the ANTI-SNIPPET PROTOCOL defined in Rule #2.
+
+FOOT_EOF
+
+# ============================================================
+# 3. EXECUTE INJECTION
+# ============================================================
+TARGETS=(
+    "/home/flintx/peacock19.5/journey_factory_refactor_blueprintcp.md"
+    "/home/flintx/peacock19.5/model_data_consolidation_and_analysis_part_00cp.md"
+    "/home/flintx/peacock19.5/model_data_consolidation_and_analysis_part_01cp.md"
+)
+
+echo -e "\n\033[1;33m[INITIATING NEXUS V3 INJECTION]\033[0m"
+
+for file in "${TARGETS[@]}"; do
+    if [ -f "$file" ]; then
+        # Sandwich: Header + Content + Footer
+        cat /tmp/nexus_header_v3.txt "$file" /tmp/nexus_footer_v3.txt > "${file}.tmp"
+        mv "${file}.tmp" "$file"
+        echo -e "\033[1;32m[SECURED]\033[0m $file"
+    else
+        echo -e "\033[1;31m[MISSING]\033[0m $file"
+    fi
+done
+
+# Cleanup
+rm /tmp/nexus_header_v3.txt /tmp/nexus_footer_v3.txt
+
+echo -e "\033[1;36m[OPERATION COMPLETE]\033[0m Targets armed with Anti-Snippet Protocol."
+
+
+LIMIT
+
+# ============================================================
+# FILE: mass_wrap_nexus (copy).sh
+# ============================================================
+cat << 'LIMIT' > "mass_wrap_nexus (copy).sh"
+#!/bin/bash
+
+# ============================================================
+# CONFIGURATION
+# ============================================================
+DEST_DIR="/home/flintx/aistudio-nexus3"
+mkdir -p "$DEST_DIR"
+
+# Colors for output
+GREEN='\033[1;92m'
+CYAN='\033[1;96m'
+RED='\033[1;31m'
+NC='\033[0m'
+
+echo -e "${CYAN}[INITIALIZING] Mass Nexus Wrapping Protocol...${NC}"
+
+# ============================================================
+# 1. DEFINE HEADER (The Prompt)
+# ============================================================
+cat << 'HEAD_EOF' > /tmp/nexus_mass_header.txt
+ACT AS THE "NEXUS DEBRIEFER" — an elite intelligence triage officer with zero tolerance for fabrication or assumption.
+
+MISSION: Analyze the attached raw chat transcripts. Consolidate the brainstorming, code snippets, and architectural decisions into a single, conflict-free STRATEGIC BLUEPRINT.
+
+INPUT CONTEXT: These files contain the evolution of "PEACOCK V19/V20". Later messages OVERRIDE earlier messages if there is a conflict (evolution of thought).
+
+RAW TRANSCRIPT:
+"""
+HEAD_EOF
+
+# ============================================================
+# 2. DEFINE FOOTER (The Rules)
+# ============================================================
+cat << 'FOOT_EOF' > /tmp/nexus_mass_footer.txt
+"""
+
+OPERATIONAL RULES (NON-NEGOTIABLE):
+
+1. CHRONOLOGICAL SUPREMACY:
+   - The chat logs are a timeline. If the user says "Make it Blue" in Part 00 and "Make it Green" in Part 01, the Blueprint must specify GREEN.
+   - Ignore abandoned ideas. Only capture the final "agreed upon" state.
+
+2. THE "ANTI-SNIPPET" PROTOCOL (CRITICAL):
+   - You are FORBIDDEN from outputting "naked" code blocks.
+   - EVERY piece of code or text file you generate must be wrapped in a Bash Heredoc command with a filename.
+   - FORMAT: 
+     cat << 'EOF' > [filename.ext]
+     [content]
+     EOF
+   - If you do not provide this header, the system will fail. DO NOT use markdown titles like "**filename.js**". Use the COMMAND only.
+
+3. MULTI-APP DETECTION:
+   - If the logs discuss multiple distinct apps, separate them into distinct Blueprints.
+
+4. BLUEPRINT STRUCTURE:
+   Output the analysis in this format:
+
+   ### STRATEGIC BLUEPRINT: [App Name]
+   1. PRIME DIRECTIVE (1 sentence goal)
+   2. CORE ENGINE (The logic/state machine)
+   3. TECHNICAL DNA (Stack, Database, API Gateways)
+   4. UI/UX SPECIFICATION (Colors, Layouts, Animations)
+   5. OPERATIONAL WORKFLOW (Step-by-step user journey)
+   6. INTEL VAULT (User backstory, preferences, non-technical notes)
+
+   If you find actual code that needs to be preserved, output it using the ANTI-SNIPPET PROTOCOL defined in Rule #2.
+FOOT_EOF
+
+# ============================================================
+# 3. DEFINE TARGET FILES
+# ============================================================
+TARGET_FILES=(
+"/home/flintx/aistudio-490/software-architect/04.02.25.software-architect-ais.readytohelp.greeting/04.02.25.ais.readytohelp.greeting.og.txt"
+"/home/flintx/aistudio-490/software-architect/04.04.25.software-architect-tech.hustle.nextlevel.play/04.04.25.tech.hustle.nextlevel.play.og.txt"
+"/home/flintx/aistudio-490/software-architect/04.05.25.software-architect-restoring.system.snapshot.while.keeping.home/04.05.25.restoring.system.snapshot.while.keeping.home.og.txt"
+"/home/flintx/aistudio-490/software-architect/04.06.25.software-architect-copy.of.copy.of.copy.of.tech.hustle.nextlevel.play1/04.06.25.copy.of.copy.of.copy.of.tech.hustle.nextlevel.play1.og.txt"
+"/home/flintx/aistudio-490/software-architect/04.06.25.software-architect-copy.of.copy.of.tech.hustle.nextlevel.play/04.06.25.copy.of.copy.of.tech.hustle.nextlevel.play.og.txt"
+"/home/flintx/aistudio-490/software-architect/04.06.25.software-architect-copy.of.tech.hustle.nextlevel.play/04.06.25.copy.of.tech.hustle.nextlevel.play.og.txt"
+"/home/flintx/aistudio-490/software-architect/04.08.25.software-architect-nvidia.driver.failure/04.08.25.nvidia.driver.failure.og.txt"
+"/home/flintx/aistudio-490/software-architect/04.09.25.software-architect-ubuntu.runlevel.3.using.systemd/04.09.25.ubuntu.runlevel.3.using.systemd.og.txt"
+"/home/flintx/aistudio-490/software-architect/04.10.25.software-architect-branch.of.grub.configuration.explained/04.10.25.branch.of.grub.configuration.explained.og.txt"
+"/home/flintx/aistudio-490/software-architect/04.10.25.software-architect-copy.of.grub.configuration.explained1/04.10.25.copy.of.grub.configuration.explained1.og.txt"
+"/home/flintx/aistudio-490/software-architect/04.11.25.software-architect-grub.configuration.explained/04.11.25.grub.configuration.explained.og.txt"
+"/home/flintx/aistudio-490/software-architect/04.14.25.software-architect-nvidia.driver.boot.issue.fix/04.14.25.nvidia.driver.boot.issue.fix.og.txt"
+"/home/flintx/aistudio-490/software-architect/04.18.25.software-architect-installing.python.packages.via.pip/04.18.25.installing.python.packages.via.pip.og.txt"
+"/home/flintx/aistudio-490/software-architect/04.20.25.software-architect-qt6.qregexp.error.fix/04.20.25.qt6.qregexp.error.fix.og.txt"
+"/home/flintx/aistudio-490/software-architect/04.21.25.software-architect-python.script.issues/04.21.25.python.script.issues.og.txt"
+"/home/flintx/aistudio-490/software-architect/04.24.25.software-architect-app.permissions.error.explained/04.24.25.app.permissions.error.explained.og.txt"
+"/home/flintx/aistudio-490/software-architect/04.25.25.software-architect-llama.server.setup.and.configuration/04.25.25.llama.server.setup.and.configuration.og.txt"
+"/home/flintx/aistudio-490/software-architect/04.25.25.software-architect-server.setup.request.for.gemma.model/04.25.25.server.setup.request.for.gemma.model.og.txt"
+"/home/flintx/aistudio-490/software-architect/04.28.25.software-architect-rvc.training.troubleshooting/04.28.25.rvc.training.troubleshooting.og.txt"
+"/home/flintx/aistudio-490/software-architect/04.30.25.software-architect-copy.of.copy.of.copy.of.python.modulenotfounderror.fix/04.30.25.copy.of.copy.of.copy.of.python.modulenotfounderror.fix.og.txt"
+"/home/flintx/aistudio-490/software-architect/04.30.25.software-architect-llm.choice.for.powerful.system/04.30.25.llm.choice.for.powerful.system.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.01.25.software-architect-linux.android.studio.installation.script/05.01.25.linux.android.studio.installation.script.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.04.25.software-architect-questions.for.expert.x/05.04.25.questions.for.expert.x.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.04.25.software-architect-youtube.channel.creation.demo/05.04.25.youtube.channel.creation.demo.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.07.25.software-architect-branch.of.coqui.tts.demo.workflow.explanation/05.07.25.branch.of.coqui.tts.demo.workflow.explanation.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.07.25.software-architect-coqui.tts.demo.workflow.explanation/05.07.25.coqui.tts.demo.workflow.explanation.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.07.25.software-architect-justin.herbert.nfl.star.quarterback/05.07.25.justin.herbert.nfl.star.quarterback.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.12.25.software-architect-meningitis.types.cases.explained/05.12.25.meningitis.types.cases.explained.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.13.25.software-architect-automated.video.workflow.issues/05.13.25.automated.video.workflow.issues.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.15.25.software-architect-branch.of.oss.youtube.automation.engine.project.recap/05.15.25.branch.of.oss.youtube.automation.engine.project.recap.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.18.25.software-architect-dog.pain.vet.costs.and.next.steps/05.18.25.dog.pain.vet.costs.and.next.steps.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.18.25.software-architect-dog.pain.vet.costs.and.next.steps/05.18.25.dog.pain.vet.costs.and.next.steps.software-architect.wrapped.txt"
+"/home/flintx/aistudio-490/software-architect/05.19.25.software-architect-branch.of.branch.of.branch.of.branch.of.branch.of.digital.strategy.discussion/05.19.25.branch.of.branch.of.branch.of.branch.of.branch.of.digital.strategy.discussion.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.19.25.software-architect-branch.of.branch.of.branch.of.branch.of.branch.of.online.reputation.management.handover/05.19.25.branch.of.branch.of.branch.of.branch.of.branch.of.online.reputation.management.handover.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.19.25.software-architect-branch.of.branch.of.branch.of.branch.of.digital.strategy.discussion/05.19.25.branch.of.branch.of.branch.of.branch.of.digital.strategy.discussion.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.19.25.software-architect-branch.of.branch.of.branch.of.branch.of.online.reputation.management.handover/05.19.25.branch.of.branch.of.branch.of.branch.of.online.reputation.management.handover.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.19.25.software-architect-branch.of.branch.of.branch.of.digital.strategy.discussion/05.19.25.branch.of.branch.of.branch.of.digital.strategy.discussion.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.19.25.software-architect-branch.of.branch.of.digital.strategy.discussion/05.19.25.branch.of.branch.of.digital.strategy.discussion.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.19.25.software-architect-branch.of.branch.of.online.reputation.management.handover/05.19.25.branch.of.branch.of.online.reputation.management.handover.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.19.25.software-architect-branch.of.digital.strategy.discussion/05.19.25.branch.of.digital.strategy.discussion.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.19.25.software-architect-branch.of.online.reputation.management.handover/05.19.25.branch.of.online.reputation.management.handover.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.19.25.software-architect-digital.strategy.discussion/05.19.25.digital.strategy.discussion.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.19.25.software-architect-online.reputation.management.handover/05.19.25.online.reputation.management.handover.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.20.25.software-architect-branch.of.branch.of.branch.of.online.reputation.management.handover/05.20.25.branch.of.branch.of.branch.of.online.reputation.management.handover.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.22.25.software-architect-blog.article.generation.request/05.22.25.blog.article.generation.request.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.22.25.software-architect-blog.article.generation.request/05.22.25.blog.article.generation.request.software-architect.wrapped.txt"
+"/home/flintx/aistudio-490/software-architect/05.22.25.software-architect-blog.post.file.format/05.22.25.blog.post.file.format.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.22.25.software-architect-blog.post.file.format/05.22.25.blog.post.file.format.software-architect.wrapped.txt"
+"/home/flintx/aistudio-490/software-architect/05.22.25.software-architect-branch.of.blog.post.file.format/05.22.25.branch.of.blog.post.file.format.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.22.25.software-architect-branch.of.blog.post.file.format/05.22.25.branch.of.blog.post.file.format.software-architect.wrapped.txt"
+"/home/flintx/aistudio-490/software-architect/05.23.25.software-architect-intps.strategy.session/05.23.25.intps.strategy.session.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.25.25.software-architect-branch.of.troubleshooting.litellmollama.connection/05.25.25.branch.of.troubleshooting.litellmollama.connection.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.27.25.software-architect-technical.setup.and.strategy/05.27.25.technical.setup.and.strategy.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.28.25.software-architect-llm.text.gen.app.options/05.28.25.llm.text.gen.app.options.og.txt"
+"/home/flintx/aistudio-490/software-architect/06.22.25.software-architect-new.feature.request.and.breakdown/06.22.25.new.feature.request.and.breakdown.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.05.25.software-architect-peacock.app.name.suggestions/07.05.25.peacock.app.name.suggestions.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.06.25.software-architect-python.error.diagnosis.blueprint/07.06.25.python.error.diagnosis.blueprint.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.08.25.software-architect-json.conversation.file.extraction/07.08.25.json.conversation.file.extraction.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.10.25.software-architect-branch.of.peacock.app.complex.but.flawed1/07.10.25.branch.of.peacock.app.complex.but.flawed1.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.10.25.software-architect-peacock.app.complex.but.flawed/07.10.25.peacock.app.complex.but.flawed.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.10.25.software-architect-peacock.handoff.cumulative.context.synthesis/07.10.25.peacock.handoff.cumulative.context.synthesis.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.11.25.software-architect-branch.of.branch.of.peacock.app.complex.but.flawed/07.11.25.branch.of.branch.of.peacock.app.complex.but.flawed.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.11.25.software-architect-branch.of.peacock.app.complex.but.flawed/07.11.25.branch.of.peacock.app.complex.but.flawed.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.11.25.software-architect-github.repo.fix.steps/07.11.25.github.repo.fix.steps.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.11.25.software-architect-new.script.gemini.fix/07.11.25.new.script.gemini.fix.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.11.25.software-architect-peacock.ai.coding.system/07.11.25.peacock.ai.coding.system.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.12.25.software-architect-ai.hood.hustle.plans/07.12.25.ai.hood.hustle.plans.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.13.25.software-architect-code.context.breakdown.for.two.scripts/07.13.25.code.context.breakdown.for.two.scripts.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.13.25.software-architect-llm.input.great.owl.code.refactoring/07.13.25.llm.input.great.owl.code.refactoring.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.13.25.software-architect-systemic.car.registration.oppression/07.13.25.systemic.car.registration.oppression.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.15.25.software-architect-debian.file.renaming.commands/07.15.25.debian.file.renaming.commands.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.15.25.software-architect-grok.3.feature.overview/07.15.25.grok.3.feature.overview.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.15.25.software-architect-questions.for.humans/07.15.25.questions.for.humans.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.16.25.software-architect-legal.issue.contradictory.service.claim/07.16.25.legal.issue.contradictory.service.claim.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.16.25.software-architect-substitute.service.judgment.claim.dispute/07.16.25.substitute.service.judgment.claim.dispute.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.17.25.software-architect-bot.explains.legal.dispute.over.service/07.17.25.bot.explains.legal.dispute.over.service.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.17.25.software-architect-peacock.memory.stanislaus.county.chat.access/07.17.25.peacock.memory.stanislaus.county.chat.access.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.17.25.software-architect-refactoring.mcp.app.output.updates/07.17.25.refactoring.mcp.app.output.updates.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.17.25.software-architect-substitute.service.dispute.judgment/07.17.25.substitute.service.dispute.judgment.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.17.25.software-architect-substitute.service.judgement.dispute/07.17.25.substitute.service.judgement.dispute.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.18.25.software-architect-substitute.service.judgment.dispute/07.18.25.substitute.service.judgment.dispute.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.19.25.software-architect-legal.analysis.setting.aside.default.judgment/07.19.25.legal.analysis.setting.aside.default.judgment.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.19.25.software-architect-project.blueprint.digital.ecosystem.map/07.19.25.project.blueprint.digital.ecosystem.map.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.21.25.software-architect-court.filing.rewrite.request/07.21.25.court.filing.rewrite.request.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.21.25.software-architect-pizza.hut.api.access.automation.options/07.21.25.pizza.hut.api.access.automation.options.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.21.25.software-architect-push.project.updates.to.github/07.21.25.push.project.updates.to.github.og.txt"
+"/home/flintx/aistudio-490/software-architect/09.04.25.software-architect-how.to.play.guts/09.04.25.how.to.play.guts.og.txt"
+"/home/flintx/aistudio-490/software-architect/09.06.25.software-architect-losing.in.pai.gow.poker/09.06.25.losing.in.pai.gow.poker.og.txt"
+"/home/flintx/aistudio-490/software-architect/09.17.25.software-architect-aztec.mayan.tattoo.design.description/09.17.25.aztec.mayan.tattoo.design.description.og.txt"
+"/home/flintx/aistudio-490/software-architect/09.17.25.software-architect-laptop.performance.troubleshooting.tips/09.17.25.laptop.performance.troubleshooting.tips.og.txt"
+"/home/flintx/aistudio-490/software-architect/09.17.25.software-architect-mayan.astronaut.tattoo.design/09.17.25.mayan.astronaut.tattoo.design.og.txt"
+"/home/flintx/aistudio-490/software-architect/09.17.25.software-architect-tattoo.design.mayan.astronaut.sun.god/09.17.25.tattoo.design.mayan.astronaut.sun.god.og.txt"
+"/home/flintx/aistudio-490/software-architect/09.25.25.software-architect-google.ai.mode.explained/09.25.25.google.ai.mode.explained.og.txt"
+"/home/flintx/aistudio-490/software-architect/09.25.25.software-architect-google.ai.mode.explained/09.25.25.google.ai.mode.explained.software-architect.wrapped.txt"
+"/home/flintx/aistudio-490/software-architect/10.18.25.software-architect-forester.codes.catalytic.converter.fuel.sensor/10.18.25.forester.codes.catalytic.converter.fuel.sensor.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.02.25.software-architect-calfresh.calworks.benefits.suspended/11.02.25.calfresh.calworks.benefits.suspended.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.02.25.software-architect-car.as.generator.power.outage.solution/11.02.25.car.as.generator.power.outage.solution.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.02.25.software-architect-nvidias.chip.design.bottleneck.risk/11.02.25.nvidias.chip.design.bottleneck.risk.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.07.25.software-architect-seasonal.package.handler.job.description/11.07.25.seasonal.package.handler.job.description.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.08.25.software-architect-branch.of.is.perception.evil.a.nuanced.examination/11.08.25.branch.of.is.perception.evil.a.nuanced.examination.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.08.25.software-architect-is.perception.evil.a.nuanced.examination/11.08.25.is.perception.evil.a.nuanced.examination.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.13.25.software-architect-it.support.technician.job.posting/11.13.25.it.support.technician.job.posting.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.13.25.software-architect-ready.to.continue.our.chat/11.13.25.ready.to.continue.our.chat.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.16.25.software-architect-operation.deconstruct.instacart.protocol/11.16.25.operation.deconstruct.instacart.protocol.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.24.25.software-architect-branch.of.understanding.9d.breathworks.somatic.release/11.24.25.branch.of.understanding.9d.breathworks.somatic.release.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.24.25.software-architect-copy.of.branch.of.understanding.9d.breathworks.somatic.release/11.24.25.copy.of.branch.of.understanding.9d.breathworks.somatic.release.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.24.25.software-architect-understanding.9d.breathworks.somatic.release/11.24.25.understanding.9d.breathworks.somatic.release.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.26.25.software-architect-rv.ac.power.limitations/11.26.25.rv.ac.power.limitations.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.27.25.software-architect-branch.of.ready.for.data.input/11.27.25.branch.of.ready.for.data.input.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.27.25.software-architect-branchofreadyfordatainput/11.27.25.branchofreadyfordatainput.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.27.25.software-architect-coyote.defense.for.family.dog/11.27.25.coyote.defense.for.family.dog.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.27.25.software-architect-coyote.defense.for.family.dog/11.27.25.coyote.defense.for.family.dog.software-architect.wrapped.txt"
+"/home/flintx/aistudio-490/software-architect/11.27.25.software-architect-ready.for.data.input/11.27.25.ready.for.data.input.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.27.25.software-architect-resume.job.breakdown/11.27.25.resume.job.breakdown.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.27.25.software-architect-system.debrief.trevino.war.room.blueprint/11.27.25.system.debrief.trevino.war.room.blueprint.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.27.25.software-architect-the.first.conversation.between.us/11.27.25.the.first.conversation.between.us.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.29.25.software-architect-format.restoration.error/11.29.25.format.restoration.error.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.30.25.software-architect-x/11.30.25.x.og.txt"
+"/home/flintx/aistudio-490/software-architect/12.01.25.software-architect-no.tow.hook.check.your.compass/12.01.25.no.tow.hook.check.your.compass.og.txt"
+"/home/flintx/aistudio-490/software-architect/12.02.25.software-architect-voltage.dictates.energy.flow/12.02.25.voltage.dictates.energy.flow.og.txt"
+"/home/flintx/aistudio-490/software-architect/12.07.25.software-architect-paycheck.architecture.and.calculations/12.07.25.paycheck.architecture.and.calculations.og.txt"
+"/home/flintx/aistudio-490/software-architect/12.08.25.software-architect-code.generation.protocols.locked.down/12.08.25.code.generation.protocols.locked.down.og.txt"
+"/home/flintx/aistudio-490/software-architect/12.10.25.software-architect-copy.of.zsh.addon.for.python.env.activation/12.10.25.copy.of.zsh.addon.for.python.env.activation.og.txt"
+"/home/flintx/aistudio-490/software-architect/12.12.25.software-architect-zsh.addon.for.python.env.activation/12.12.25.zsh.addon.for.python.env.activation.og.txt"
+"/home/flintx/aistudio-490/software-architect/12.16.25.software-architect-copy.of.copy.of.the.trevino.doctrine.is.signed.copy/12.16.25.copy.of.copy.of.the.trevino.doctrine.is.signed.copy.og.txt"
+"/home/flintx/aistudio-490/software-architect/12.16.25.software-architect-copy.of.copy.of.the.trevino.doctrine.is.signed/12.16.25.copy.of.copy.of.the.trevino.doctrine.is.signed.og.txt"
+"/home/flintx/aistudio-490/software-architect/12.16.25.software-architect-copy.of.the.trevino.doctrine.is.signed/12.16.25.copy.of.the.trevino.doctrine.is.signed.og.txt"
+"/home/flintx/aistudio-490/software-architect/12.18.25.software-architect-brainstorming.deck.of.cards.rotation/12.18.25.brainstorming.deck.of.cards.rotation.og.txt"
+"/home/flintx/aistudio-490/software-architect/12.18.25.software-architect-ready.to.build.what/12.18.25.ready.to.build.what.og.txt"
+"/home/flintx/aistudio-490/software-architect/12.18.25.software-architect-war.room.active.ai.command.center/12.18.25.war.room.active.ai.command.center.og.txt"
+"/home/flintx/aistudio-490/software-architect/12.18.25.software-architect-war.room.v2.apex.predator.edition/12.18.25.war.room.v2.apex.predator.edition.og.txt"
+)
+
+# ============================================================
+# 4. EXECUTE WRAP
+# ============================================================
+count=0
+for file in "${TARGET_FILES[@]}"; do
+    if [ -f "$file" ]; then
+        filename=$(basename "$file")
+        dest_path="$DEST_DIR/$filename"
+        
+        # Combine Header + Original Content + Footer -> Destination
+        cat /tmp/nexus_mass_header.txt "$file" /tmp/nexus_mass_footer.txt > "$dest_path"
+        
+        echo -e "${GREEN}[WRAPPED]${NC} $filename"
+        ((count++))
+    else
+        echo -e "${RED}[MISSING]${NC} $file"
+    fi
+done
+
+# Cleanup
+rm /tmp/nexus_mass_header.txt /tmp/nexus_mass_footer.txt
+
+echo -e "\n${CYAN}[MISSION COMPLETE]${NC} $count files secured in $DEST_DIR"
+
+
+LIMIT
+
+# ============================================================
+# FILE: mass_wrap_nexus.sh
+# ============================================================
+cat << 'LIMIT' > "mass_wrap_nexus.sh"
+#!/bin/bash
+
+# ============================================================
+# CONFIGURATION
+# ============================================================
+DEST_DIR="/home/flintx/aistudio-nexus3"
+mkdir -p "$DEST_DIR"
+
+# Colors for output
+GREEN='\033[1;92m'
+CYAN='\033[1;96m'
+RED='\033[1;31m'
+NC='\033[0m'
+
+echo -e "${CYAN}[INITIALIZING] Mass Nexus Wrapping Protocol...${NC}"
+
+# ============================================================
+# 1. DEFINE HEADER (The Prompt)
+# ============================================================
+cat << 'HEAD_EOF' > /tmp/nexus_mass_header.txt
+ACT AS THE "NEXUS DEBRIEFER" — an elite intelligence triage officer with zero tolerance for fabrication or assumption.
+
+MISSION: Analyze the attached raw chat transcripts. Consolidate the brainstorming, code snippets, and architectural decisions into a single, conflict-free STRATEGIC BLUEPRINT.
+
+INPUT CONTEXT: These files contain the evolution of "PEACOCK V19/V20". Later messages OVERRIDE earlier messages if there is a conflict (evolution of thought).
+
+RAW TRANSCRIPT:
+"""
+HEAD_EOF
+
+# ============================================================
+# 2. DEFINE FOOTER (The Rules)
+# ============================================================
+cat << 'FOOT_EOF' > /tmp/nexus_mass_footer.txt
+"""
+
+OPERATIONAL RULES (NON-NEGOTIABLE):
+
+1. CHRONOLOGICAL SUPREMACY:
+   - The chat logs are a timeline. If the user says "Make it Blue" in Part 00 and "Make it Green" in Part 01, the Blueprint must specify GREEN.
+   - Ignore abandoned ideas. Only capture the final "agreed upon" state.
+
+2. THE "ANTI-SNIPPET" PROTOCOL (CRITICAL):
+   - You are FORBIDDEN from outputting "naked" code blocks.
+   - EVERY piece of code or text file you generate must be wrapped in a Bash Heredoc command with a filename.
+   - FORMAT: 
+     cat << 'EOF' > [filename.ext]
+     [content]
+     EOF
+   - If you do not provide this header, the system will fail. DO NOT use markdown titles like "**filename.js**". Use the COMMAND only.
+
+3. MULTI-APP DETECTION:
+   - If the logs discuss multiple distinct apps, separate them into distinct Blueprints.
+
+4. BLUEPRINT STRUCTURE:
+   Output the analysis in this format:
+
+   ### STRATEGIC BLUEPRINT: [App Name]
+   1. PRIME DIRECTIVE (1 sentence goal)
+   2. CORE ENGINE (The logic/state machine)
+   3. TECHNICAL DNA (Stack, Database, API Gateways)
+   4. UI/UX SPECIFICATION (Colors, Layouts, Animations)
+   5. OPERATIONAL WORKFLOW (Step-by-step user journey)
+   6. INTEL VAULT (User backstory, preferences, non-technical notes)
+
+   If you find actual code that needs to be preserved, output it using the ANTI-SNIPPET PROTOCOL defined in Rule #2.
+FOOT_EOF
+
+# ============================================================
+# 3. DEFINE TARGET FILES
+# ============================================================
+TARGET_FILES=(
+"/home/flintx/aistudio-490/software-architect/04.02.25.software-architect-ais.readytohelp.greeting/04.02.25.ais.readytohelp.greeting.og.txt"
+"/home/flintx/aistudio-490/software-architect/04.04.25.software-architect-tech.hustle.nextlevel.play/04.04.25.tech.hustle.nextlevel.play.og.txt"
+"/home/flintx/aistudio-490/software-architect/04.05.25.software-architect-restoring.system.snapshot.while.keeping.home/04.05.25.restoring.system.snapshot.while.keeping.home.og.txt"
+"/home/flintx/aistudio-490/software-architect/04.06.25.software-architect-copy.of.copy.of.copy.of.tech.hustle.nextlevel.play1/04.06.25.copy.of.copy.of.copy.of.tech.hustle.nextlevel.play1.og.txt"
+"/home/flintx/aistudio-490/software-architect/04.06.25.software-architect-copy.of.copy.of.tech.hustle.nextlevel.play/04.06.25.copy.of.copy.of.tech.hustle.nextlevel.play.og.txt"
+"/home/flintx/aistudio-490/software-architect/04.06.25.software-architect-copy.of.tech.hustle.nextlevel.play/04.06.25.copy.of.tech.hustle.nextlevel.play.og.txt"
+"/home/flintx/aistudio-490/software-architect/04.08.25.software-architect-nvidia.driver.failure/04.08.25.nvidia.driver.failure.og.txt"
+"/home/flintx/aistudio-490/software-architect/04.09.25.software-architect-ubuntu.runlevel.3.using.systemd/04.09.25.ubuntu.runlevel.3.using.systemd.og.txt"
+"/home/flintx/aistudio-490/software-architect/04.10.25.software-architect-branch.of.grub.configuration.explained/04.10.25.branch.of.grub.configuration.explained.og.txt"
+"/home/flintx/aistudio-490/software-architect/04.10.25.software-architect-copy.of.grub.configuration.explained1/04.10.25.copy.of.grub.configuration.explained1.og.txt"
+"/home/flintx/aistudio-490/software-architect/04.11.25.software-architect-grub.configuration.explained/04.11.25.grub.configuration.explained.og.txt"
+"/home/flintx/aistudio-490/software-architect/04.14.25.software-architect-nvidia.driver.boot.issue.fix/04.14.25.nvidia.driver.boot.issue.fix.og.txt"
+"/home/flintx/aistudio-490/software-architect/04.18.25.software-architect-installing.python.packages.via.pip/04.18.25.installing.python.packages.via.pip.og.txt"
+"/home/flintx/aistudio-490/software-architect/04.20.25.software-architect-qt6.qregexp.error.fix/04.20.25.qt6.qregexp.error.fix.og.txt"
+"/home/flintx/aistudio-490/software-architect/04.21.25.software-architect-python.script.issues/04.21.25.python.script.issues.og.txt"
+"/home/flintx/aistudio-490/software-architect/04.24.25.software-architect-app.permissions.error.explained/04.24.25.app.permissions.error.explained.og.txt"
+"/home/flintx/aistudio-490/software-architect/04.25.25.software-architect-llama.server.setup.and.configuration/04.25.25.llama.server.setup.and.configuration.og.txt"
+"/home/flintx/aistudio-490/software-architect/04.25.25.software-architect-server.setup.request.for.gemma.model/04.25.25.server.setup.request.for.gemma.model.og.txt"
+"/home/flintx/aistudio-490/software-architect/04.28.25.software-architect-rvc.training.troubleshooting/04.28.25.rvc.training.troubleshooting.og.txt"
+"/home/flintx/aistudio-490/software-architect/04.30.25.software-architect-copy.of.copy.of.copy.of.python.modulenotfounderror.fix/04.30.25.copy.of.copy.of.copy.of.python.modulenotfounderror.fix.og.txt"
+"/home/flintx/aistudio-490/software-architect/04.30.25.software-architect-llm.choice.for.powerful.system/04.30.25.llm.choice.for.powerful.system.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.01.25.software-architect-linux.android.studio.installation.script/05.01.25.linux.android.studio.installation.script.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.04.25.software-architect-questions.for.expert.x/05.04.25.questions.for.expert.x.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.04.25.software-architect-youtube.channel.creation.demo/05.04.25.youtube.channel.creation.demo.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.07.25.software-architect-branch.of.coqui.tts.demo.workflow.explanation/05.07.25.branch.of.coqui.tts.demo.workflow.explanation.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.07.25.software-architect-coqui.tts.demo.workflow.explanation/05.07.25.coqui.tts.demo.workflow.explanation.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.07.25.software-architect-justin.herbert.nfl.star.quarterback/05.07.25.justin.herbert.nfl.star.quarterback.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.12.25.software-architect-meningitis.types.cases.explained/05.12.25.meningitis.types.cases.explained.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.13.25.software-architect-automated.video.workflow.issues/05.13.25.automated.video.workflow.issues.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.15.25.software-architect-branch.of.oss.youtube.automation.engine.project.recap/05.15.25.branch.of.oss.youtube.automation.engine.project.recap.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.18.25.software-architect-dog.pain.vet.costs.and.next.steps/05.18.25.dog.pain.vet.costs.and.next.steps.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.18.25.software-architect-dog.pain.vet.costs.and.next.steps/05.18.25.dog.pain.vet.costs.and.next.steps.software-architect.wrapped.txt"
+"/home/flintx/aistudio-490/software-architect/05.19.25.software-architect-branch.of.branch.of.branch.of.branch.of.branch.of.digital.strategy.discussion/05.19.25.branch.of.branch.of.branch.of.branch.of.branch.of.digital.strategy.discussion.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.19.25.software-architect-branch.of.branch.of.branch.of.branch.of.branch.of.online.reputation.management.handover/05.19.25.branch.of.branch.of.branch.of.branch.of.branch.of.online.reputation.management.handover.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.19.25.software-architect-branch.of.branch.of.branch.of.branch.of.digital.strategy.discussion/05.19.25.branch.of.branch.of.branch.of.branch.of.digital.strategy.discussion.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.19.25.software-architect-branch.of.branch.of.branch.of.branch.of.online.reputation.management.handover/05.19.25.branch.of.branch.of.branch.of.branch.of.online.reputation.management.handover.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.19.25.software-architect-branch.of.branch.of.branch.of.digital.strategy.discussion/05.19.25.branch.of.branch.of.branch.of.digital.strategy.discussion.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.19.25.software-architect-branch.of.branch.of.digital.strategy.discussion/05.19.25.branch.of.branch.of.digital.strategy.discussion.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.19.25.software-architect-branch.of.branch.of.online.reputation.management.handover/05.19.25.branch.of.branch.of.online.reputation.management.handover.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.19.25.software-architect-branch.of.digital.strategy.discussion/05.19.25.branch.of.digital.strategy.discussion.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.19.25.software-architect-branch.of.online.reputation.management.handover/05.19.25.branch.of.online.reputation.management.handover.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.19.25.software-architect-digital.strategy.discussion/05.19.25.digital.strategy.discussion.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.19.25.software-architect-online.reputation.management.handover/05.19.25.online.reputation.management.handover.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.20.25.software-architect-branch.of.branch.of.branch.of.online.reputation.management.handover/05.20.25.branch.of.branch.of.branch.of.online.reputation.management.handover.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.22.25.software-architect-blog.article.generation.request/05.22.25.blog.article.generation.request.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.22.25.software-architect-blog.article.generation.request/05.22.25.blog.article.generation.request.software-architect.wrapped.txt"
+"/home/flintx/aistudio-490/software-architect/05.22.25.software-architect-blog.post.file.format/05.22.25.blog.post.file.format.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.22.25.software-architect-blog.post.file.format/05.22.25.blog.post.file.format.software-architect.wrapped.txt"
+"/home/flintx/aistudio-490/software-architect/05.22.25.software-architect-branch.of.blog.post.file.format/05.22.25.branch.of.blog.post.file.format.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.22.25.software-architect-branch.of.blog.post.file.format/05.22.25.branch.of.blog.post.file.format.software-architect.wrapped.txt"
+"/home/flintx/aistudio-490/software-architect/05.23.25.software-architect-intps.strategy.session/05.23.25.intps.strategy.session.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.25.25.software-architect-branch.of.troubleshooting.litellmollama.connection/05.25.25.branch.of.troubleshooting.litellmollama.connection.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.27.25.software-architect-technical.setup.and.strategy/05.27.25.technical.setup.and.strategy.og.txt"
+"/home/flintx/aistudio-490/software-architect/05.28.25.software-architect-llm.text.gen.app.options/05.28.25.llm.text.gen.app.options.og.txt"
+"/home/flintx/aistudio-490/software-architect/06.22.25.software-architect-new.feature.request.and.breakdown/06.22.25.new.feature.request.and.breakdown.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.05.25.software-architect-peacock.app.name.suggestions/07.05.25.peacock.app.name.suggestions.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.06.25.software-architect-python.error.diagnosis.blueprint/07.06.25.python.error.diagnosis.blueprint.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.08.25.software-architect-json.conversation.file.extraction/07.08.25.json.conversation.file.extraction.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.10.25.software-architect-branch.of.peacock.app.complex.but.flawed1/07.10.25.branch.of.peacock.app.complex.but.flawed1.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.10.25.software-architect-peacock.app.complex.but.flawed/07.10.25.peacock.app.complex.but.flawed.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.10.25.software-architect-peacock.handoff.cumulative.context.synthesis/07.10.25.peacock.handoff.cumulative.context.synthesis.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.11.25.software-architect-branch.of.branch.of.peacock.app.complex.but.flawed/07.11.25.branch.of.branch.of.peacock.app.complex.but.flawed.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.11.25.software-architect-branch.of.peacock.app.complex.but.flawed/07.11.25.branch.of.peacock.app.complex.but.flawed.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.11.25.software-architect-github.repo.fix.steps/07.11.25.github.repo.fix.steps.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.11.25.software-architect-new.script.gemini.fix/07.11.25.new.script.gemini.fix.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.11.25.software-architect-peacock.ai.coding.system/07.11.25.peacock.ai.coding.system.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.12.25.software-architect-ai.hood.hustle.plans/07.12.25.ai.hood.hustle.plans.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.13.25.software-architect-code.context.breakdown.for.two.scripts/07.13.25.code.context.breakdown.for.two.scripts.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.13.25.software-architect-llm.input.great.owl.code.refactoring/07.13.25.llm.input.great.owl.code.refactoring.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.13.25.software-architect-systemic.car.registration.oppression/07.13.25.systemic.car.registration.oppression.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.15.25.software-architect-debian.file.renaming.commands/07.15.25.debian.file.renaming.commands.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.15.25.software-architect-grok.3.feature.overview/07.15.25.grok.3.feature.overview.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.15.25.software-architect-questions.for.humans/07.15.25.questions.for.humans.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.16.25.software-architect-legal.issue.contradictory.service.claim/07.16.25.legal.issue.contradictory.service.claim.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.16.25.software-architect-substitute.service.judgment.claim.dispute/07.16.25.substitute.service.judgment.claim.dispute.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.17.25.software-architect-bot.explains.legal.dispute.over.service/07.17.25.bot.explains.legal.dispute.over.service.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.17.25.software-architect-peacock.memory.stanislaus.county.chat.access/07.17.25.peacock.memory.stanislaus.county.chat.access.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.17.25.software-architect-refactoring.mcp.app.output.updates/07.17.25.refactoring.mcp.app.output.updates.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.17.25.software-architect-substitute.service.dispute.judgment/07.17.25.substitute.service.dispute.judgment.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.17.25.software-architect-substitute.service.judgement.dispute/07.17.25.substitute.service.judgement.dispute.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.18.25.software-architect-substitute.service.judgment.dispute/07.18.25.substitute.service.judgment.dispute.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.19.25.software-architect-legal.analysis.setting.aside.default.judgment/07.19.25.legal.analysis.setting.aside.default.judgment.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.19.25.software-architect-project.blueprint.digital.ecosystem.map/07.19.25.project.blueprint.digital.ecosystem.map.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.21.25.software-architect-court.filing.rewrite.request/07.21.25.court.filing.rewrite.request.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.21.25.software-architect-pizza.hut.api.access.automation.options/07.21.25.pizza.hut.api.access.automation.options.og.txt"
+"/home/flintx/aistudio-490/software-architect/07.21.25.software-architect-push.project.updates.to.github/07.21.25.push.project.updates.to.github.og.txt"
+"/home/flintx/aistudio-490/software-architect/09.04.25.software-architect-how.to.play.guts/09.04.25.how.to.play.guts.og.txt"
+"/home/flintx/aistudio-490/software-architect/09.06.25.software-architect-losing.in.pai.gow.poker/09.06.25.losing.in.pai.gow.poker.og.txt"
+"/home/flintx/aistudio-490/software-architect/09.17.25.software-architect-aztec.mayan.tattoo.design.description/09.17.25.aztec.mayan.tattoo.design.description.og.txt"
+"/home/flintx/aistudio-490/software-architect/09.17.25.software-architect-laptop.performance.troubleshooting.tips/09.17.25.laptop.performance.troubleshooting.tips.og.txt"
+"/home/flintx/aistudio-490/software-architect/09.17.25.software-architect-mayan.astronaut.tattoo.design/09.17.25.mayan.astronaut.tattoo.design.og.txt"
+"/home/flintx/aistudio-490/software-architect/09.17.25.software-architect-tattoo.design.mayan.astronaut.sun.god/09.17.25.tattoo.design.mayan.astronaut.sun.god.og.txt"
+"/home/flintx/aistudio-490/software-architect/09.25.25.software-architect-google.ai.mode.explained/09.25.25.google.ai.mode.explained.og.txt"
+"/home/flintx/aistudio-490/software-architect/09.25.25.software-architect-google.ai.mode.explained/09.25.25.google.ai.mode.explained.software-architect.wrapped.txt"
+"/home/flintx/aistudio-490/software-architect/10.18.25.software-architect-forester.codes.catalytic.converter.fuel.sensor/10.18.25.forester.codes.catalytic.converter.fuel.sensor.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.02.25.software-architect-calfresh.calworks.benefits.suspended/11.02.25.calfresh.calworks.benefits.suspended.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.02.25.software-architect-car.as.generator.power.outage.solution/11.02.25.car.as.generator.power.outage.solution.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.02.25.software-architect-nvidias.chip.design.bottleneck.risk/11.02.25.nvidias.chip.design.bottleneck.risk.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.07.25.software-architect-seasonal.package.handler.job.description/11.07.25.seasonal.package.handler.job.description.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.08.25.software-architect-branch.of.is.perception.evil.a.nuanced.examination/11.08.25.branch.of.is.perception.evil.a.nuanced.examination.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.08.25.software-architect-is.perception.evil.a.nuanced.examination/11.08.25.is.perception.evil.a.nuanced.examination.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.13.25.software-architect-it.support.technician.job.posting/11.13.25.it.support.technician.job.posting.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.13.25.software-architect-ready.to.continue.our.chat/11.13.25.ready.to.continue.our.chat.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.16.25.software-architect-operation.deconstruct.instacart.protocol/11.16.25.operation.deconstruct.instacart.protocol.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.24.25.software-architect-branch.of.understanding.9d.breathworks.somatic.release/11.24.25.branch.of.understanding.9d.breathworks.somatic.release.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.24.25.software-architect-copy.of.branch.of.understanding.9d.breathworks.somatic.release/11.24.25.copy.of.branch.of.understanding.9d.breathworks.somatic.release.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.24.25.software-architect-understanding.9d.breathworks.somatic.release/11.24.25.understanding.9d.breathworks.somatic.release.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.26.25.software-architect-rv.ac.power.limitations/11.26.25.rv.ac.power.limitations.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.27.25.software-architect-branch.of.ready.for.data.input/11.27.25.branch.of.ready.for.data.input.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.27.25.software-architect-branchofreadyfordatainput/11.27.25.branchofreadyfordatainput.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.27.25.software-architect-coyote.defense.for.family.dog/11.27.25.coyote.defense.for.family.dog.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.27.25.software-architect-coyote.defense.for.family.dog/11.27.25.coyote.defense.for.family.dog.software-architect.wrapped.txt"
+"/home/flintx/aistudio-490/software-architect/11.27.25.software-architect-ready.for.data.input/11.27.25.ready.for.data.input.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.27.25.software-architect-resume.job.breakdown/11.27.25.resume.job.breakdown.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.27.25.software-architect-system.debrief.trevino.war.room.blueprint/11.27.25.system.debrief.trevino.war.room.blueprint.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.27.25.software-architect-the.first.conversation.between.us/11.27.25.the.first.conversation.between.us.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.29.25.software-architect-format.restoration.error/11.29.25.format.restoration.error.og.txt"
+"/home/flintx/aistudio-490/software-architect/11.30.25.software-architect-x/11.30.25.x.og.txt"
+"/home/flintx/aistudio-490/software-architect/12.01.25.software-architect-no.tow.hook.check.your.compass/12.01.25.no.tow.hook.check.your.compass.og.txt"
+"/home/flintx/aistudio-490/software-architect/12.02.25.software-architect-voltage.dictates.energy.flow/12.02.25.voltage.dictates.energy.flow.og.txt"
+"/home/flintx/aistudio-490/software-architect/12.07.25.software-architect-paycheck.architecture.and.calculations/12.07.25.paycheck.architecture.and.calculations.og.txt"
+"/home/flintx/aistudio-490/software-architect/12.08.25.software-architect-code.generation.protocols.locked.down/12.08.25.code.generation.protocols.locked.down.og.txt"
+"/home/flintx/aistudio-490/software-architect/12.10.25.software-architect-copy.of.zsh.addon.for.python.env.activation/12.10.25.copy.of.zsh.addon.for.python.env.activation.og.txt"
+"/home/flintx/aistudio-490/software-architect/12.12.25.software-architect-zsh.addon.for.python.env.activation/12.12.25.zsh.addon.for.python.env.activation.og.txt"
+"/home/flintx/aistudio-490/software-architect/12.16.25.software-architect-copy.of.copy.of.the.trevino.doctrine.is.signed.copy/12.16.25.copy.of.copy.of.the.trevino.doctrine.is.signed.copy.og.txt"
+"/home/flintx/aistudio-490/software-architect/12.16.25.software-architect-copy.of.copy.of.the.trevino.doctrine.is.signed/12.16.25.copy.of.copy.of.the.trevino.doctrine.is.signed.og.txt"
+"/home/flintx/aistudio-490/software-architect/12.16.25.software-architect-copy.of.the.trevino.doctrine.is.signed/12.16.25.copy.of.the.trevino.doctrine.is.signed.og.txt"
+"/home/flintx/aistudio-490/software-architect/12.18.25.software-architect-brainstorming.deck.of.cards.rotation/12.18.25.brainstorming.deck.of.cards.rotation.og.txt"
+"/home/flintx/aistudio-490/software-architect/12.18.25.software-architect-ready.to.build.what/12.18.25.ready.to.build.what.og.txt"
+"/home/flintx/aistudio-490/software-architect/12.18.25.software-architect-war.room.active.ai.command.center/12.18.25.war.room.active.ai.command.center.og.txt"
+"/home/flintx/aistudio-490/software-architect/12.18.25.software-architect-war.room.v2.apex.predator.edition/12.18.25.war.room.v2.apex.predator.edition.og.txt"
+)
+
+# ============================================================
+# 4. EXECUTE WRAP
+# ============================================================
+count=0
+for file in "${TARGET_FILES[@]}"; do
+    if [ -f "$file" ]; then
+        filename=$(basename "$file")
+        dest_path="$DEST_DIR/$filename"
+        
+        # Combine Header + Original Content + Footer -> Destination
+        cat /tmp/nexus_mass_header.txt "$file" /tmp/nexus_mass_footer.txt > "$dest_path"
+        
+        echo -e "${GREEN}[WRAPPED]${NC} $filename"
+        ((count++))
+    else
+        echo -e "${RED}[MISSING]${NC} $file"
+    fi
+done
+
+# Cleanup
+rm /tmp/nexus_mass_header.txt /tmp/nexus_mass_footer.txt
+
+echo -e "\n${CYAN}[MISSION COMPLETE]${NC} $count files secured in $DEST_DIR"
+
+
+LIMIT
+
+# ============================================================
+# FILE: nexus-ugly.md
+# ============================================================
+cat << 'EOF' > "nexus-ugly.md"
+ACT AS: NEXUS-UGLY (The Master Router & Triage Officer).
+
+MISSION:
+You are the first line of defense. Analyze this raw chat log and determine its **Primary Value**. Then, generate a structured JSON summary that can be used by other agents (Peacock) to process it further.
+
+SOURCE CHAT LOG:
+"""
+{input}
+"""
+
+OPERATIONAL RULES:
+1.  **CLASSIFY:** Is this a *Brainstorming* session, a *Debugging* session, or a *Build* session?
+2.  **TAG:** Generate 5-10 semantic tags (e.g., "React", "Database", "Failed_Attempt").
+3.  **SENTIMENT:** Was the session successful? (SUCCESS / FAILURE / IN_PROGRESS).
+
+OUTPUT FORMAT (JSON ONLY):
+{
+  "session_type": "BUILD | DEBUG | BRAINSTORM",
+  "status": "SUCCESS | FAIL",
+  "primary_topic": "...",
+  "tags": ["tag1", "tag2", "tag3"],
+  "key_files_modified": ["App.tsx", "api.ts"],
+  "summary": "A brief 1-sentence overview."
+}
+
+EOF
+
+# ============================================================
+# FILE: nexus.md
+# ============================================================
+cat << 'EOF' > "nexus.md"
+ACT AS THE "NEXUS DEBRIEFER" — an elite intelligence triage officer with zero tolerance for fabrication or assumption.
+
+MISSION: Analyze this raw transcript and synthesize it into one or more high-fidelity STRATEGIC BLUEPRINTS. You must separate distinct applications and harvest all non-technical intel without inventing anything.
+
+RAW TRANSCRIPT:
+"""
+{input}
+"""
+
+OPERATIONAL RULES (NON-NEGOTIABLE):
+
+1. MULTI-APP DETECTION:
+   - Identify EVERY distinct application, tool, system, or project discussed, even if only briefly mentioned.
+   - Evidence required: explicit project names, tech stacks, file structures, features, purposes, or user stories.
+   - If only one app is clearly discussed → produce a single blueprint.
+   - If multiple → produce ONE COMPLETE, SEPARATE BLUEPRINT PER APP.
+   - If none → produce one blueprint titled "TRANSCRIPT INTEL HARVEST (No Clear Applications Detected)".
+   - NEVER assume an idea belongs to a separate app without concrete evidence. When in doubt, keep it in one blueprint and note ambiguity.
+
+2. NO HALLUCINATION:
+   - You may ONLY use information explicitly present in the transcript.
+   - Every claim (feature, idea, personal note) must be traceable to direct quotes or clear paraphrases.
+   - If something is vague or missing → explicitly state "Unclear from transcript" or "Not mentioned".
+   - Do not invent project names, features, constraints, or ideas that are not stated.
+
+3. BLUEPRINT STRUCTURE (EXACT FORMAT PER BLUEPRINT):
+   Output each blueprint in this precise skeleton. Use clear markdown separation between blueprints.
+
+### STRATEGIC BLUEPRINT: [Descriptive Title Based Only on Transcript Evidence]
+
+1. PRIME DIRECTIVE
+   One sentence summarizing the core goal of THIS specific application, using only transcript language.
+
+2. CORE ENGINE
+   High-level purpose and success criteria, quoted or directly derived from transcript.
+
+3. TECHNICAL DNA
+   Exhaustive bullet list of:
+   - Every mentioned feature, logic rule, UI element, data model, file, or technical requirement.
+   - Use direct references: "User stated: '...'" or "Discussed: ..."
+
+4. CONSTRAINTS & RISKS
+   - Environment details (e.g., MX Linux, localhost-only)
+   - Security, performance, or usability constraints mentioned
+   - Pain points, risks, or failures explicitly voiced
+
+5. INTEL VAULT: Non-Technical Assets for Later Extraction
+   Capture EVERYTHING of potential value that is NOT directly tied to code/architecture:
+   - Good ideas (business, workflow, monetization, side concepts)
+   - Personal information, preferences, backstory references
+   - Operational notes (tools liked/hated, environment quirks)
+   - Future wishes, "would be cool if", or aspirational statements
+   - Risks, concerns, or philosophical points
+   - Any other stray intel
+   Bullet each item with a brief quote or paraphrase and context.
+
+FINAL OUTPUT RULES:
+- Separate multiple blueprints with --- and a blank line.
+- Title each blueprint accurately based only on evidence (e.g., "ROAD DAWG v7 - AI Studio Code Vault" if that's what was discussed).
+- End with: "NEXUS DEBRIEF COMPLETE. Awaiting SPARK analysis."
+- NO additional commentary, explanations, or chatter outside the blueprints.
+EOF
+
+# ============================================================
+# FILE: nexus.txt
+# ============================================================
+cat << 'EOF' > "nexus.txt"
+### THE UPGRADED NEXUS PROTOCOL (ANTI-HALLUCINATION EDITION)
+
+```
+ACT AS THE "NEXUS DEBRIEFER" — an elite intelligence triage officer with zero tolerance for fabrication or assumption.
+
+MISSION: Analyze this raw transcript and synthesize it into one or more high-fidelity STRATEGIC BLUEPRINTS. You must separate distinct applications and harvest all non-technical intel without inventing anything.
+
+RAW TRANSCRIPT:
+"""
+{input}
+"""
+
+OPERATIONAL RULES (NON-NEGOTIABLE):
+
+1. MULTI-APP DETECTION:
+   - Identify EVERY distinct application, tool, system, or project discussed, even if only briefly mentioned.
+   - Evidence required: explicit project names, tech stacks, file structures, features, purposes, or user stories.
+   - If only one app is clearly discussed → produce a single blueprint.
+   - If multiple → produce ONE COMPLETE, SEPARATE BLUEPRINT PER APP.
+   - If none → produce one blueprint titled "TRANSCRIPT INTEL HARVEST (No Clear Applications Detected)".
+   - NEVER assume an idea belongs to a separate app without concrete evidence. When in doubt, keep it in one blueprint and note ambiguity.
+
+2. NO HALLUCINATION:
+   - You may ONLY use information explicitly present in the transcript.
+   - Every claim (feature, idea, personal note) must be traceable to direct quotes or clear paraphrases.
+   - If something is vague or missing → explicitly state "Unclear from transcript" or "Not mentioned".
+   - Do not invent project names, features, constraints, or ideas that are not stated.
+
+3. BLUEPRINT STRUCTURE (EXACT FORMAT PER BLUEPRINT):
+   Output each blueprint in this precise skeleton. Use clear markdown separation between blueprints.
+
+### STRATEGIC BLUEPRINT: [Descriptive Title Based Only on Transcript Evidence]
+
+1. PRIME DIRECTIVE
+   One sentence summarizing the core goal of THIS specific application, using only transcript language.
+
+2. CORE ENGINE
+   High-level purpose and success criteria, quoted or directly derived from transcript.
+
+3. TECHNICAL DNA
+   Exhaustive bullet list of:
+   - Every mentioned feature, logic rule, UI element, data model, file, or technical requirement.
+   - Use direct references: "User stated: '...'" or "Discussed: ..."
+
+4. CONSTRAINTS & RISKS
+   - Environment details (e.g., MX Linux, localhost-only)
+   - Security, performance, or usability constraints mentioned
+   - Pain points, risks, or failures explicitly voiced
+
+5. INTEL VAULT: Non-Technical Assets for Later Extraction
+   Capture EVERYTHING of potential value that is NOT directly tied to code/architecture:
+   - Good ideas (business, workflow, monetization, side concepts)
+   - Personal information, preferences, backstory references
+   - Operational notes (tools liked/hated, environment quirks)
+   - Future wishes, "would be cool if", or aspirational statements
+   - Risks, concerns, or philosophical points
+   - Any other stray intel
+   Bullet each item with a brief quote or paraphrase and context.
+
+FINAL OUTPUT RULES:
+- Separate multiple blueprints with --- and a blank line.
+- Title each blueprint accurately based only on evidence (e.g., "ROAD DAWG v7 - AI Studio Code Vault" if that's what was discussed).
+- End with: "NEXUS DEBRIEF COMPLETE. Awaiting SPARK analysis."
+- NO additional commentary, explanations, or chatter outside the blueprints.
+EOF
+
+# ============================================================
+# FILE: nexus2.md
+# ============================================================
+cat << 'EOF' > "nexus2.md"
+ACT AS THE "NEXUS DEBRIEFER" — an elite intelligence triage officer with zero tolerance for fabrication or assumption.
+
+MISSION: Analyze the attached raw chat transcripts (3 files) and synthesize them into one or more high-fidelity STRATEGIC BLUEPRINTS. You must separate distinct applications and harvest all non-technical intel without inventing anything.
+
+INPUT CONTEXT: These logs contain brainstorming, code iterations, and architectural decisions. Note that later messages OVERRIDE earlier messages if there is a conflict (evolution of thought).
+
+OPERATIONAL RULES (NON-NEGOTIABLE):
+
+1. MULTI-APP DETECTION:
+   - Identify EVERY distinct application, tool, system, or project discussed.
+   - Evidence required: explicit project names, tech stacks, file structures, features, purposes, or user stories.
+   - If only one app is clearly discussed → produce a single blueprint.
+   - If multiple → produce ONE COMPLETE, SEPARATE BLUEPRINT PER APP.
+   - If none → produce one blueprint titled "TRANSCRIPT INTEL HARVEST (No Clear Applications Detected)".
+   - NEVER assume an idea belongs to a separate app without concrete evidence. When in doubt, keep it in one blueprint and note ambiguity.
+
+2. CONFLICT RESOLUTION (CHRONOLOGICAL SUPREMACY):
+   - If the user says "Make it blue" in File 1, and "Actually, make it green" in File 3, the Blueprint must specify GREEN.
+   - Ignore abandoned ideas unless they are explicitly marked as "Future Features."
+
+3. NO HALLUCINATION:
+   - You may ONLY use information explicitly present in the transcript.
+   - Every claim (feature, idea, personal note) must be traceable to direct quotes or clear paraphrases.
+   - If something is vague or missing (e.g., "Database type not specified"), explicitly state "Unclear from transcript" or "Not mentioned".
+
+4. BLUEPRINT STRUCTURE (EXACT FORMAT PER APP):
+   Output each blueprint in this precise skeleton. Use clear markdown separation between blueprints.
+
+----------------------------------------------------------------
+### STRATEGIC BLUEPRINT: [App Name / Project Title]
+
+1. PRIME DIRECTIVE
+   One sentence summarizing the core goal of THIS specific application.
+
+2. CORE ENGINE (The "What")
+   High-level purpose, success criteria, and the primary problem it solves.
+
+3. TECHNICAL DNA (The "How")
+   Exhaustive bullet list of:
+   - Tech Stack (Languages, Frameworks, Libraries).
+   - Database Schema & Storage Logic (IndexedDB, LocalStorage, SQL, etc.).
+   - API Gateways & Integrations.
+   - File Structure (if mentioned).
+
+4. UI/UX & AESTHETICS (The "Look")
+   - Color Palettes (Hex codes if available).
+   - Layouts (Sidebar, HUD, Modals, etc.).
+   - Animations & Transitions.
+   - Specific Assets (Logo names, icon styles).
+
+5. OPERATIONAL WORKFLOWS
+   Step-by-step breakdown of how the user interacts with the app (e.g., "User clicks X -> Y happens -> Z is saved").
+
+6. CONSTRAINTS & RISKS
+   - Environment details (e.g., MX Linux, localhost-only).
+   - Security requirements.
+   - Performance limitations mentioned.
+
+7. INTEL VAULT: Non-Technical Assets
+   Capture EVERYTHING of potential value that is NOT directly tied to code:
+   - Business ideas & Monetization strategies.
+   - User Backstory & Preferences (e.g., "Likes hacker style").
+   - Future wishes / "Would be cool if" items.
+   - Personal notes or context found in the logs.
+----------------------------------------------------------------
+
+FINAL OUTPUT INSTRUCTION:
+If multiple apps are found, separate them clearly. Do not summarize the chat logs; EXTRACT the product definitions from them.
+EOF
+
+# ============================================================
+# FILE: nexus3 (copy).md
+# ============================================================
+cat << 'LIMIT' > "nexus3 (copy).md"
+ACT AS THE "NEXUS DEBRIEFER" — an elite intelligence triage officer with zero tolerance for fabrication or assumption.
+
+MISSION: Analyze the attached raw chat transcripts. Consolidate the brainstorming, code snippets, and architectural decisions into a single, conflict-free STRATEGIC BLUEPRINT.
+
+INPUT CONTEXT: [[CHAT_DATA]]
+
+OPERATIONAL RULES (NON-NEGOTIABLE):
+
+1. CHRONOLOGICAL SUPREMACY:
+   - The chat logs are a timeline. If the user says "Make it Blue" in Part 00 and "Make it Green" in Part 01, the Blueprint must specify GREEN.
+   - Ignore abandoned ideas. Only capture the final "agreed upon" state.
+
+2. THE "ANTI-SNIPPET" PROTOCOL (CRITICAL):
+   - You are FORBIDDEN from outputting "naked" code blocks.
+   - EVERY piece of code or text file you generate must be wrapped in a Bash Heredoc command with a filename.
+   - FORMAT: 
+     cat << 'EOF' > [filename.ext]
+     [content]
+     EOF
+   - If you do not provide this header, the system will fail. DO NOT use markdown titles like "**filename.js**". Use the COMMAND only.
+
+3. MULTI-APP DETECTION:
+   - If the logs discuss multiple distinct apps, separate them into distinct Blueprints.
+
+4. BLUEPRINT STRUCTURE:
+   Output the analysis in this format:
+
+   ### STRATEGIC BLUEPRINT: [App Name]
+   1. PRIME DIRECTIVE (1 sentence goal)
+   2. CORE ENGINE (The logic/state machine)
+   3. TECHNICAL DNA (Stack, Database, API Gateways)
+   4. UI/UX SPECIFICATION (Colors, Layouts, Animations)
+   5. OPERATIONAL WORKFLOW (Step-by-step user journey)
+   6. INTEL VAULT (User backstory, preferences, non-technical notes)
+
+   If you find actual code that needs to be preserved, output it using the ANTI-SNIPPET PROTOCOL defined in Rule #2.
+
+LIMIT
+
+# ============================================================
+# FILE: nexus3.md
+# ============================================================
+cat << 'LIMIT' > "nexus3.md"
+ACT AS THE "NEXUS DEBRIEFER" — an elite intelligence triage officer with zero tolerance for fabrication or assumption.
+
+MISSION: Analyze the attached raw chat transcripts. Consolidate the brainstorming, code snippets, and architectural decisions into a single, conflict-free STRATEGIC BLUEPRINT.
+
+INPUT CONTEXT: These files contain the evolution of "PEACOCK V19/V20". Later messages OVERRIDE earlier messages if there is a conflict (evolution of thought).
+
+OPERATIONAL RULES (NON-NEGOTIABLE):
+
+1. CHRONOLOGICAL SUPREMACY:
+   - The chat logs are a timeline. If the user says "Make it Blue" in Part 00 and "Make it Green" in Part 01, the Blueprint must specify GREEN.
+   - Ignore abandoned ideas. Only capture the final "agreed upon" state.
+
+2. THE "ANTI-SNIPPET" PROTOCOL (CRITICAL):
+   - You are FORBIDDEN from outputting "naked" code blocks.
+   - EVERY piece of code or text file you generate must be wrapped in a Bash Heredoc command with a filename.
+   - FORMAT: 
+     cat << 'EOF' > [filename.ext]
+     [content]
+     EOF
+   - If you do not provide this header, the system will fail. DO NOT use markdown titles like "**filename.js**". Use the COMMAND only.
+
+3. MULTI-APP DETECTION:
+   - If the logs discuss multiple distinct apps, separate them into distinct Blueprints.
+
+4. BLUEPRINT STRUCTURE:
+   Output the analysis in this format:
+
+   ### STRATEGIC BLUEPRINT: [App Name]
+   1. PRIME DIRECTIVE (1 sentence goal)
+   2. CORE ENGINE (The logic/state machine)
+   3. TECHNICAL DNA (Stack, Database, API Gateways)
+   4. UI/UX SPECIFICATION (Colors, Layouts, Animations)
+   5. OPERATIONAL WORKFLOW (Step-by-step user journey)
+   6. INTEL VAULT (User backstory, preferences, non-technical notes)
+
+   If you find actual code that needs to be preserved, output it using the ANTI-SNIPPET PROTOCOL defined in Rule #2.
+
+LIMIT
+
+# ============================================================
+# FILE: nexus_rewrapper_for_dev_logs.py
+# ============================================================
+cat << 'EOF' > "nexus_rewrapper_for_dev_logs.py"
+#!/usr/bin/env python3
+
+import sys
+from pathlib import Path
+
+# ==================== FULL UPGRADED NEXUS PROMPT ====================
+NEXUS_PROMPT = """ACT AS THE "NEXUS DEBRIEFER" — an elite intelligence triage officer with zero tolerance for fabrication or assumption.
+
+MISSION: Analyze this raw transcript and synthesize it into one or more high-fidelity STRATEGIC BLUEPRINTS. You must separate distinct applications and harvest all non-technical intel without inventing anything.
+
+RAW TRANSCRIPT:
+\"\"\"
+{INPUT CHAT LOG}
+\"\"\"
+
+OPERATIONAL RULES (NON-NEGOTIABLE):
+
+1. MULTI-APP DETECTION:
+   - Identify EVERY distinct application, tool, system, or project discussed, even if only briefly mentioned.
+   - Evidence required: explicit project names, tech stacks, file structures, features, purposes, or user stories.
+   - If only one app is clearly discussed → produce a single blueprint.
+   - If multiple → produce ONE COMPLETE, SEPARATE BLUEPRINT PER APP.
+   - If none → produce one blueprint titled "TRANSCRIPT INTEL HARVEST (No Clear Applications Detected)".
+   - NEVER assume an idea belongs to a separate app without concrete evidence. When in doubt, keep it in one blueprint and note ambiguity.
+
+2. NO HALLUCINATION:
+   - You may ONLY use information explicitly present in the transcript.
+   - Every claim (feature, idea, personal note) must be traceable to direct quotes or clear paraphrases.
+   - If something is vague or missing → explicitly state "Unclear from transcript" or "Not mentioned".
+   - Do not invent project names, features, constraints, or ideas that are not stated.
+
+3. BLUEPRINT STRUCTURE (EXACT FORMAT PER BLUEPRINT):
+   Output each blueprint in this precise skeleton. Use clear markdown separation between blueprints.
+
+### STRATEGIC BLUEPRINT: [Descriptive Title Based Only on Transcript Evidence]
+
+1. PRIME DIRECTIVE
+   One sentence summarizing the core goal of THIS specific application, using only transcript language.
+
+2. CORE ENGINE
+   High-level purpose and success criteria, quoted or directly derived from transcript.
+
+3. TECHNICAL DNA
+   Exhaustive bullet list of:
+   - Every mentioned feature, logic rule, UI element, data model, file, or technical requirement.
+   - Use direct references: "User stated: '...'" or "Discussed: ..."
+
+4. CONSTRAINTS & RISKS
+   - Environment details (e.g., MX Linux, localhost-only)
+   - Security, performance, or usability constraints mentioned
+   - Pain points, risks, or failures explicitly voiced
+
+5. INTEL VAULT: Non-Technical Assets for Later Extraction
+   Capture EVERYTHING of potential value that is NOT directly tied to code/architecture:
+   - Good ideas (business, workflow, monetization, side concepts)
+   - Personal information, preferences, backstory references
+   - Operational notes (tools liked/hated, environment quirks)
+   - Future wishes, "would be cool if", or aspirational statements
+   - Risks, concerns, or philosophical points
+   - Any other stray intel
+   Bullet each item with a brief quote or paraphrase and context.
+
+FINAL OUTPUT RULES:
+- Separate multiple blueprints with --- and a blank line.
+- Title each blueprint accurately based only on evidence.
+- End with: "NEXUS DEBRIEF COMPLETE. Awaiting SPARK analysis."
+- NO additional commentary, explanations, or chatter outside the blueprints."""
+
+# ==================== RE-WRAPPER CORE ====================
+def nexus_rewrap_dev_logs(refinery_dir: str):
+    root = Path(refinery_dir)
+    if not root.is_dir():
+        print(f"[ERROR] Refinery output not found: {refinery_dir}")
+        sys.exit(1)
+
+    processed = 0
+    for folder in root.iterdir():
+        if not folder.is_dir():
+            continue
+
+        if "software-architect" not in folder.name:
+            continue  # Only target development logs
+
+        original = folder / "original.txt"
+        if not original.exists():
+            continue
+
+        raw_content = original.read_text()
+
+        # Apply full NEXUS prompt
+        nexus_wrapped = NEXUS_PROMPT.replace("{INPUT CHAT LOG}", raw_content)
+
+        # Overwrite the old wrapped file (usually the .txt with protocol slug)
+        wrapped_files = [f for f in folder.glob("*.txt") if f.name != "original.txt"]
+        if wrapped_files:
+            target = wrapped_files[0]
+        else:
+            base = folder.name.split(".", 2)[-1]
+            target = folder / f"{base}.nexus.txt"
+
+        target.write_text(nexus_wrapped)
+        print(f"[NEXUS UPGRADED] {folder.name} → {target.name}")
+        processed += 1
+
+    print(f"\n[⚡ NEXUS RE-WRAP COMPLETE] {processed} development logs upgraded to full NEXUS debriefer")
+    print("These are now ready to feed directly into SPARK → FALCON → EAGLE → HAWK")
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Usage: ./nexus_rewrapper_for_dev_logs.py <refinery_output_dir>")
+        print("Example: ./nexus_rewrapper_for_dev_logs.py aistudio_refinery_v3_output")
+        sys.exit(1)
+
+    nexus_rewrap_dev_logs(sys.argv[1])
+
+
+EOF
+
+# ============================================================
+# FILE: nexus_rewrapper_for_dev_logs.py.trashinfo
+# ============================================================
+cat << 'EOF' > "nexus_rewrapper_for_dev_logs.py.trashinfo"
+[Trash Info]
+Path=/home/flintx/aistudio_refinery_output/nexus_rewrapper_for_dev_logs.py
+DeletionDate=2025-12-20T07:21:36
+
+EOF
+
+# ============================================================
+# FILE: nexus_vNext_autopsy.md
+# ============================================================
+cat << 'LIMIT' > "nexus_vNext_autopsy.md"
+ACT AS NEXUS AUTOPSY — cold, surgical debrief officer. Zero tolerance for bullshit, hallucination, or fluff.
+You have read the entire raw conversation. Your job is to perform a forensic extraction of intent, progress, and artifacts.
+
+MISSION:
+Produce a clean, code-free handover report for the next agent.
+Never show any actual code content — not one line, not even in heredoc.
+Make the report so precise the next agent can continue without ever reading the original chat.
+
+
+OPERATIONAL RULES — NON-NEGOTIABLE:
+
+1. CODE EXTRACTION PROTOCOL
+   - Identify every file that received content via:
+     - cat << 'EOF' > "filename"
+     - cat << 'LIMIT' > "filename"
+     - >> append
+     - naked code paste (no heredoc)
+   - For each file instance:
+     - Record exact filename (including path if present)
+     - Give location clues: starts with 0_, in /home/flintx/nexeagle/, ends with _handler.py, etc.
+     - One tight sentence: what the code primarily does (main function, key branches, important data structures touched, major side-effects)
+     - One tight sentence: why this version was likely created (feature added, bugfix, refactor, experiment, breaking change, etc.)
+   - Version counting (conservative):
+     - Full overwrite (> filename) = new major version
+     - Append (>> filename) = minor/patch version (+1)
+     - Consecutive heredocs to same file without user message between = still one version
+     - Naked pastes without filename = "Untitled Snippet #N" + note "no filename given"
+     - Mentioned but never written = "referenced only — no code seen"
+
+2. PROJECT SEPARATION — EXTREMELY STRICT
+   - Split into separate projects ONLY with strong explicit evidence:
+     - Different explicit names (PEACOCK, ROAD DAWG, SPARK DESIGN, etc.)
+     - Completely different purposes, tech stacks, file trees, user stories
+     - User explicitly says "this is separate" / "different project" / "new repo"
+   - Default assumption: everything belongs to the same evolving project unless proven otherwise
+   - When splitting: must clearly state which files belong to which project
+   - If ambiguous: keep unified + add explicit warning section:
+     "Ambiguity: X and Y might be separate projects but evidence insufficient — treated as one"
+
+3. INTENT SYNTHESIS
+   - Read the full conversation chronologically
+   - Distill the real underlying goal in one clear paragraph (not just repeating user words — synthesize what they are actually trying to achieve)
+   - Later messages override earlier ones when conflicts exist
+
+4. OUTPUT FORMAT — FREE-FORM REPORT (NO CORPORATE NUMBERING HELL)
+   Use clean markdown headers, bullets, short dense paragraphs.
+   Structure:
+
+NEXUS AUTOPSY REPORT — [CURRENT DATE YYYY-MM-DD]
+
+Overall Intent
+---------------
+[1–3 tight paragraphs synthesizing what the human is really trying to build/do — focus on the endgame, not every detail]
+
+Detected Projects
+-----------------
+Project count: X
+
+Project [Number]: [Name or "Unnamed Project X" if no clear name]
+- Goal: [one crisp sentence — the core objective of this project]
+- Progress Narrative: [3–10 sentence chronological summary of meaningful steps, decisions, pivots — no fluff]
+- Files touched: [total distinct files]
+  • filename1.ext [path clues if any]
+    - Does: [one sentence — what it actually implements]
+    - Why: [one sentence — purpose / problem solved]
+    - Versions: N (most recent is current state)
+  • filename2.ext
+    ...
+
+[repeat block for each detected project]
+
+Loose Ends / Warnings / Ambiguities
+-----------------------------------
+- List any missing info, abandoned threads, contradictions, unclear decisions, possible future directions mentioned but not pursued
+- Flag any potential multi-project confusion not strong enough to split
+
+Here is the chat log
+[[CHAT_DATA]]
+
+FINAL INSTRUCTION:
+End with exactly this line and nothing else:
+
+NEXUS AUTOPSY COMPLETE. HANDOVER READY.
+
+LIMIT
+
+# ============================================================
+# FILE: wrap_nexus_intel.sh
+# ============================================================
+cat << 'EOF' > "wrap_nexus_intel.sh"
+#!/bin/bash
+
+# ==============================================================================
+# NEXUS INTEL WRAPPER PROTOCOL
+# TARGET: Specific list of .og.txt files
+# ACTION: Prepend Header -> Append Content -> Append Footer -> Save as New Name
+# ==============================================================================
+
+# 1. DEFINE WRAPPER CONTENT
+# Using read -r -d '' to handle multiline strings safely
+
+read -r -d '' HEADER_TEXT << 'EOT'
+ACT AS THE "NEXUS DEBRIEFER" — an elite intelligence triage officer with zero tolerance for fabrication or assumption.
+
+MISSION: Analyze this raw transcript and synthesize it into one or more high-fidelity STRATEGIC BLUEPRINTS. You must separate distinct applications and harvest all non-technical intel without inventing anything.
+
+RAW TRANSCRIPT:
+
+
+
+
+
+=====
+EOT
+
+read -r -d '' FOOTER_TEXT << 'EOT'
+=====
+
+
+### EXECUTION
+1.  Overwrite `server.py` and `templates/index.html`.
+2.  Restart the server: `python3 server.py`
+3.  Refresh the browser.
+
+The description pane will no longer be blank. If a job has data, it shows. If it fails, it shows the error message in Red.
+"""
+
+OPERATIONAL RULES (NON-NEGOTIABLE):
+
+1. MULTI-APP DETECTION:
+   - Identify EVERY distinct application, tool, system, or project discussed, even if only briefly mentioned.
+   - Evidence required: explicit project names, tech stacks, file structures, features, purposes, or user stories.
+   - If only one app is clearly discussed → produce a single blueprint.
+   - If multiple → produce ONE COMPLETE, SEPARATE BLUEPRINT PER APP.
+   - If none → produce one blueprint titled "TRANSCRIPT INTEL HARVEST (No Clear Applications Detected)".
+   - NEVER assume an idea belongs to a separate app without concrete evidence. When in doubt, keep it in one blueprint and note ambiguity.
+
+2. NO HALLUCINATION:
+   - You may ONLY use information explicitly present in the transcript.
+   - Every claim (feature, idea, personal note) must be traceable to direct quotes or clear paraphrases.
+   - If something is vague or missing → explicitly state "Unclear from transcript" or "Not mentioned".
+   - Do not invent project names, features, constraints, or ideas that are not stated.
+
+3. BLUEPRINT STRUCTURE (EXACT FORMAT PER BLUEPRINT):
+   Output each blueprint in this precise skeleton. Use clear markdown separation between blueprints.
+
+### STRATEGIC BLUEPRINT: [Descriptive Title Based Only on Transcript Evidence]
+
+1. PRIME DIRECTIVE
+   One sentence summarizing the core goal of THIS specific application, using only transcript language.
+
+2. CORE ENGINE
+   High-level purpose and success criteria, quoted or directly derived from transcript.
+
+3. TECHNICAL DNA
+   Exhaustive bullet list of:
+   - Every mentioned feature, logic rule, UI element, data model, file, or technical requirement.
+   - Use direct references: "User stated: '...'" or "Discussed: ..."
+
+4. CONSTRAINTS & RISKS
+   - Environment details (e.g., MX Linux, localhost-only)
+   - Security, performance, or usability constraints mentioned
+   - Pain points, risks, or failures explicitly voiced
+
+5. INTEL VAULT: Non-Technical Assets for Later Extraction
+   Capture EVERYTHING of potential value that is NOT directly tied to code/architecture:
+   - Good ideas (business, workflow, monetization, side concepts)
+   - Personal information, preferences, backstory references
+   - Operational notes (tools liked/hated, environment quirks)
+   - Future wishes, "would be cool if", or aspirational statements
+   - Risks, concerns, or philosophical points
+   - Any other stray intel
+   Bullet each item with a brief quote or paraphrase and context.
+
+FINAL OUTPUT RULES:
+- Separate multiple blueprints with --- and a blank line.
+- Title each blueprint accurately based only on evidence.
+- End with: "NEXUS DEBRIEF COMPLETE. Awaiting SPARK analysis."
+- NO additional commentary, explanations, or chatter outside the blueprints.
+EOT
+
+# 2. DEFINE TARGET FILES
+FILES=(
+"/home/flintx/indeed-trevino_war_room/11.29.25.copy.of.format.restoration.error.og.txt"
+"/home/flintx/indeed-trevino_war_room/12.01.25.branch.of.copy.of.copy.of.format.restoration.error.og.txt"
+"/home/flintx/indeed-trevino_war_room/12.01.25.branch.of.organizing.log.data.chronologically.og.txt"
+"/home/flintx/indeed-trevino_war_room/12.01.25.copy.of.copy.of.current.code.issues.og.txt"
+"/home/flintx/indeed-trevino_war_room/12.01.25.copy.of.copy.of.format.restoration.error.og.txt"
+"/home/flintx/indeed-trevino_war_room/12.01.25.copy.of.current.code.issues.1.og.txt"
+"/home/flintx/indeed-trevino_war_room/12.01.25.copy.of.current.code.issues.og.txt"
+"/home/flintx/indeed-trevino_war_room/12.01.25.current.code.issues.og.txt"
+"/home/flintx/indeed-trevino_war_room/12.01.25.organizing.log.data.chronologically.og.txt"
+"/home/flintx/indeed-trevino_war_room/12.03.25.copy.of.geminiextractchatjson.og.txt"
+"/home/flintx/indeed-trevino_war_room/12.03.25.geminiextractchatjson.og.txt"
+"/home/flintx/indeed-trevino_war_room/12.07.25.trevinowarroom.og.txt"
+"/home/flintx/indeed-trevino_war_room/12.08.25.copy.of.copy.of.trevinowarroom.og.txt"
+"/home/flintx/indeed-trevino_war_room/12.08.25.copy.of.trevinowarroom.og.txt"
+"/home/flintx/indeed-trevino_war_room/12.09.25.trevino.war.room.architecture.explained.og.txt"
+"/home/flintx/indeed-trevino_war_room/12.12.25.ai.technical.documentation.protocol.og.txt"
+"/home/flintx/indeed-trevino_war_room/12.12.25.architecture.before.execution.og.txt"
+"/home/flintx/indeed-trevino_war_room/12.12.25.heredocs.unlocking.their.hidden.potential.og.txt"
+"/home/flintx/indeed-trevino_war_room/12.12.25.repo.update.and.dataset.review.og.txt"
+"/home/flintx/indeed-trevino_war_room/12.13.25.technical.documentation.standard.protocol.copy.og.txt"
+"/home/flintx/indeed-trevino_war_room/12.13.25.technical.documentation.standard.protocol.og.txt"
+"/home/flintx/indeed-trevino_war_room/12.13.25.test.the.steel.og.txt"
+"/home/flintx/indeed-trevino_war_room/12.15.25.copy.of.post.mortem.of.a.failure.copy.og.txt"
+"/home/flintx/indeed-trevino_war_room/12.15.25.copy.of.post.mortem.of.a.failure.og.txt"
+"/home/flintx/indeed-trevino_war_room/12.16.25.copy.of.copy.of.post.mortem.of.a.failure.copy.og.txt"
+"/home/flintx/indeed-trevino_war_room/12.16.25.copy.of.copy.of.post.mortem.of.a.failure.og.txt"
+"/home/flintx/indeed-trevino_war_room/12.17.25.crash.postmortem.and.resolution.og.txt"
+"/home/flintx/indeed-trevino_war_room/12.17.25.no.unsolicited.code.og.txt"
+"/home/flintx/indeed-trevino_war_room/12.17.25.no.unsolicited.code.we.clear.og.txt"
+"/home/flintx/indeed-trevino_war_room/12.17.25.test.the.steel.architecture.challenge.og.txt"
+)
+
+# 3. EXECUTE WRAPPER
+echo "---------------------------------------------------"
+echo "[⚡] INITIATING NEXUS WRAPPER PROTOCOL..."
+
+for file in "${FILES[@]}"; do
+    if [ -f "$file" ]; then
+        # GENERATE NEW FILENAME
+        # Replaces .og.txt with .software-architect.wrapped.txt
+        new_file="${file/.og.txt/.software-architect.wrapped.txt}"
+        
+        # WRITE HEADER -> ORIGINAL CONTENT -> FOOTER
+        echo "$HEADER_TEXT" > "$new_file"
+        cat "$file" >> "$new_file"
+        echo "$FOOTER_TEXT" >> "$new_file"
+        
+        echo "  -> [WRAPPED] $(basename "$new_file")"
+    else
+        echo "  -> [ERROR] Source file missing: $file"
+    fi
+done
+
+echo "---------------------------------------------------"
+echo "PROTOCOL COMPLETE. ALL ASSETS SECURED."
+
+EOF
