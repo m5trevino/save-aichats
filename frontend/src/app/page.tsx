@@ -42,6 +42,24 @@ const DEFAULT_PERSONAS: Persona[] = [
 
 const PEACOCK_ENGINE_URL = "http://localhost:3099/v1/strike";
 
+const GhostTerminal = ({ telemetry }: { telemetry: any[] }) => (
+  <div className="absolute inset-0 pointer-events-none opacity-[0.03] overflow-hidden z-0 select-none flex flex-col justify-end p-8">
+    <div className="flex flex-col-reverse gap-6">
+      {telemetry.slice(-100).map((log, i) => (
+        <motion.div
+          key={i}
+          initial={{ opacity: 0, x: -100 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8 }}
+          className="text-matrix whitespace-nowrap font-black tracking-widest uppercase text-9xl leading-none italic blur-[1px]"
+        >
+          {log.msg.replace(/\[.*?\]/g, '').replace(/[\W_]+/g, ' ').trim()}
+        </motion.div>
+      ))}
+    </div>
+  </div>
+);
+
 export default function CommandDeck() {
   const [mounted, setMounted] = useState(false);
   const [phase, setPhase] = useState<Phase>('BREACH');
@@ -472,7 +490,7 @@ EOF
 
           {!(phase === 'REFINERY' || phase === 'EXTRACTION') && (
             <div className="flex items-center gap-6">
-              {!isSiphon && <AdBanner placeholderId={103} refreshInterval={0} showSystemSponsor={false} />}
+              {!isSiphon && <AdBanner placeholderId={103} refreshInterval={30} showSystemSponsor={false} />}
               <SecurityBanner />
               <div className={`h-12 w-[1px] ${isSiphon ? 'bg-slate-800' : 'bg-matrix/20'}`} />
               <div className="text-right">
@@ -631,7 +649,10 @@ EOF
             )}
 
             {(phase === 'REFINERY' || phase === 'EXTRACTION') && (
-              <motion.div key="telemetry" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col lg:flex-row gap-4 relative min-h-[800px] w-full overflow-hidden bg-void">
+              <motion.div key="telemetry" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col lg:flex-row gap-4 relative min-h-[800px] w-full overflow-hidden bg-void p-4">
+
+                {/* GHOST TERMINAL BACKGROUND */}
+                <GhostTerminal telemetry={telemetry} />
 
                 {/* LEFT: FILE STACK + BATCH STATUS */}
                 <div className="w-full lg:w-[320px] shrink-0 flex flex-col gap-4">
@@ -778,7 +799,7 @@ EOF
                   {showAdGate && !isSiphon ? (
                     <div className="flex-grow flex flex-col gap-4 overflow-hidden">
                       {/* THE TERMINAL */}
-                      <div className="flex-grow relative bg-black border-2 border-matrix/40 flex flex-col overflow-hidden">
+                      <div className="flex-grow relative bg-black/40 backdrop-blur-md border-2 border-matrix/40 flex flex-col overflow-hidden z-10 shadow-[0_0_30px_rgba(0,0,0,0.5)]">
                         <div className="p-3 border-b border-matrix/10 bg-matrix/5 flex justify-between items-center z-20">
                           <div className="text-[10px] text-matrix font-black uppercase tracking-[0.3em]">
                             Terminal_Location
