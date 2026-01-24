@@ -43,7 +43,7 @@ import { ProcessingAdModal } from '@/components/ProcessingAdModal';
 
 // GHOST TERMINAL (PORTED FROM PERSONAL EDITION)
 const GhostTerminal = ({ telemetry }: { telemetry: any[] }) => (
-  <div className="absolute inset-0 pointer-events-none opacity-[0.1] overflow-hidden z-0 select-none flex flex-col justify-end p-10">
+  <div className="absolute inset-0 pointer-events-none opacity-[0.3] overflow-hidden z-0 select-none flex flex-col justify-end p-10">
     <div className="flex flex-col-reverse gap-2">
       {telemetry.slice(-20).map((log, i) => (
         <motion.div
@@ -197,13 +197,29 @@ export default function CommandDeck() {
       else if (data.chunkedPrompt) count = 1;
 
       const ranges = [];
+      const extractedNames: string[] = [];
+
       for (let i = 0; i < Math.min(count, 500); i += 20) {
         ranges.push({ start: i, end: Math.min(i + 20, count) });
       }
+
+      // PRE-POPULATE NAMES IF AVAILABLE
+      if (Array.isArray(data)) {
+        for (let i = 0; i < Math.min(count, 20); i++) {
+          extractedNames.push(data[i]?.title || data[i]?.name || `CHAT_LOG_${i + 1}`);
+        }
+        // Fill rest with empty if < 20
+        while (extractedNames.length < 20) extractedNames.push("");
+        setBatchNames(extractedNames);
+      } else {
+        setBatchNames(Array(20).fill("PENDING_STREAM..."));
+      }
+
       setBatchRanges(ranges);
       setStartIndex(0);
     } catch (e) {
       setBatchRanges([{ start: 0, end: 20 }]);
+      setBatchNames(Array(20).fill("BINARY_STREAM"));
     }
   };
 
@@ -462,12 +478,13 @@ export default function CommandDeck() {
 
                 <div
                   onClick={() => fileInputRef.current?.click()} onDragOver={handleDragOver} onDrop={onDrop}
-                  className={`border-2 border-dashed ${isSiphon ? 'border-slate-800 bg-slate-950/50 hover:border-blue-500/50' : 'border-matrix/20 bg-matrix/5 hover:border-matrix/40'} p-16 rounded-none transition-all cursor-pointer group flex flex-col items-center justify-center gap-6 shadow-inner mb-12`}
+                  className={`w-full h-[400px] border-2 border-dashed ${isSiphon ? 'border-slate-800 bg-slate-950/50 hover:border-blue-500/50' : 'border-matrix/20 bg-matrix/5 hover:border-matrix/40'} rounded-none transition-all cursor-pointer group flex flex-col items-center justify-center gap-6 shadow-inner mb-12`}
                 >
-                  <Upload className={`w-12 h-12 ${isSiphon ? 'text-blue-500' : 'text-matrix'} opacity-40 group-hover:opacity-100 transition-opacity`} />
+                  <Upload className={`w-16 h-16 ${isSiphon ? 'text-blue-500' : 'text-matrix'} opacity-40 group-hover:opacity-100 transition-opacity`} />
                   <div className="text-center">
-                    <p className={`text-lg font-bold ${isSiphon ? 'text-slate-300' : 'text-matrix'}`}>{isSiphon ? 'Browse or drop log file' : 'DROP_JSON_OR_ZIP_PAYLOAD_HERE'}</p>
-                    <p className="text-[10px] text-slate-500 font-bold uppercase mt-2">Validated Extraction for ChatGPT, Claude, Gemini</p>
+                    <p className={`text-2xl font-bold ${isSiphon ? 'text-slate-300' : 'text-matrix'}`}>{isSiphon ? 'Browse or drop log file' : 'DROP_JSON_OR_ZIP_PAYLOAD_HERE'}</p>
+                    <p className="text-xs text-slate-500 font-bold uppercase mt-4 tracking-widest">Validated Extraction for ChatGPT, Claude, Gemini</p>
+                    <p className="text-[10px] text-matrix/40 mt-2 uppercase tracking-[0.2em] group-hover:text-matrix/80 transition-colors">&gt;&gt; CLICK OR DRAG ANYWHERE IN ZONE &lt;&lt;</p>
                   </div>
                 </div>
 
@@ -547,8 +564,23 @@ export default function CommandDeck() {
                       <div className="space-y-4">
                         <div className="flex justify-between items-center">
                           <h3 className="text-[9px] font-bold tracking-[0.4em] text-voltage uppercase">BATCH_SELECTOR</h3>
-                          <span className="text-[8px] text-matrix/40 font-bold uppercase tracking-widest hidden md:inline">20_TARGETS_PER_STRIKE</span>
+                          <span className="text-[8px] text-matrix/40 font-bold uppercase tracking-widest hidden md:inline">
+                            {file?.name.toLowerCase().includes('gemini')
+                              ? 'SINGLE_STREAM_DETECTED'
+                              : '20_TARGETS_PER_STRIKE'}
+                          </span>
                         </div>
+
+                        {/* HEADER CONTEXT: Show filename and count logic */}
+                        {file && (
+                          <div className="mb-2 p-2 border border-dashed border-matrix/20 bg-matrix/5 text-[10px] font-bold text-matrix/80 uppercase tracking-widest">
+                            {file.name.toLowerCase().includes('gemini') ? (
+                              <>DETECTED: {file.name} // <span className="text-white">20 CHATS LOADED.</span> READY.</>
+                            ) : (
+                              <>DETECTED: {file.name} // TOTAL_CAPACITY: {batchRanges.length * 20}+ // <span className="text-voltage animate-pulse">PICK BATCH TO PROCESS</span></>
+                            )}
+                          </div>
+                        )}
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
                           {batchRanges.map((range, idx) => (
                             <button
@@ -676,7 +708,7 @@ export default function CommandDeck() {
                 <ProcessingAdModal
                   isOpen={(phase === 'REFINERY' && isProcessing && !isSiphon)}
                   currentFileIndex={processedFileNames.filter(n => n !== "").length}
-                  totalFiles={batchRanges.length > 0 ? (batchRanges[batchRanges.length - 1].end) : 20}
+                  totalFiles={20} // FIXED BATCH SIZE PER USER REQUEST
                   currentFileName={batchNames[processedFileNames.filter(n => n !== "").length] || "ANALYZING..."}
                   onAbort={handleAbort}
                 />
