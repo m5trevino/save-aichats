@@ -812,16 +812,14 @@ export default function CommandDeck() {
                                 <h2 className="text-3xl font-black italic tracking-tighter text-matrix uppercase">Payload_Extracted</h2>
                                 <div className="bg-void border border-matrix/20 p-4 rounded shadow-inner">
                                   <p className="text-[11px] text-matrix/60 font-bold uppercase tracking-widest leading-loose">
-                                    BATCH_SUCCESS: {startIndex + 1} TO {startIndex + 20}<br />
-                                    TOTAL_CAPACITY: {batchRanges.length * 20}+ CHATS DETECTED.<br />
-                                    <span className="text-voltage mt-1 block">PROTOCOL: SELECT NEXT BATCH IN COMMAND_DECK.</span>
+                                    BATCH_SUCCESS: {startIndex + 1}-{startIndex + 20} // READY_FOR_EXPORT
                                   </p>
                                 </div>
                               </div>
                               <div className="flex flex-col gap-4 min-w-[300px]">
                                 <button onClick={executePayloadDownload}
                                   className="py-6 bg-matrix text-void font-black text-xl tracking-[0.5em] uppercase hover:bg-[#00FF41] shadow-[0_0_30px_rgba(0,255,65,0.2)] transition-all">
-                                  <Download className="inline-block mr-3 w-8 h-8" /> DOWNLOAD
+                                  <Download className="inline-block mr-3 w-8 h-8" /> DOWNLOAD EXPORT
                                 </button>
                                 <button onClick={resetConsole} className="text-[10px] font-black opacity-40 hover:opacity-100 uppercase tracking-[0.5em] underline underline-offset-8">INIT_NEW_MISSION</button>
                               </div>

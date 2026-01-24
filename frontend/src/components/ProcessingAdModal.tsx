@@ -28,26 +28,29 @@ export const ProcessingAdModal: React.FC<ProcessingAdModalProps> = ({
             <div className="relative w-full max-w-2xl bg-void border-t-4 border-b-4 border-matrix p-8 shadow-[0_0_100px_rgba(0,255,65,0.1)] flex flex-col gap-8">
 
                 {/* HEADER */}
-                <div className="flex justify-between items-start">
+                <div className="flex justify-between items-start border-b border-matrix/20 pb-4">
                     <div className="space-y-1">
-                        <h2 className="text-3xl font-black text-white uppercase tracking-tighter">
-                            Refining Data
+                        <h2 className="text-2xl font-black text-matrix uppercase tracking-tighter flex items-center gap-3">
+                            <span className="animate-pulse">⚡</span> Uplink Active
                         </h2>
-                        <p className="text-matrix font-bold font-mono text-sm tracking-widest uppercase animate-pulse">
-                            Processing Active... Do Not Close
+                        <p className="text-matrix/60 font-mono text-[10px] tracking-widest uppercase">
+                            Secure Data Refinement in Progress...
                         </p>
                     </div>
 
-                    {/* CIRCULAR SPINNER + COUNTER */}
-                    <div className="relative w-16 h-16 flex items-center justify-center">
-                        <svg className="absolute inset-0 w-full h-full animate-spin-slow" viewBox="0 0 100 100">
-                            <circle cx="50" cy="50" r="45" fill="none" stroke="#1a1a1a" strokeWidth="8" />
-                            <circle cx="50" cy="50" r="45" fill="none" stroke="#00FF41" strokeWidth="8" strokeDasharray="283" strokeDashoffset="100" strokeLinecap="round" className="opacity-50" />
-                        </svg>
-                        <div className="text-xs font-black text-white">
-                            {currentFileIndex + 1}/{totalFiles}
-                        </div>
+                    {/* TACTICAL COUNTER */}
+                    <div className="flex flex-col items-end">
+                        <span className="text-4xl font-black text-white tabular-nums tracking-tighter">
+                            {String(currentFileIndex + 1).padStart(2, '0')}<span className="text-matrix/40 text-lg">/{totalFiles}</span>
+                        </span>
+                        <span className="text-[8px] font-bold text-matrix/40 uppercase tracking-[0.3em]">Payload Index</span>
                     </div>
+                </div>
+
+                {/* TACTICAL LINEAR PROGRESS */}
+                <div className="w-full h-2 bg-black border border-matrix/20 relative overflow-hidden">
+                    <div className="absolute inset-0 bg-matrix/20 animate-pulse" style={{ width: `${((currentFileIndex + 1) / totalFiles) * 100}%` }} />
+                    <div className="absolute inset-0 bg-[repeating-linear-gradient(90deg,transparent,transparent_2px,#000_2px,#000_4px)] opacity-50" />
                 </div>
 
                 {/* CURRENT FILE STATUS */}
