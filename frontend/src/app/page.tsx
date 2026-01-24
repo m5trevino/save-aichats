@@ -268,7 +268,7 @@ export default function CommandDeck() {
     setProgress(0);
     setTetherError(null);
     setShowAdGate(!isSiphon);
-    setAdModalOpen(!isSiphon);
+    // setAdModalOpen(!isSiphon); // DISABLED: Replaced by ProcessingAdModal
 
     setCurrentFileTimer(15);
     setProcessedFileNames(Array(20).fill(""));

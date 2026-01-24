@@ -22,7 +22,7 @@ export const ProcessingAdModal: React.FC<ProcessingAdModalProps> = ({
     return (
         <div className="fixed inset-0 z-[90] flex items-center justify-center p-4">
             {/* BACKDROP - Semi-transparent so they can see the Ghost Terminal working behind */}
-            <div className="absolute inset-0 bg-black/80 backdrop-blur-[2px]" />
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px]" />
 
             {/* MODAL */}
             <div className="relative w-full max-w-2xl bg-void border-t-4 border-b-4 border-matrix p-8 shadow-[0_0_100px_rgba(0,255,65,0.1)] flex flex-col gap-8">
