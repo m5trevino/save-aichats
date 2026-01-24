@@ -39,6 +39,27 @@ const DEFAULT_PERSONAS: Persona[] = [
   { id: 'forensic', name: 'FORENSIC_AUDITOR', instructions: 'Highlight security vulnerabilities, logic gaps, and edge cases.' }
 ];
 
+import { ProcessingAdModal } from '@/components/ProcessingAdModal';
+
+// GHOST TERMINAL (PORTED FROM PERSONAL EDITION)
+const GhostTerminal = ({ telemetry }: { telemetry: any[] }) => (
+  <div className="absolute inset-0 pointer-events-none opacity-[0.1] overflow-hidden z-0 select-none flex flex-col justify-end p-10">
+    <div className="flex flex-col-reverse gap-2">
+      {telemetry.slice(-20).map((log, i) => (
+        <motion.div
+          key={i}
+          initial={{ opacity: 0, x: -50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+          className="text-matrix whitespace-nowrap font-bold tracking-widest uppercase text-4xl leading-relaxed opacity-60"
+        >
+          {log.msg.replace(/\[.*?\]/g, '').replace(/[\W_]+/g, ' ').trim()}
+        </motion.div>
+      ))}
+    </div>
+  </div>
+);
+
 export default function CommandDeck() {
   const [mounted, setMounted] = useState(false);
   const [phase, setPhase] = useState<Phase>('BREACH');
@@ -142,6 +163,15 @@ export default function CommandDeck() {
     return () => clearInterval(interval);
   }, [isProcessing, currentFileTimer]);
 
+  const handleAbort = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      setIsProcessing(false);
+      addTelemetry("[❌] ABORT_SEQUENCE_INITIATED_BY_USER", "warn");
+      setTetherError("PROCESS_TERMINATED.");
+    }
+  };
+
   // --- SCROLL LOGS ---
   useEffect(() => {
     if (logContainerRef.current) {
@@ -183,6 +213,11 @@ export default function CommandDeck() {
     const droppedFile = e.dataTransfer.files[0];
     if (droppedFile) {
       setFile(droppedFile);
+
+      // FILENAME HYGIENE
+      const rawName = droppedFile.name.toLowerCase().replace(/[^a-z0-9.]/g, '.');
+      const sanitizedName = `save-aichats.com-${rawName}-optimized.json`; // Virtual rename for display nicety
+
       const reader = new FileReader();
       reader.onload = (event) => {
         const content = event.target?.result as string || "";
@@ -194,7 +229,15 @@ export default function CommandDeck() {
       if ((window as any).show_monetag_vignette && !isSiphon) {
         (window as any).show_monetag_vignette();
       }
-      setPhase('CALIBRATION');
+
+      // ENTRY FEE LOGIC
+      if (!isSiphon) {
+        // We delay phase transition until they clear the Entry Ad
+        // We actually want to show the EntryAdModal here or ensure FileUpload triggers it.
+        // Since FileUpload handles the trigger, we just ensure state is ready.
+      } else {
+        setPhase('CALIBRATION');
+      }
     }
   }, [isSiphon]);
 
@@ -336,17 +379,21 @@ export default function CommandDeck() {
   const executePayloadDownload = async () => {
     if (!file || !apiBase) return;
     addTelemetry("[🚀] INITIATING_FINAL_DOWNLOAD...");
-    const baseName = file.name.replace(/\.[^/.]+$/, "") || "payload";
+
+    // BRANDED FILENAME ENFORCEMENT
+    const rawBase = file.name.replace(/\.[^/.]+$/, "").toLowerCase().replace(/[^a-z0-9.]/g, '.');
+    const brandedName = `save-aichats.com-${rawBase}`;
+
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('options_json', JSON.stringify({ ...options, base_filename: baseName }));
+    formData.append('options_json', JSON.stringify({ ...options, base_filename: brandedName }));
     formData.append('start_index', startIndex.toString());
     try {
       const zipResponse = await axios.post(`${apiBase}/refine`, formData, { responseType: 'blob' });
       const url = window.URL.createObjectURL(new Blob([zipResponse.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', isSiphon ? `refined_chat_export.zip` : `ULTRADATA_STRIKE_EXTRACT.zip`);
+      link.setAttribute('download', isSiphon ? `refined_chat_export.zip` : `${brandedName}.zip`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -625,8 +672,18 @@ export default function CommandDeck() {
                   </div>
                 </div>
 
+                {/* PROCESSING AD MODAL (AGGRESSIVE TAX) */}
+                <ProcessingAdModal
+                  isOpen={(phase === 'REFINERY' && isProcessing && !isSiphon)}
+                  currentFileIndex={processedFileNames.filter(n => n !== "").length}
+                  totalFiles={batchRanges.length > 0 ? (batchRanges[batchRanges.length - 1].end) : 20}
+                  currentFileName={batchNames[processedFileNames.filter(n => n !== "").length] || "ANALYZING..."}
+                  onAbort={handleAbort}
+                />
+
                 {/* RIGHT: TERMINAL AREA + FOOTER AD */}
                 <div className="flex-grow flex flex-col gap-4 overflow-hidden relative">
+                  {showAdGate && !isSiphon && <GhostTerminal telemetry={telemetry} />}
                   <AnimatePresence>
                     {adModalOpen && (
                       <motion.div
