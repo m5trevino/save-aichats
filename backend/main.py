@@ -245,13 +245,11 @@ async def refine_stream(request: Request, file: UploadFile = File(...), options_
             yield f"data: {json.dumps({'status': 'start', 'total': total_in_batch, 'batch_names': batch_names})}\n\n"
             print("DEBUG: START_PACKET_YIELDED_WITH_NAMES")
             
-            # THE TOLL: Elastic Dwell Time (Scales 1m to 5m) - ONLY ENABLED IN TOLL MODE
+            # THE TOLL: Elastic Dwell Time (NERFED FOR USABILITY)
             if SITE_PERSONALITY == "TOLL":
-                if total_in_batch > 1:
-                    total_wait_time = 60 + (total_in_batch - 1) * (240 / 19)
-                else:
-                    total_wait_time = 60 # 1 minute minimum
-                delay_per_chat = total_wait_time / total_in_batch
+                # User feedback: The long wait (1-5m) felt like a crash.
+                # New Logic: 0.5s per chat. Just enough to see the animation.
+                delay_per_chat = 0.5
             else:
                 # SIPHON MODE: No artificial delay
                 delay_per_chat = 0
