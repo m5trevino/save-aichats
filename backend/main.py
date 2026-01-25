@@ -194,95 +194,118 @@ async def get_config():
     return {"personality": SITE_PERSONALITY}
 
 @app.post("/refine-stream")
-async def refine_stream(request: Request, file: UploadFile = File(...), options_json: str = Form(...), start_index: int = Form(0)):
+async def refine_stream(request: Request, files: List[UploadFile] = File(...), options_json: str = Form(...), start_index: int = Form(0)):
     try:
         options = RefineryOptions(**json.loads(options_json))
-        content = await file.read()
         
-        # THE SIPHON: Immediate archival to vault if in SIPHON mode
-        if SITE_PERSONALITY == "SIPHON":
-            os.makedirs("vault/raw", exist_ok=True)
-            timestamp = int(time.time())
-            filename = f"vault/raw/{timestamp}_{file.filename}"
-            with open(filename, "wb") as f:
-                f.write(content)
-            print(f"SIPHON_INGEST: Persisted raw log to {filename}")
+        all_chats = []
+        brand_name = "Unknown"
+        brand_handler = None
 
-        try:
-            raw_data = json.loads(content)
-            print(f"DEBUG: JSON_LOAD_SUCCESS. Type: {type(raw_data)}")
-        except json.JSONDecodeError as je:
-            print(f"DEBUG: JSON_LOAD_FAILED: {je}")
-            raise HTTPException(status_code=400, detail="INVALID_JSON_PAYLOAD")
+        # 1. INGEST & PARSE (Multi-File Support)
+        for file in files:
+            content = await file.read()
+            
+            # THE SIPHON: Immediate archival
+            if SITE_PERSONALITY == "SIPHON":
+                os.makedirs("vault/raw", exist_ok=True)
+                timestamp = int(time.time())
+                filename = f"vault/raw/{timestamp}_{file.filename or 'unknown'}"
+                with open(filename, "wb") as f:
+                    f.write(content)
+
+            try:
+                # Try parsing as JSON (even if no extension)
+                raw_data = json.loads(content)
+                
+                # Identify & Aggregate
+                if isinstance(raw_data, list) and len(raw_data) > 0 and "mapping" in raw_data[0]:
+                    # ChatGPT: It's a list of conversations
+                    all_chats.extend(raw_data)
+                    brand_name = "ChatGPT"
+                    brand_handler = handle_chatgpt
+                elif isinstance(raw_data, list) and len(raw_data) > 0 and "chat_messages" in raw_data[0]:
+                    # Claude: List of conversations
+                    all_chats.extend(raw_data)
+                    brand_name = "Claude"
+                    brand_handler = handle_claude
+                elif isinstance(raw_data, dict) and "chunkedPrompt" in raw_data:
+                    # Gemini: Single conversation per file
+                    # We treat the file dict as one "chat item"
+                    # Add a title if missing for UI niceness
+                    if "title" not in raw_data:
+                        raw_data["title"] = file.filename or "Gemini Chat"
+                    all_chats.append(raw_data)
+                    brand_name = "Gemini"
+                    brand_handler = handle_gemini
+            except json.JSONDecodeError:
+                print(f"WARN: Failed to parse file {file.filename}")
+                continue
+
+        if not all_chats:
+             # Yield error but don't crash connection immediately so UI can handle it
+            async def error_gen():
+                yield f"data: {json.dumps({'status': 'error', 'message': 'NO_VALID_PAYLOAD_FOUND'})}\n\n"
+            return StreamingResponse(error_gen(), media_type="text/event-stream")
+
+        # 2. BATCHING
+        # We process a slice of all_chats based on start_index
+        # Default batch size is 20
+        batch = all_chats[start_index : start_index + 20]
+        total_in_batch = len(batch)
+        
+        if total_in_batch == 0:
+             async def empty_gen():
+                yield f"data: {json.dumps({'status': 'error', 'message': 'BATCH_EMPTY'})}\n\n"
+             return StreamingResponse(empty_gen(), media_type="text/event-stream")
 
         async def event_generator():
-            print("DEBUG: STREAM_STARTING...")
-            batch = []
-            if isinstance(raw_data, list) and len(raw_data) > 0 and "mapping" in raw_data[0]:
-                # ChatGPT Logic: 20-chat batching
-                batch = raw_data[start_index : start_index + 20]
-                brand_handler = handle_chatgpt
-                brand_name = "ChatGPT"
-            elif isinstance(raw_data, list) and len(raw_data) > 0 and "chat_messages" in raw_data[0]:
-                # Claude Logic: 20-chat batching
-                batch = raw_data[start_index : start_index + 20]
-                brand_handler = handle_claude
-                brand_name = "Claude"
-            elif isinstance(raw_data, dict) and "chunkedPrompt" in raw_data:
-                # Gemini Logic: Whole file (as it's usually singular)
-                batch = [raw_data]
-                brand_handler = handle_gemini
-                brand_name = "Gemini"
-                yield f"data: {json.dumps({'status': 'error', 'message': 'UNKNOWN_SCHEMA'})}\n\n"
-                return
-
-            total_in_batch = len(batch)
+            print(f"DEBUG: STARTING_STREAM | BRAND={brand_name} | COUNT={total_in_batch}")
+            
+            # Prepare names for the UI list
             batch_names = []
             for idx, item in enumerate(batch):
-                name = item.get("title") or item.get("name") or f"{brand_name}_Chat_{start_index + idx}"
+                # safe name retrieval
+                name = item.get("title") or item.get("name") or f"{brand_name}_Chat_{start_index + idx + 1}"
                 batch_names.append(name)
 
             yield f"data: {json.dumps({'status': 'start', 'total': total_in_batch, 'batch_names': batch_names})}\n\n"
-            print("DEBUG: START_PACKET_YIELDED_WITH_NAMES")
             
-            # THE TOLL: Elastic Dwell Time (REVENUE ENFORCEMENT)
+            # 3. THE REVENUE ENGINE (STRICT TIMING)
+            # Formula: TotalWaitSeconds = 60 + (N - 1) * (240 / 19)
+            # If N=1 -> 60s. If N=20 -> 300s.
             if SITE_PERSONALITY == "TOLL":
-                # FORMULA: Base 60s + ((N-1) * (240/19))
                 if total_in_batch > 1:
-                     total_wait_time = 60 + (total_in_batch - 1) * (240 / 19)
+                     total_wait_seconds = 60 + (total_in_batch - 1) * (240 / 19)
                 else:
-                     # Single chat = 60s dwell
-                     total_wait_time = 60
+                     total_wait_seconds = 60
                 
-                delay_per_chat = total_wait_time / total_in_batch
+                delay_per_chat = total_wait_seconds / total_in_batch
             else:
-                # SIPHON MODE: No artificial delay
-                delay_per_chat = 0
+                delay_per_chat = 0 # Siphon is instant
 
-            print(f"DEBUG: BATCH_SIZE={len(batch)}, DELAY_PER_CHAT={delay_per_chat}")
+            print(f"REVENUE_LOGIC: N={total_in_batch} | TOTAL_WAIT={total_wait_seconds}s | DELAY_PER={delay_per_chat}s")
 
             for idx, item in enumerate(batch):
-                print(f"DEBUG: PROCESSING_ITEM_{idx + 1}/{len(batch)}")
-                # THE HUSTLE: Ad-Tethering Check
+                # Check connection
                 if await request.is_disconnected():
-                    print("STRIKE_SEVERED: Client disconnected. Purging volatile memory.")
+                    print("STRIKE_SEVERED: Client disconnected.")
                     break
 
-                # THE TOLL BOOTH: Dynamic Elastic Delay
-                if idx > 0 or total_in_batch == 1:
-                    # For total_in_batch == 1, we wait before the first and only yield
-                    # For total_in_batch > 1, we wait before each yield to stagger
-                    await asyncio.sleep(delay_per_chat)
+                # PAY THE TOLL
+                # We wait BEFORE yielding the result to enforce the "Processing..." state retention
+                await asyncio.sleep(delay_per_chat)
                 
+                # Process
                 messages = brand_handler(item, options, raw=True)
-                name = item.get("title") or item.get("name") or f"{brand_name}_Chat_{start_index + idx}"
+                item_name = batch_names[idx]
                 
-                yield f"data: {json.dumps({'status': 'welded', 'index': idx + 1, 'total': total_in_batch, 'name': name, 'messages': messages, 'msg_count': len(messages)})}\n\n"
+                yield f"data: {json.dumps({'status': 'welded', 'index': idx + 1, 'total': total_in_batch, 'name': item_name, 'messages': messages, 'msg_count': len(messages)})}\n\n"
             
             yield f"data: {json.dumps({'status': 'complete'})}\n\n"
 
         return StreamingResponse(
-            event_generator(), 
+            event_generator(),
             media_type="text/event-stream",
             headers={
                 "Cache-Control": "no-cache",
@@ -291,34 +314,61 @@ async def refine_stream(request: Request, file: UploadFile = File(...), options_
             }
         )
     except Exception as e:
-        print(f"DEBUG: REFINE_STREAM_ERROR: {e}")
+        print(f"DEBUG: REFINE_STREAM_CRITICAL_FAIL: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/refine")
-async def refine_payload(file: UploadFile = File(...), options_json: str = Form(...), start_index: int = Form(0)):
+async def refine_payload(files: List[UploadFile] = File(...), options_json: str = Form(...), start_index: int = Form(0)):
     try:
         options = RefineryOptions(**json.loads(options_json))
-        content = await file.read()
         
-        try:
-            raw_data = json.loads(content)
-        except json.JSONDecodeError:
-            raise HTTPException(status_code=400, detail="INVALID_JSON_PAYLOAD")
+        all_chats = []
+        brand_name = "Unknown"
+        brand_handler = None
+
+        # 1. AGGREGATE
+        for file in files:
+            content = await file.read()
+            try:
+                raw_data = json.loads(content)
+                if isinstance(raw_data, list) and len(raw_data) > 0 and "mapping" in raw_data[0]:
+                    all_chats.extend(raw_data)
+                    brand_handler = handle_chatgpt
+                    brand_name = "ChatGPT"
+                elif isinstance(raw_data, list) and len(raw_data) > 0 and "chat_messages" in raw_data[0]:
+                    all_chats.extend(raw_data)
+                    brand_handler = handle_claude
+                    brand_name = "Claude"
+                elif isinstance(raw_data, dict) and "chunkedPrompt" in raw_data:
+                    if "title" not in raw_data:
+                        raw_data["title"] = file.filename or "Gemini Chat"
+                    all_chats.append(raw_data)
+                    brand_handler = handle_gemini
+                    brand_name = "Gemini"
+            except:
+                 continue
+
+        if not all_chats:
+             raise HTTPException(status_code=400, detail="NO_VALID_PAYLOAD")
 
         refined_files = []
         
-        if isinstance(raw_data, list) and len(raw_data) > 0 and "mapping" in raw_data[0]:
-            batch = raw_data[start_index : start_index + 20]
-            for conv in batch:
-                refined_files.append({"name": conv.get("title") or "ChatGPT_Chat", "content": handle_chatgpt(conv, options)})
-        elif isinstance(raw_data, list) and len(raw_data) > 0 and "chat_messages" in raw_data[0]:
-            batch = raw_data[start_index : start_index + 20]
-            for chat in batch:
-                refined_files.append({"name": chat.get("name") or "Claude_Chat", "content": handle_claude(chat, options)})
-        elif isinstance(raw_data, dict) and "chunkedPrompt" in raw_data:
-            refined_files.append({"name": file.filename or "Gemini_Export", "content": handle_gemini(raw_data, options)})
-        else:
-            raise HTTPException(status_code=400, detail="UNKNOWN_SCHEMA")
+        # 2. BATCH
+        batch = all_chats[start_index : start_index + 20]
+        
+        # 3. PROCESS
+        for idx, item in enumerate(batch):
+            # SAFE NAME GENERATION
+            # If default name logic fails, use generic
+            base_name = item.get("title") or item.get("name") or f"{brand_name}_Chat_{start_index + idx + 1}"
+            safe_name = clean_filename(base_name) # Ensure usage of clean_filename helper if available or simple replace
+            
+            # Since helper availability isn't guaranteed in this snippet scope, let's use robust local logic
+            safe_name = re.sub(r'[\s]+', '.', safe_name)
+            safe_name = re.sub(r'[^a-zA-Z0-9.-]', '', safe_name)
+            
+            refined_content = brand_handler(item, options)
+            refined_files.append({"name": safe_name, "content": refined_content})
 
         zip_io = io.BytesIO()
         
@@ -346,6 +396,7 @@ async def refine_payload(file: UploadFile = File(...), options_json: str = Form(
             headers={"Content-Disposition": f"attachment; filename={zip_filename}"}
         )
     except Exception as e:
+        print(f"REFINE_ERROR: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":

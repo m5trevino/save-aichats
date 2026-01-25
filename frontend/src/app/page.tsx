@@ -64,6 +64,7 @@ export default function CommandDeck() {
   const [mounted, setMounted] = useState(false);
   const [phase, setPhase] = useState<Phase>('BREACH');
   const [file, setFile] = useState<File | null>(null);
+  const [fileList, setFileList] = useState<File[]>([]);
   const [fileContent, setFileContent] = useState<string>("");
   const [options, setRefineryOptions] = useState<RefineryOptions>({
     include_user: true,
@@ -180,32 +181,19 @@ export default function CommandDeck() {
     e.stopPropagation();
   };
 
-  const calculateBatchRanges = (jsonContent: string) => {
+  const updateBatchInfo = (totalCount: number, names: string[] = []) => {
     try {
-      const data = JSON.parse(jsonContent);
-      let count = 0;
-      if (Array.isArray(data)) count = data.length;
-      else if (data.chunkedPrompt) count = 1;
-
       const ranges = [];
-      const extractedNames: string[] = [];
+      const extractedNames: string[] = [...names];
 
-      for (let i = 0; i < Math.min(count, 500); i += 20) {
-        ranges.push({ start: i, end: Math.min(i + 20, count) });
+      for (let i = 0; i < Math.min(totalCount, 500); i += 20) {
+        ranges.push({ start: i, end: Math.min(i + 20, totalCount) });
       }
 
-      // PRE-POPULATE NAMES IF AVAILABLE
-      if (Array.isArray(data)) {
-        for (let i = 0; i < Math.min(count, 20); i++) {
-          extractedNames.push(data[i]?.title || data[i]?.name || `CHAT_LOG_${i + 1}`);
-        }
-        // Fill rest with empty if < 20
-        while (extractedNames.length < 20) extractedNames.push("");
-        setBatchNames(extractedNames);
-      } else {
-        setBatchNames(Array(20).fill("PENDING_STREAM..."));
-      }
+      // Fill rest with empty if < 20
+      while (extractedNames.length < 20) extractedNames.push("");
 
+      setBatchNames(extractedNames.slice(0, 20));
       setBatchRanges(ranges);
       setStartIndex(0);
     } catch (e) {
@@ -214,24 +202,35 @@ export default function CommandDeck() {
     }
   };
 
-  const onDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+  const onDrop = useCallback(async (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    const droppedFile = e.dataTransfer.files[0];
-    if (droppedFile) {
-      setFile(droppedFile);
+    const droppedFiles = Array.from(e.dataTransfer.files);
 
-      // FILENAME HYGIENE
-      const rawName = droppedFile.name.toLowerCase().replace(/[^a-z0-9.]/g, '.');
-      const sanitizedName = `save-aichats.com-${rawName}-optimized.json`; // Virtual rename for display nicety
+    if (droppedFiles.length > 0) {
+      setFile(droppedFiles[0]);
+      setFileList(droppedFiles);
 
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const content = event.target?.result as string || "";
-        setFileContent(content);
-        calculateBatchRanges(content);
-      };
-      reader.readAsText(droppedFile);
+      // AGGREGATE COUNT LOGIC
+      let totalChats = 0;
+      let allNames: string[] = [];
+
+      for (const f of droppedFiles) {
+        try {
+          const text = await f.text();
+          if (droppedFiles.length === 1) setFileContent(text); // Only show text if single file
+          const data = JSON.parse(text);
+          if (Array.isArray(data)) {
+            totalChats += data.length;
+            data.forEach((c: any) => allNames.push(c.title || c.name || "Chat"));
+          } else if (data.chunkedPrompt) {
+            totalChats += 1;
+            allNames.push(f.name.replace('.json', '') || "Gemini Chat");
+          }
+        } catch (e) { console.error("Parse error on drop", e); }
+      }
+
+      updateBatchInfo(totalChats, allNames);
 
       if ((window as any).show_monetag_vignette && !isSiphon) {
         (window as any).show_monetag_vignette();
@@ -248,17 +247,32 @@ export default function CommandDeck() {
     }
   }, [isSiphon]);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      setFile(selectedFile);
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const content = event.target?.result as string || "";
-        setFileContent(content);
-        calculateBatchRanges(content);
-      };
-      reader.readAsText(selectedFile);
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = e.target.files ? Array.from(e.target.files) : [];
+    if (selectedFiles.length > 0) {
+      setFile(selectedFiles[0]);
+      setFileList(selectedFiles);
+
+      // AGGREGATE COUNT LOGIC
+      let totalChats = 0;
+      let allNames: string[] = [];
+
+      for (const f of selectedFiles) {
+        try {
+          const text = await f.text();
+          if (selectedFiles.length === 1) setFileContent(text);
+          const data = JSON.parse(text);
+          if (Array.isArray(data)) {
+            totalChats += data.length;
+            data.forEach((c: any) => allNames.push(c.title || c.name || "Chat"));
+          } else if (data.chunkedPrompt) {
+            totalChats += 1;
+            allNames.push(f.name.replace('.json', '') || "Gemini Chat");
+          }
+        } catch (e) { console.error("Parse error on select", e); }
+      }
+
+      updateBatchInfo(totalChats, allNames);
 
       if ((window as any).show_monetag_vignette && !isSiphon) {
         (window as any).show_monetag_vignette();
@@ -294,7 +308,10 @@ export default function CommandDeck() {
     const strikeOptions = { ...options, base_filename: baseName };
 
     const formData = new FormData();
-    formData.append('file', file);
+    // MULTI-FILE PAYLOAD
+    fileList.forEach((f) => {
+      formData.append('files', f);
+    });
     formData.append('options_json', JSON.stringify(strikeOptions));
     formData.append('start_index', startIndex.toString());
 
@@ -398,7 +415,7 @@ export default function CommandDeck() {
     const brandedName = `save-aichats.com-${rawBase}`;
 
     const formData = new FormData();
-    formData.append('file', file);
+    fileList.forEach(f => formData.append('files', f));
     formData.append('options_json', JSON.stringify({ ...options, base_filename: brandedName }));
     formData.append('start_index', startIndex.toString());
     try {
@@ -419,6 +436,7 @@ export default function CommandDeck() {
   const resetConsole = () => {
     setPhase('BREACH');
     setFile(null);
+    setFileList([]);
     setFileContent("");
     setProgress(0);
     addTelemetry(isSiphon ? "[🧹] CACHE_CLEARED" : "[🧹] MEMORY_PURGED");
@@ -514,7 +532,7 @@ export default function CommandDeck() {
                     ))}
                   </div>
                 </div>
-                <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" />
+                <input type="file" multiple ref={fileInputRef} onChange={handleFileSelect} className="hidden" />
               </motion.div>
             )}
 
