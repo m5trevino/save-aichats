@@ -86,7 +86,7 @@ export default function CommandDeck() {
   const [batchProgress, setBatchProgress] = useState<('IDLE' | 'PROCESSING' | 'COMPLETE')[]>(Array(20).fill('IDLE'));
   const [processedFileNames, setProcessedFileNames] = useState<string[]>(Array(20).fill(""));
   const [batchNames, setBatchNames] = useState<string[]>(Array(20).fill("AWAITING_TAG..."));
-  const [currentFileTimer, setCurrentFileTimer] = useState(15);
+
   const [adModalOpen, setAdModalOpen] = useState(false);
   const [uplinkKey, setUplinkKey] = useState(0);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -152,16 +152,7 @@ export default function CommandDeck() {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [isProcessing, isSiphon]);
 
-  // --- TIMER: PER-FILE COUNTDOWN (INTERNAL ONLY NOW) ---
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isProcessing && currentFileTimer > 0) {
-      interval = setInterval(() => {
-        setCurrentFileTimer(prev => Math.max(0, prev - 1));
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [isProcessing, currentFileTimer]);
+
 
   const handleAbort = () => {
     if (abortControllerRef.current) {
@@ -286,7 +277,7 @@ export default function CommandDeck() {
     setShowAdGate(!isSiphon);
     // setAdModalOpen(!isSiphon); // DISABLED: Replaced by ProcessingAdModal
 
-    setCurrentFileTimer(15);
+
     setProcessedFileNames(Array(20).fill(""));
     setBatchProgress(prev => {
       const next = [...prev];
@@ -335,7 +326,13 @@ export default function CommandDeck() {
               try {
                 const data = JSON.parse(line.slice(6));
                 if (data.status === 'start') {
-                  setBatchNames(data.batch_names || []);
+                  // FORCE UPDATE NAMES FROM BACKEND TO FIX BLANK LIST
+                  if (data.batch_names && Array.isArray(data.batch_names)) {
+                    const incomingNames = [...data.batch_names];
+                    // Pad if needed
+                    while (incomingNames.length < 20) incomingNames.push("");
+                    setBatchNames(incomingNames);
+                  }
                   addTelemetry(isSiphon ? `[📡] EXTRACTION_STARTED: ${data.total} ASSETS` : `[📡] REFINERY_STRIKE_CONFIRMED: ${data.total} TARGETS_LOCKED`, "success");
                 } else if (data.status === 'welded') {
                   const msg = isSiphon ? `PROCESSED: ${data.name.toUpperCase()}` : `WELDED: [${data.name.toUpperCase()}] // MSGS: ${data.msg_count}`;
@@ -356,7 +353,7 @@ export default function CommandDeck() {
                       });
                       if (idx + 1 < 20) {
                         next[idx + 1] = 'PROCESSING';
-                        setCurrentFileTimer(15);
+                        next[idx + 1] = 'PROCESSING';
                       }
                     }
                     return next;
@@ -643,7 +640,8 @@ export default function CommandDeck() {
                           {batchProgress[i] === 'PROCESSING' && (
                             <motion.div
                               initial={{ width: 0 }}
-                              animate={{ width: `${((15 - currentFileTimer) / 15) * 100}%` }}
+                              animate={{ width: "100%" }}
+                              transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
                               className="absolute inset-0 bg-voltage/10 z-0"
                             />
                           )}
@@ -673,7 +671,7 @@ export default function CommandDeck() {
                         </span>
                       </div>
                       <div className="scale-[0.5] origin-top-right">
-                        <AnalogCycle progress={progress < 100 ? (15 - currentFileTimer) * (100 / 15) : 100} />
+                        <AnalogCycle progress={progress} />
                       </div>
                     </div>
 
