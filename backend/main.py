@@ -216,7 +216,11 @@ async def refine_stream(request: Request, files: List[UploadFile] = File(...), o
 
             try:
                 # Try parsing as JSON (even if no extension)
-                raw_data = json.loads(content)
+                # Robust decoding: replace invalid UTF-8 bytes to prevent crash
+                decoded_content = content.decode('utf-8', errors='replace')
+                if '' in decoded_content:
+                    print(f"WARN: Invalid UTF-8 detected in {file.filename}, characters replaced.")
+                raw_data = json.loads(decoded_content)
                 
                 # Identify & Aggregate
                 if isinstance(raw_data, list) and len(raw_data) > 0 and "mapping" in raw_data[0]:
@@ -328,9 +332,12 @@ async def refine_payload(files: List[UploadFile] = File(...), options_json: str 
 
         # 1. AGGREGATE
         for file in files:
-            content = await file.read()
             try:
-                raw_data = json.loads(content)
+                # Robust decoding: replace invalid UTF-8 bytes to prevent crash
+                decoded_content = content.decode('utf-8', errors='replace')
+                if '' in decoded_content:
+                    print(f"WARN: Invalid UTF-8 detected in {file.filename}, characters replaced.")
+                raw_data = json.loads(decoded_content)
                 if isinstance(raw_data, list) and len(raw_data) > 0 and "mapping" in raw_data[0]:
                     all_chats.extend(raw_data)
                     brand_handler = handle_chatgpt
