@@ -59,7 +59,8 @@ export const ConversationDisplay: React.FC<ConversationDisplayProps> = ({ messag
     const blob = new Blob([content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.download = `${exportTitle}.${format}`;
+    const extension = format === 'nexus' ? 'txt' : format;
+    link.download = `${exportTitle}.${extension}`;
     link.href = url;
     document.body.appendChild(link);
     link.click();
@@ -79,7 +80,7 @@ export const ConversationDisplay: React.FC<ConversationDisplayProps> = ({ messag
           className="w-full md:w-64 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-slate-200 font-mono text-xs"
         />
         <div className="flex gap-2">
-          {(['json', 'md', 'txt', 'html'] as ExportFormat[]).map(fmt => (
+          {(['json', 'md', 'txt', 'html', 'nexus'] as ExportFormat[]).map(fmt => (
             <button
               key={fmt}
               onClick={() => handleDownload(fmt)}
