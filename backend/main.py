@@ -332,6 +332,7 @@ async def refine_payload(files: List[UploadFile] = File(...), options_json: str 
 
         # 1. AGGREGATE
         for file in files:
+            content = await file.read()
             try:
                 # Robust decoding: replace invalid UTF-8 bytes to prevent crash
                 decoded_content = content.decode('utf-8', errors='replace')
