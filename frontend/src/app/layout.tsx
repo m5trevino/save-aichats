@@ -24,7 +24,14 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${jbMono.variable} font-mono antialiased matrix-grid min-h-screen relative`}>
         {/* THE HUSTLE: Adsterra / PopAds / Monetag Global Scripts */}
-        {/* <script src="..." /> */}
+        <script src="https://pl28528141.effectivegatecpm.com/e6/7b/98/e67b98bfac791ca1d920f4555e92fb10.js" async />
+        
+        {/* Monetag In-Page Push */}
+        <script 
+          dangerouslySetInnerHTML={{
+            __html: `(function(s){s.dataset.zone='10498614',s.src='https://nap5k.com/tag.min.js'})(document.body.appendChild(document.createElement('script')))`
+          }}
+        />
 
         {/* Overlay Effects */}
         <div className="fixed inset-0 pointer-events-none z-50">

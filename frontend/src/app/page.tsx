@@ -39,7 +39,8 @@ const DEFAULT_PERSONAS: Persona[] = [
   { id: 'forensic', name: 'FORENSIC_AUDITOR', instructions: 'Highlight security vulnerabilities, logic gaps, and edge cases.' }
 ];
 
-import { ProcessingAdModal } from '@/components/ProcessingAdModal';
+import { ProcessingGateModal } from '@/components/ProcessingGateModal';
+import { useProcessingTime } from '@/hooks/useProcessingTime';
 
 // GHOST TERMINAL (PORTED FROM PERSONAL EDITION)
 const GhostTerminal = ({ telemetry }: { telemetry: any[] }) => (
@@ -89,6 +90,7 @@ export default function CommandDeck() {
   const [batchNames, setBatchNames] = useState<string[]>(Array(20).fill("AWAITING_TAG..."));
 
   const [adModalOpen, setAdModalOpen] = useState(false);
+  const [processingGateOpen, setProcessingGateOpen] = useState(false);
   const [uplinkKey, setUplinkKey] = useState(0);
   const [isVerifying, setIsVerifying] = useState(false);
   const [hasVerifiedOnce, setHasVerifiedOnce] = useState(false);
@@ -107,6 +109,9 @@ export default function CommandDeck() {
   };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Calculate processing time based on file count
+  const processingTime = useProcessingTime(fileList.length);
   const abortControllerRef = useRef<AbortController | null>(null);
   const logContainerRef = useRef<HTMLDivElement>(null);
 
@@ -159,6 +164,7 @@ export default function CommandDeck() {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       setIsProcessing(false);
+      setProcessingGateOpen(false);
       addTelemetry("[❌] ABORT_SEQUENCE_INITIATED_BY_USER", "warn");
       setTetherError("PROCESS_TERMINATED.");
     }
@@ -289,7 +295,7 @@ export default function CommandDeck() {
     setProgress(0);
     setTetherError(null);
     setShowAdGate(!isSiphon);
-    // setAdModalOpen(!isSiphon); // DISABLED: Replaced by ProcessingAdModal
+    setProcessingGateOpen(!isSiphon); // Open the ad gate modal
 
 
     setProcessedFileNames(Array(20).fill(""));
@@ -397,10 +403,12 @@ export default function CommandDeck() {
       setRefinedMessages(allMessages);
       setPhase('EXTRACTION');
       setIsProcessing(false);
+      setProcessingGateOpen(false); // Close the gate when done
 
     } catch (error: any) {
       if (error.name !== 'AbortError') {
         setIsProcessing(false);
+        setProcessingGateOpen(false);
         addTelemetry(`[❌] FATAL_ERROR: ${error.message || 'STRIKE_FAILED'}`, "warn");
       }
     }
@@ -441,6 +449,7 @@ export default function CommandDeck() {
     setProgress(0);
     addTelemetry(isSiphon ? "[🧹] CACHE_CLEARED" : "[🧹] MEMORY_PURGED");
     setShowAdGate(false);
+    setProcessingGateOpen(false);
   };
 
   if (!mounted) return <div className="min-h-screen bg-void" />;
@@ -720,13 +729,15 @@ export default function CommandDeck() {
                   </div>
                 </div>
 
-                {/* PROCESSING AD MODAL (AGGRESSIVE TAX) */}
-                <ProcessingAdModal
-                  isOpen={(phase === 'REFINERY' && isProcessing && !isSiphon)}
+                {/* PROCESSING GATE MODAL (THE HOSTAGE SYSTEM) */}
+                <ProcessingGateModal
+                  isOpen={processingGateOpen}
                   currentFileIndex={processedFileNames.filter(n => n !== "").length}
-                  totalFiles={20} // FIXED BATCH SIZE PER USER REQUEST
+                  totalFiles={20}
                   currentFileName={batchNames[processedFileNames.filter(n => n !== "").length] || "ANALYZING..."}
+                  processingTimeRemaining={processingTime}
                   onAbort={handleAbort}
+                  onComplete={() => setProcessingGateOpen(false)}
                 />
 
                 {/* RIGHT: TERMINAL AREA + FOOTER AD */}
