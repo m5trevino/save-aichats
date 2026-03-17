@@ -11,7 +11,8 @@ export const metadata: Metadata = {
   title: "THE WASHHOUSE | AI LOG REFINERY",
   description: "High-fidelity AI conversation log extraction and refinement.",
   other: {
-    "coinzilla": "8a95edce0669039c30b73d226c3aa715"
+    "coinzilla": "8a95edce0669039c30b73d226c3aa715",
+    "6a97888e-site-verification": "d8d3b362ab851d5c6a9039018822b225"
   }
 };
 
