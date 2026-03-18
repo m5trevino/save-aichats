@@ -1,228 +1,137 @@
 "use client";
 
-import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { XCircle, Shield, Clock, Eye, Lock } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { XCircle, Download, CheckCircle2, FileText } from 'lucide-react';
 import Script from 'next/script';
+
+interface ChatItem {
+  id: number;
+  name: string;
+  status: 'pending' | 'processing' | 'completed';
+}
 
 interface ProcessingGateModalProps {
   isOpen: boolean;
-  currentFileIndex: number;
-  totalFiles: number;
-  currentFileName: string;
-  processingTimeRemaining: number; // in seconds
+  chatNames: string[];
   onAbort: () => void;
   onComplete?: () => void;
+  onDownload?: () => void;
 }
 
-// Multi-Network Ad Rotator - cycles through Monetag + Adsterra + ExoClick for maximum fill
-const AD_NETWORKS = [
-  // Monetag Banner Script
-  { 
-    id: 'monetag-10498614', 
-    zone: '10498614', 
-    src: 'https://nap5k.com/tag.min.js', 
-    type: 'script',
-    network: 'Monetag'
-  },
-  // Adsterra 300x250 Banner
-  {
-    id: 'adsterra-300x250',
-    zone: '28837792',
-    key: 'c5de9e788b4f1e9f5fcdfc790eebf45f',
-    type: 'adsterra-banner',
-    network: 'Adsterra'
-  },
-  // Adsterra Smartlink (higher CPM for some geos)
-  { 
-    id: 'adsterra-smartlink', 
-    src: 'https://www.effectivegatecpm.com/hxdn4yhu7?key=53269311ad498a3a6bdf8959b9254348', 
-    type: 'iframe',
-    network: 'Adsterra'
-  },
-  // ExoClick Banners (4 zones for high fill rate)
-  { 
-    id: 'exoclick-banner-5874960', 
-    zone: '5874960',
-    src: 'https://a.pemsrv.com/ad-provider.js',
-    insClass: 'eas6a97888e33',
-    type: 'exoclick-banner',
-    network: 'ExoClick'
-  },
-  { 
-    id: 'exoclick-banner-5874950', 
-    zone: '5874950',
-    src: 'https://a.pemsrv.com/ad-provider.js',
-    insClass: 'eas6a97888e35',
-    type: 'exoclick-banner',
-    network: 'ExoClick'
-  },
-  { 
-    id: 'exoclick-banner-5874962', 
-    zone: '5874962',
-    src: 'https://a.magsrv.com/ad-provider.js',
-    insClass: 'eas6a97888e37',
-    type: 'exoclick-banner',
-    network: 'ExoClick'
-  },
-  { 
-    id: 'exoclick-banner-5874968', 
-    zone: '5874968',
-    src: 'https://a.magsrv.com/ad-provider.js',
-    insClass: 'eas6a97888e2',
-    type: 'exoclick-banner',
-    network: 'ExoClick'
-  },
-  // Monetag Direct Zones
-  { 
-    id: 'monetag-10498603', 
-    zone: '10498603', 
-    src: 'https://omg10.com/4/10498603', 
-    type: 'iframe',
-    network: 'Monetag'
-  },
-  { 
-    id: 'monetag-10498618', 
-    zone: '10498618', 
-    src: 'https://omg10.com/4/10498618', 
-    type: 'iframe',
-    network: 'Monetag'
-  },
-];
+const getChatProcessingTime = (index: number): number => {
+  if (index === 0) return 60;
+  if (index <= 4) return 30;
+  return 8;
+};
 
 export const ProcessingGateModal: React.FC<ProcessingGateModalProps> = ({
   isOpen,
-  currentFileIndex,
-  totalFiles,
-  currentFileName,
-  processingTimeRemaining,
+  chatNames,
   onAbort,
   onComplete,
+  onDownload,
 }) => {
-  const [adRefreshKey, setAdRefreshKey] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(processingTimeRemaining);
-  const [currentAdIndex, setCurrentAdIndex] = useState(0);
+  const [chats, setChats] = useState<ChatItem[]>([]);
+  const [currentChatIndex, setCurrentChatIndex] = useState(0);
+  const [currentChatProgress, setCurrentChatProgress] = useState(0);
+  const [overallProgress, setOverallProgress] = useState(0);
+  const [isDone, setIsDone] = useState(false);
   const [showConfirmAbort, setShowConfirmAbort] = useState(false);
-  const [adBlockDetected, setAdBlockDetected] = useState(false);
-  const [privacyMessageIndex, setPrivacyMessageIndex] = useState(0);
-  const adContainerRef = useRef<HTMLDivElement>(null);
-  const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [timeRemaining, setTimeRemaining] = useState(0);
+  
+  const totalChats = chatNames.length;
+  
+  const totalProcessingTime = (() => {
+    let total = 0;
+    for (let i = 0; i < totalChats; i++) {
+      total += getChatProcessingTime(i);
+    }
+    return total;
+  })();
 
-  // Privacy tax messages that rotate
-  const privacyMessages = [
-    { icon: Lock, text: "WE DON'T SELL YOUR DATA. WE SELL THIS AD SPACE." },
-    { icon: Eye, text: "YOUR PRIVACY IS FUNDED BY THIS WAIT. NO LOGS. NO TRACKING." },
-    { icon: Shield, text: "100% STATELESS PROCESSING. ADS KEEP US ZERO-KNOWLEDGE." },
-    { icon: Clock, text: "THE COST OF PRIVACY IS PATIENCE. NOT YOUR DATA." },
-  ];
-
-  // Check for ad blocker
   useEffect(() => {
     if (!isOpen) return;
     
-    const checkAdBlock = async () => {
-      try {
-        // Try to fetch a known ad script
-        const testUrls = [
-          'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js',
-          'https://nap5k.com/tag.min.js',
-        ];
-        
-        for (const url of testUrls) {
-          try {
-            const response = await fetch(url, { method: 'HEAD', mode: 'no-cors' });
-            // If we get here, ad might not be blocked (but no-cors hides real status)
-          } catch (e) {
-            setAdBlockDetected(true);
-            return;
-          }
+    const initialChats: ChatItem[] = chatNames.map((name, idx) => ({
+      id: idx,
+      name: name || 'Chat_' + String(idx + 1).padStart(2, '0'),
+      status: idx === 0 ? 'processing' : 'pending',
+    }));
+    
+    setChats(initialChats);
+    setCurrentChatIndex(0);
+    setCurrentChatProgress(0);
+    setOverallProgress(0);
+    setIsDone(false);
+    setTimeRemaining(totalProcessingTime);
+  }, [isOpen, chatNames, totalProcessingTime]);
+
+  useEffect(() => {
+    if (!isOpen || isDone) return;
+
+    let elapsedTime = 0;
+    let currentIdx = 0;
+    let chatStartTime = 0;
+    
+    const interval = setInterval(() => {
+      elapsedTime += 0.1;
+      
+      let timeAccumulator = 0;
+      let newIdx = 0;
+      
+      for (let i = 0; i < totalChats; i++) {
+        const chatTime = getChatProcessingTime(i);
+        if (elapsedTime >= timeAccumulator + chatTime) {
+          timeAccumulator += chatTime;
+          newIdx = i + 1;
+        } else {
+          break;
         }
-        
-        // Additional check: see if our ad container is hidden
-        setTimeout(() => {
-          if (adContainerRef.current) {
-            const rect = adContainerRef.current.getBoundingClientRect();
-            if (rect.height === 0 || rect.width === 0) {
-              setAdBlockDetected(true);
-            }
-          }
-        }, 2000);
-      } catch (e) {
-        console.log("Ad block check failed:", e);
       }
-    };
-
-    checkAdBlock();
-  }, [isOpen, adRefreshKey]);
-
-  // Auto-refresh ads every 30 seconds
-  useEffect(() => {
-    if (!isOpen) return;
-
-    // Reset timer when opened
-    setTimeLeft(processingTimeRemaining);
-    setAdRefreshKey(0);
-    setCurrentAdIndex(0);
-    setAdBlockDetected(false);
-    setShowConfirmAbort(false);
-
-    // 30-second ad refresh cycle
-    refreshIntervalRef.current = setInterval(() => {
-      setAdRefreshKey(prev => prev + 1);
-      setCurrentAdIndex(prev => (prev + 1) % AD_NETWORKS.length);
-      const nextIndex = (currentAdIndex + 1) % AD_NETWORKS.length;
-      console.log("[💰] AD_REFRESH: Loading", AD_NETWORKS[nextIndex].network, "-", AD_NETWORKS[nextIndex].id);
-    }, 30000);
-
-    return () => {
-      if (refreshIntervalRef.current) {
-        clearInterval(refreshIntervalRef.current);
+      
+      if (newIdx !== currentIdx) {
+        setChats(prev => prev.map((chat, idx) => {
+          if (idx < newIdx) return { ...chat, status: 'completed' };
+          if (idx === newIdx) return { ...chat, status: 'processing' };
+          return { ...chat, status: 'pending' };
+        }));
+        currentIdx = newIdx;
+        setCurrentChatIndex(newIdx);
+        chatStartTime = timeAccumulator;
       }
-    };
-  }, [isOpen, processingTimeRemaining]);
+      
+      if (currentIdx < totalChats) {
+        const currentChatTime = getChatProcessingTime(currentIdx);
+        const timeInCurrentChat = elapsedTime - chatStartTime;
+        const progress = Math.min(100, (timeInCurrentChat / currentChatTime) * 100);
+        setCurrentChatProgress(progress);
+      }
+      
+      const overall = Math.min(100, (elapsedTime / totalProcessingTime) * 100);
+      setOverallProgress(overall);
+      setTimeRemaining(Math.max(0, Math.ceil(totalProcessingTime - elapsedTime)));
+      
+      if (elapsedTime >= totalProcessingTime) {
+        setIsDone(true);
+        setChats(prev => prev.map(chat => ({ ...chat, status: 'completed' })));
+        onComplete?.();
+        clearInterval(interval);
+      }
+    }, 100);
 
-  // Countdown timer
-  useEffect(() => {
-    if (!isOpen || timeLeft <= 0) return;
+    return () => clearInterval(interval);
+  }, [isOpen, isDone, totalChats, totalProcessingTime, onComplete]);
 
-    const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          onComplete?.();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [isOpen, timeLeft, onComplete]);
-
-  // Rotate privacy messages every 10 seconds
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const msgInterval = setInterval(() => {
-      setPrivacyMessageIndex(prev => (prev + 1) % privacyMessages.length);
-    }, 10000);
-
-    return () => clearInterval(msgInterval);
-  }, [isOpen]);
-
-  // Format time as MM:SS
-  const formatTime = (seconds: number) => {
+  const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return mins + ':' + secs.toString().padStart(2, '0');
   };
 
-  // Calculate progress percentage
-  const progressPercent = Math.min(100, ((processingTimeRemaining - timeLeft) / processingTimeRemaining) * 100);
-
-  // Handle abort with confirmation
   const handleAbortClick = () => {
     if (!showConfirmAbort) {
       setShowConfirmAbort(true);
-      setTimeout(() => setShowConfirmAbort(false), 3000); // Reset after 3s
+      setTimeout(() => setShowConfirmAbort(false), 3000);
     } else {
       onAbort();
     }
@@ -230,212 +139,121 @@ export const ProcessingGateModal: React.FC<ProcessingGateModalProps> = ({
 
   if (!isOpen) return null;
 
-  const CurrentMessage = privacyMessages[privacyMessageIndex].icon;
-  const currentAd = AD_NETWORKS[currentAdIndex];
+  const completedCount = chats.filter(c => c.status === 'completed').length;
+  const pendingCount = chats.filter(c => c.status === 'pending').length;
+  const currentChat = chats[currentChatIndex];
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      {/* Backdrop - darker to force focus */}
       <div className="absolute inset-0 bg-black/95 backdrop-blur-sm" />
-
-      {/* Main Modal Container */}
-      <div className="relative w-full max-w-2xl bg-[#0a0a0a] border-2 border-[#00FF41] shadow-[0_0_100px_rgba(0,255,65,0.15)] flex flex-col max-h-[90vh] overflow-hidden">
+      <div className="relative w-full max-w-4xl bg-[#0a0a0a] border-2 border-[#00FF41] shadow-[0_0_100px_rgba(0,255,65,0.15)] flex flex-col max-h-[95vh] overflow-hidden">
         
-        {/* Scanline Effect */}
-        <div className="absolute inset-0 pointer-events-none z-10 opacity-[0.03] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px]" />
-        
-        {/* HEADER */}
-        <div className="relative z-20 flex justify-between items-start border-b-2 border-[#00FF41]/30 p-6 bg-gradient-to-b from-[#00FF41]/5 to-transparent">
-          <div className="space-y-2">
-            <h2 className="text-2xl font-black text-[#00FF41] uppercase tracking-tighter flex items-center gap-3">
+        <div className="relative z-20 flex justify-between items-start border-b-2 border-[#00FF41]/30 p-4 bg-gradient-to-b from-[#00FF41]/5 to-transparent">
+          <div>
+            <h2 className="text-xl font-black text-[#00FF41] uppercase tracking-tighter flex items-center gap-2">
               <span className="animate-pulse">⚡</span> 
-              Refinery Strike Active
+              Refinery Assembly Line
             </h2>
             <p className="text-[#00FF41]/60 font-mono text-[10px] tracking-[0.3em] uppercase">
-              [ SYSTEM_LOCK: PROCESSING_PAYLOAD ]
+              [ BATCH_PROCESSING: {totalChats} CHATS_LOCKED ]
             </p>
           </div>
-
-          {/* Tactical Counter */}
-          <div className="flex flex-col items-end">
-            <span className="text-4xl font-black text-white tabular-nums tracking-tighter">
-              {String(currentFileIndex + 1).padStart(2, '0')}
-              <span className="text-[#00FF41]/40 text-lg">/{totalFiles}</span>
-            </span>
-            <span className="text-[8px] font-bold text-[#00FF41]/40 uppercase tracking-[0.3em]">Payload Index</span>
+          <div className="text-right">
+            <div className="text-3xl font-black text-white tabular-nums tracking-tighter">{formatTime(timeRemaining)}</div>
+            <div className="text-[8px] text-[#00FF41]/40 uppercase tracking-widest">Time Remaining</div>
           </div>
         </div>
 
-        {/* PROGRESS SECTION */}
-        <div className="relative z-20 p-6 space-y-4 border-b border-[#00FF41]/20">
-          {/* Main Progress Bar */}
-          <div className="w-full h-4 bg-black border border-[#00FF41]/30 relative overflow-hidden">
-            <div 
-              className="absolute inset-y-0 left-0 bg-[#00FF41]/30 transition-all duration-1000"
-              style={{ width: `${progressPercent}%` }}
-            />
-            <div className="absolute inset-0 bg-[repeating-linear-gradient(90deg,transparent,transparent_4px,#000_4px,#000_8px)] opacity-30" />
-            {/* Animated pulse on progress */}
-            <div 
-              className="absolute inset-y-0 w-2 bg-[#00FF41] animate-pulse transition-all duration-1000"
-              style={{ left: `${progressPercent}%`, transform: 'translateX(-100%)' }}
-            />
-          </div>
-
-          {/* Time Display */}
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-3">
-              <Clock className="w-4 h-4 text-[#00FF41] animate-pulse" />
-              <span className="text-[#00FF41] font-mono text-sm tracking-widest">
-                TIME_REMAINING: <span className="font-bold text-xl">{formatTime(timeLeft)}</span>
-              </span>
+        <div className="relative z-20 flex flex-col lg:flex-row gap-4 p-4 overflow-hidden">
+          
+          <div className="lg:w-1/3 flex flex-col bg-black border border-[#00FF41]/20">
+            <div className="p-2 bg-[#00FF41]/5 border-b border-[#00FF41]/20">
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] text-[#00FF41] uppercase tracking-widest font-bold">To Process</span>
+                <span className="text-[10px] text-[#00FF41]/60 font-mono">{pendingCount} remaining</span>
+              </div>
             </div>
-            <div className="text-[10px] text-[#00FF41]/40 font-mono">
-              {Math.floor(progressPercent)}% COMPLETE
+            <div className="flex-1 overflow-y-auto max-h-[200px] lg:max-h-[300px] p-2 space-y-1">
+              {chats.filter(c => c.status === 'pending').map((chat) => (
+                <div key={chat.id} className="flex items-center gap-2 p-2 bg-[#00FF41]/5 border border-[#00FF41]/10 opacity-50">
+                  <FileText className="w-3 h-3 text-[#00FF41]/40" />
+                  <span className="text-[10px] text-[#00FF41]/60 truncate font-mono">{chat.name}</span>
+                </div>
+              ))}
+              {pendingCount === 0 && <div className="text-center py-4 text-[10px] text-[#00FF41]/30 uppercase">Queue Empty</div>}
             </div>
           </div>
 
-          {/* Current File */}
-          <div className="bg-[#00FF41]/5 p-3 border-l-4 border-[#00FF41]">
-            <p className="text-[10px] text-[#00FF41]/60 uppercase tracking-widest mb-1">Processing_Target</p>
-            <p className="text-sm font-mono text-white truncate">{currentFileName || "ANALYZING_STREAM..."}</p>
-          </div>
-        </div>
-
-        {/* AD SECTION - THE REVENUE ENGINE */}
-        <div className="relative z-20 p-6 bg-black">
-          {/* Privacy Tax Message */}
-          <div className="flex items-center gap-3 mb-4 text-[10px] text-[#00FF41]/70 uppercase tracking-wider">
-            <CurrentMessage className="w-4 h-4" />
-            <span className="animate-pulse">{privacyMessages[privacyMessageIndex].text}</span>
-          </div>
-
-          {/* Ad Block Warning */}
-          {adBlockDetected && (
-            <div className="mb-4 p-3 bg-red-900/20 border border-red-500/50 text-red-400 text-[10px] font-mono uppercase tracking-wider animate-pulse">
-              <span className="font-bold">⚠️ WARNING:</span> Ad blocker detected. Disable to support zero-log infrastructure.
-            </div>
-          )}
-
-          {/* Ad Container - Refreshes every 30s */}
-          <div 
-            ref={adContainerRef}
-            className="relative min-h-[250px] bg-[#050505] border-2 border-[#00FF41]/30 flex flex-col items-center justify-center overflow-hidden"
-            key={`ad-${adRefreshKey}`}
-          >
-            {/* Scanline overlay */}
-            <div className="absolute inset-0 pointer-events-none z-20 bg-[linear-gradient(rgba(0,0,0,0)_50%,rgba(0,0,0,0.3)_50%)] bg-[length:100%_4px]" />
-            
-            {/* Corner markers */}
-            <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[#00FF41] z-30" />
-            <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-[#00FF41] z-30" />
-            <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-[#00FF41] z-30" />
-            <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-[#00FF41] z-30" />
-
-            {/* Network Label */}
-            <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 text-[8px] text-[#00FF41]/40 uppercase tracking-[0.3em]">
-              {currentAd.network} // {currentAd.id} // Refresh_{String(adRefreshKey).padStart(2, '0')}
-            </div>
-
-            {/* The Actual Ad */}
-            <div className="w-full h-full flex items-center justify-center p-4">
-              {currentAd.type === 'script' ? (
-                <Script
-                  id={`ad-script-${currentAd.id}`}
-                  strategy="afterInteractive"
-                  dangerouslySetInnerHTML={{
-                    __html: `(function(s){s.dataset.zone='${currentAd.zone}',s.src='${currentAd.src}'})(document.body.appendChild(document.createElement('script')))`
-                  }}
-                />
-              ) : currentAd.type === 'exoclick-banner' ? (
+          <div className="lg:w-1/3 flex flex-col gap-4">
+            <div className="bg-black border border-[#00FF41]/30 p-4">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-[10px] text-[#00FF41]/60 uppercase tracking-widest">Processing Now</span>
+                <span className="text-[10px] text-[#00FF41] font-mono">{currentChatIndex + 1} / {totalChats}</span>
+              </div>
+              
+              {currentChat && currentChat.status === 'processing' && (
                 <>
-                  <Script
-                    id={`exoclick-script-${currentAd.zone}`}
-                    src={currentAd.src}
-                    strategy="afterInteractive"
-                  />
-                  <ins className={currentAd.insClass} data-zoneid={currentAd.zone} />
-                  <Script
-                    id={`exoclick-serve-${currentAd.zone}`}
-                    strategy="afterInteractive"
-                    dangerouslySetInnerHTML={{
-                      __html: `(AdProvider = window.AdProvider || []).push({"serve": {}});`
-                    }}
-                  />
+                  <div className="text-xs text-white font-mono truncate mb-2">{currentChat.name}</div>
+                  <div className="w-full h-2 bg-black border border-[#00FF41]/30 relative overflow-hidden">
+                    <div className="absolute inset-y-0 left-0 bg-[#00FF41] transition-all duration-100" style={{ width: currentChatProgress + '%' }} />
+                  </div>
+                  <div className="text-[8px] text-[#00FF41]/40 mt-1 text-right font-mono">{Math.round(currentChatProgress)}%</div>
                 </>
-              ) : currentAd.type === 'adsterra-banner' ? (
-                <>
-                  <Script
-                    id={`adsterra-options-${currentAd.zone}`}
-                    strategy="afterInteractive"
-                    dangerouslySetInnerHTML={{
-                      __html: `atOptions = { 'key': '${currentAd.key}', 'format': 'iframe', 'height': 250, 'width': 300, 'params': {} };`
-                    }}
-                  />
-                  <Script
-                    id={`adsterra-script-${currentAd.zone}`}
-                    src={`https://www.highperformanceformat.com/${currentAd.key}/invoke.js`}
-                    strategy="afterInteractive"
-                  />
-                </>
-              ) : (
-                <iframe
-                  src={currentAd.src}
-                  width="300"
-                  height="250"
-                  style={{ border: 'none', maxWidth: '100%' }}
-                  title="Sponsor"
-                  sandbox="allow-scripts allow-same-origin allow-popups"
-                />
+              )}
+              
+              {isDone && (
+                <div className="text-center py-2">
+                  <CheckCircle2 className="w-8 h-8 text-[#00FF41] mx-auto mb-2" />
+                  <span className="text-xs text-[#00FF41] uppercase">All Chats Processed</span>
+                </div>
               )}
             </div>
 
-            {/* Refresh Timer Indicator */}
-            <div className="absolute bottom-2 right-2 z-30 flex items-center gap-2">
-              <div className="w-2 h-2 bg-[#00FF41] rounded-full animate-pulse" />
-              <span className="text-[8px] text-[#00FF41]/60 font-mono">
-                Auto-refresh active
-              </span>
+            <div className="bg-black border border-[#00FF41]/30 p-3">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-[10px] text-[#00FF41]/60 uppercase tracking-widest">Total Progress</span>
+                <span className="text-[10px] text-[#00FF41] font-mono">{Math.round(overallProgress)}%</span>
+              </div>
+              <div className="w-full h-3 bg-black border border-[#00FF41]/30 relative overflow-hidden">
+                <div className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#00FF41]/50 to-[#00FF41] transition-all duration-100" style={{ width: overallProgress + '%' }} />
+              </div>
+            </div>
+          </div>
+
+          <div className="lg:w-1/3 flex flex-col bg-black border border-[#00FF41]/20">
+            <div className="p-2 bg-[#00FF41]/10 border-b border-[#00FF41]/20">
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] text-[#00FF41] uppercase tracking-widest font-bold">Completed</span>
+                <span className="text-[10px] text-[#00FF41] font-mono">{completedCount} done</span>
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto max-h-[200px] lg:max-h-[300px] p-2 space-y-1">
+              {chats.filter(c => c.status === 'completed').map((chat) => (
+                <div key={chat.id} className="flex items-center gap-2 p-2 bg-[#00FF41]/10 border border-[#00FF41]/30">
+                  <CheckCircle2 className="w-3 h-3 text-[#00FF41]" />
+                  <span className="text-[10px] text-[#00FF41] truncate font-mono">{chat.name}</span>
+                </div>
+              ))}
+              {completedCount === 0 && <div className="text-center py-4 text-[10px] text-[#00FF41]/30 uppercase">No completions yet</div>}
             </div>
           </div>
         </div>
 
-        {/* FOOTER / ABORT SECTION */}
-        <div className="relative z-20 p-6 border-t border-[#00FF41]/20 bg-gradient-to-t from-black to-[#00FF41]/5">
-          <div className="flex flex-col items-center gap-4">
-            {/* Warning Text */}
-            <p className="text-[10px] text-[#00FF41]/40 text-center uppercase tracking-widest max-w-md">
-              Closing this modal will terminate the refinement process. 
-              Your files will not be processed.
-            </p>
-
-            {/* Abort Button */}
-            <button
-              onClick={handleAbortClick}
-              className={`group flex items-center gap-2 px-6 py-3 text-xs font-black uppercase tracking-[0.2em] transition-all border-2
-                ${showConfirmAbort 
-                  ? 'bg-red-500/20 border-red-500 text-red-400 animate-pulse' 
-                  : 'border-[#00FF41]/20 text-[#00FF41]/40 hover:border-red-500/50 hover:text-red-400/60'
-                }`}
-            >
-              <XCircle className="w-4 h-4" />
-              {showConfirmAbort ? 'CLICK AGAIN TO CONFIRM ABORT' : 'Abort Sequence'}
+        <div className="relative z-20 p-4 border-t border-[#00FF41]/20 bg-gradient-to-t from-black to-[#00FF41]/5">
+          {isDone ? (
+            <button onClick={onDownload} className="w-full py-4 bg-[#00FF41] text-black font-black text-lg uppercase tracking-[0.3em] flex items-center justify-center gap-3 hover:bg-[#00FF41]/80 transition-all animate-pulse">
+              <Download className="w-6 h-6" /> DOWNLOAD ALL CHATS
             </button>
-
-            {showConfirmAbort && (
-              <p className="text-[10px] text-red-400 animate-pulse">
-                ⚠️ WARNING: All progress will be lost
-              </p>
-            )}
-          </div>
+          ) : (
+            <div className="flex flex-col items-center gap-3">
+              <p className="text-[10px] text-[#00FF41]/40 text-center uppercase tracking-widest">Closing this modal will terminate processing</p>
+              <button onClick={handleAbortClick} className={`flex items-center gap-2 px-6 py-3 text-xs font-black uppercase tracking-[0.2em] transition-all border-2 ${showConfirmAbort ? 'bg-red-500/20 border-red-500 text-red-400 animate-pulse' : 'border-[#00FF41]/20 text-[#00FF41]/40 hover:border-red-500/50'}`}>
+                <XCircle className="w-4 h-4" />
+                {showConfirmAbort ? 'CLICK AGAIN TO CONFIRM' : 'Abort'}
+              </button>
+            </div>
+          )}
         </div>
-
-        {/* Background noise effect */}
-        <div className="absolute inset-0 pointer-events-none z-[5] opacity-[0.02]" 
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-          }}
-        />
       </div>
     </div>
   );
