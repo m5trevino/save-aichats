@@ -24,19 +24,52 @@ const AD_NETWORKS = [
     type: 'script',
     network: 'Monetag'
   },
-  // Adsterra Direct Link (higher CPM for some geos)
+  // Adsterra 300x250 Banner
+  {
+    id: 'adsterra-300x250',
+    zone: '28837792',
+    key: 'c5de9e788b4f1e9f5fcdfc790eebf45f',
+    type: 'adsterra-banner',
+    network: 'Adsterra'
+  },
+  // Adsterra Smartlink (higher CPM for some geos)
   { 
-    id: 'adsterra-direct', 
+    id: 'adsterra-smartlink', 
     src: 'https://www.effectivegatecpm.com/hxdn4yhu7?key=53269311ad498a3a6bdf8959b9254348', 
     type: 'iframe',
     network: 'Adsterra'
   },
-  // ExoClick Zone
+  // ExoClick Banners (4 zones for high fill rate)
   { 
-    id: 'exoclick-zone', 
-    zone: 'd8d3b362ab851d5c6a9039018822b225',
-    src: 'https://a.exoclick.com/tag.php?zoneid=d8d3b362ab851d5c6a9039018822b225', 
-    type: 'iframe',
+    id: 'exoclick-banner-5874960', 
+    zone: '5874960',
+    src: 'https://a.pemsrv.com/ad-provider.js',
+    insClass: 'eas6a97888e33',
+    type: 'exoclick-banner',
+    network: 'ExoClick'
+  },
+  { 
+    id: 'exoclick-banner-5874950', 
+    zone: '5874950',
+    src: 'https://a.pemsrv.com/ad-provider.js',
+    insClass: 'eas6a97888e35',
+    type: 'exoclick-banner',
+    network: 'ExoClick'
+  },
+  { 
+    id: 'exoclick-banner-5874962', 
+    zone: '5874962',
+    src: 'https://a.magsrv.com/ad-provider.js',
+    insClass: 'eas6a97888e37',
+    type: 'exoclick-banner',
+    network: 'ExoClick'
+  },
+  { 
+    id: 'exoclick-banner-5874968', 
+    zone: '5874968',
+    src: 'https://a.magsrv.com/ad-provider.js',
+    insClass: 'eas6a97888e2',
+    type: 'exoclick-banner',
     network: 'ExoClick'
   },
   // Monetag Direct Zones
@@ -314,6 +347,37 @@ export const ProcessingGateModal: React.FC<ProcessingGateModalProps> = ({
                     __html: `(function(s){s.dataset.zone='${currentAd.zone}',s.src='${currentAd.src}'})(document.body.appendChild(document.createElement('script')))`
                   }}
                 />
+              ) : currentAd.type === 'exoclick-banner' ? (
+                <>
+                  <Script
+                    id={`exoclick-script-${currentAd.zone}`}
+                    src={currentAd.src}
+                    strategy="afterInteractive"
+                  />
+                  <ins className={currentAd.insClass} data-zoneid={currentAd.zone} />
+                  <Script
+                    id={`exoclick-serve-${currentAd.zone}`}
+                    strategy="afterInteractive"
+                    dangerouslySetInnerHTML={{
+                      __html: `(AdProvider = window.AdProvider || []).push({"serve": {}});`
+                    }}
+                  />
+                </>
+              ) : currentAd.type === 'adsterra-banner' ? (
+                <>
+                  <Script
+                    id={`adsterra-options-${currentAd.zone}`}
+                    strategy="afterInteractive"
+                    dangerouslySetInnerHTML={{
+                      __html: `atOptions = { 'key': '${currentAd.key}', 'format': 'iframe', 'height': 250, 'width': 300, 'params': {} };`
+                    }}
+                  />
+                  <Script
+                    id={`adsterra-script-${currentAd.zone}`}
+                    src={`https://www.highperformanceformat.com/${currentAd.key}/invoke.js`}
+                    strategy="afterInteractive"
+                  />
+                </>
               ) : (
                 <iframe
                   src={currentAd.src}
