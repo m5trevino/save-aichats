@@ -732,9 +732,11 @@ export default function CommandDeck() {
                 {/* PROCESSING GATE MODAL (THE HOSTAGE SYSTEM) */}
                 <ProcessingGateModal
                   isOpen={processingGateOpen}
-                  chatNames={batchNames.filter(n => n && n !== "AWAITING_TAG..." && n !== "")}
+                  chatNames={batchNames}
+                  batchProgress={batchProgress}
+                  overallProgress={progress}
+                  isProcessing={isProcessing}
                   onAbort={handleAbort}
-                  onComplete={() => setProcessingGateOpen(false)}
                   onDownload={executePayloadDownload}
                 />
 
