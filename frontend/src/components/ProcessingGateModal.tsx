@@ -1,5 +1,7 @@
 "use client";
 
+import React, { useState } from 'react';
+import { XCircle, Download, CheckCircle2, FileText } from 'lucide-react';
 import { AdBanner } from './AdBanner';
 
 interface ProcessingGateModalProps {
