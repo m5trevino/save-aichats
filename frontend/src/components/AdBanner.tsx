@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 // --- MULTI-NETWORK AD PAYLOADS ---
 // An array of different ad unit tags. The rotator will pick one randomly.
