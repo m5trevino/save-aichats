@@ -280,15 +280,23 @@ export default function CommandDeck() {
 
       updateBatchInfo(totalChats, allNames);
 
+      // THE HUSTLE: Entry Interstitial
       if ((window as any).show_monetag_vignette && !isSiphon) {
         (window as any).show_monetag_vignette();
       }
+
       setPhase('CALIBRATION');
     }
   };
 
   const initiateStrike = async () => {
     if (!file || !apiBase) return;
+
+    // THE HUSTLE: Start-Processing Interstitial
+    if ((window as any).show_monetag_vignette && !isSiphon) {
+      (window as any).show_monetag_vignette();
+    }
+
     setPhase('REFINERY');
     setIsProcessing(true);
     setTelemetry([]);
@@ -362,7 +370,13 @@ export default function CommandDeck() {
                   addTelemetry(msg, "success");
                   allMessages.push(...data.messages);
                   setRefinedMessages([...allMessages]);
-                  setProgress(Math.round((data.index / data.total) * 100));
+                  const currentProgress = Math.round((data.index / data.total) * 100);
+                  setProgress(currentProgress);
+
+                  // THE HUSTLE: Mid-Point Interstitial (Hijack at 50%)
+                  if (currentProgress === 50 && (window as any).show_monetag_vignette && !isSiphon) {
+                    (window as any).show_monetag_vignette();
+                  }
 
                   setBatchProgress(prev => {
                     const next = [...prev];
@@ -416,6 +430,12 @@ export default function CommandDeck() {
 
   const executePayloadDownload = async () => {
     if (!file || !apiBase) return;
+
+    // THE HUSTLE: Exit Interstitial on Download
+    if ((window as any).show_monetag_vignette && !isSiphon) {
+      (window as any).show_monetag_vignette();
+    }
+
     addTelemetry("[🚀] INITIATING_FINAL_DOWNLOAD...");
 
     // BRANDED FILENAME ENFORCEMENT
@@ -897,7 +917,21 @@ export default function CommandDeck() {
         </div>
       </div>
 
-      <footer className="fixed bottom-0 w-full p-4 flex justify-between text-[8px] font-bold uppercase opacity-20 pointer-events-none">
+      {/* STICKY REVENUE BAR - FIXED TO BOTTOM */}
+      {!isSiphon && (
+        <div className="fixed bottom-0 left-0 w-full z-[100] bg-void/90 backdrop-blur-md border-t-2 border-matrix/40 p-1 flex flex-col items-center shadow-[0_-10px_50px_rgba(0,0,0,0.8)]">
+          <div className="w-full flex justify-between px-4 mb-0.5">
+            <span className="text-[7px] text-matrix/40 font-black uppercase tracking-[0.4em]">Proprietary_Ad_Stream // 0xCC12</span>
+            <span className="text-[7px] text-matrix/40 font-black uppercase tracking-[0.4em]">save-aichats.com // REVENUE_NODE</span>
+          </div>
+          <div className="w-full max-w-4xl h-[60px] md:h-[90px] overflow-hidden flex items-center justify-center scale-90 md:scale-100 origin-bottom">
+            <AdBanner refreshInterval={25} />
+          </div>
+        </div>
+      )}
+
+      {/* FOOTER METADATA (NUDGED UP TO AVOID CLASH) */}
+      <footer className={`fixed bottom-[75px] md:bottom-[105px] w-full p-4 flex justify-between text-[8px] font-bold uppercase opacity-10 pointer-events-none z-0`}>
         <div>ID: {isSiphon ? 'SILENT_SIPHON_2.1' : 'ASH_UNIT_0.1'}</div>
         <div>{mountedTime} // STOCKTON_SEC</div>
       </footer>

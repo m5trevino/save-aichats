@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
-import { XCircle, Download, CheckCircle2, FileText } from 'lucide-react';
+import { AdBanner } from './AdBanner';
 
 interface ProcessingGateModalProps {
   isOpen: boolean;
@@ -118,12 +117,15 @@ export const ProcessingGateModal: React.FC<ProcessingGateModalProps> = ({
               </div>
             </div>
 
-            {/* Ad Space Placeholder - Shows when processing */}
-            {isProcessing && (
-              <div className="relative min-h-[150px] bg-black border border-[#00FF41]/30 flex items-center justify-center">
-                <span className="text-[10px] text-[#00FF41]/40 uppercase">Ad Space - Revenue Zone</span>
+            {/* Ad Space - THE REVENUE ZONE */}
+            <div className="relative min-h-[250px] bg-black border border-[#00FF41]/30 flex flex-col items-center justify-center overflow-hidden">
+              <div className="absolute top-0 left-0 w-full bg-[#00FF41]/10 px-2 py-0.5 border-b border-[#00FF41]/20">
+                <span className="text-[8px] text-[#00FF41]/60 font-black tracking-[0.3em] uppercase">Secure_Sponsor_Uplink</span>
               </div>
-            )}
+              <div className="w-full scale-90 md:scale-100">
+                <AdBanner refreshInterval={15} />
+              </div>
+            </div>
           </div>
 
           {/* RIGHT: COMPLETED */}
