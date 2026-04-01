@@ -1,6 +1,7 @@
 import React from 'react';
-import { XCircle } from 'lucide-react';
+import { XCircle, Activity, Target } from 'lucide-react';
 import { AdBanner } from './AdBanner';
+import { motion } from 'framer-motion';
 
 interface ProcessingAdModalProps {
     isOpen: boolean;
@@ -20,59 +21,68 @@ export const ProcessingAdModal: React.FC<ProcessingAdModalProps> = ({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[90] flex items-center justify-center p-4">
-            {/* BACKDROP - Semi-transparent so they can see the Ghost Terminal working behind */}
-            <div className="absolute inset-0 bg-black/20" />
+        <div className="fixed inset-0 z-[140] flex items-center justify-center p-4">
+            {/* BACKDROP - Semi-transparent */}
+            <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" />
 
             {/* MODAL */}
-            <div className="relative w-full max-w-2xl bg-void border-t-4 border-b-4 border-matrix p-8 shadow-[0_0_100px_rgba(0,255,65,0.1)] flex flex-col gap-8">
+            <div className="relative w-full max-w-2xl bg-surface-container border-2 border-kinetik-lime p-8 shadow-[0_0_100px_rgba(204,255,0,0.15)] flex flex-col gap-8 overflow-hidden">
+                <div className="scanline-overlay absolute inset-0 opacity-10 pointer-events-none"></div>
 
                 {/* HEADER */}
-                <div className="flex justify-between items-start border-b border-matrix/20 pb-4">
+                <div className="flex justify-between items-start border-b-2 border-surface-bright pb-6 relative z-10">
                     <div className="space-y-1">
-                        <h2 className="text-2xl font-black text-matrix uppercase tracking-tighter flex items-center gap-3">
-                            <span className="animate-pulse">⚡</span> Uplink Active
+                        <h2 className="text-3xl font-black text-kinetik-lime uppercase tracking-tighter flex items-center gap-3 font-headline italic">
+                            <Activity className="w-7 h-7 animate-pulse" /> Uplink_Active
                         </h2>
-                        <p className="text-matrix/60 font-mono text-[10px] tracking-widest uppercase">
-                            Secure Data Refinement in Progress...
+                        <p className="text-on-surface-variant font-mono text-[10px] tracking-[0.4em] uppercase">
+                            Secure_Refinement_Protocol // ACTIVE
                         </p>
                     </div>
 
                     {/* TACTICAL COUNTER */}
                     <div className="flex flex-col items-end">
-                        <span className="text-4xl font-black text-white tabular-nums tracking-tighter">
-                            {String(currentFileIndex + 1).padStart(2, '0')}<span className="text-matrix/40 text-lg">/{totalFiles}</span>
+                        <span className="text-4xl font-black text-on-surface tabular-nums tracking-tighter font-mono">
+                            {String(currentFileIndex + 1).padStart(2, '0')}<span className="text-on-surface-variant/30 text-lg">/{totalFiles}</span>
                         </span>
-                        <span className="text-[8px] font-bold text-matrix/40 uppercase tracking-[0.3em]">Payload Index</span>
+                        <span className="text-[9px] font-black text-on-surface-variant uppercase tracking-[0.3em]">STREAM_INDEX</span>
                     </div>
                 </div>
 
-                {/* TACTICAL LINEAR PROGRESS */}
-                <div className="w-full h-2 bg-black border border-matrix/20 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-matrix/20 animate-pulse" style={{ width: `${((currentFileIndex + 1) / totalFiles) * 100}%` }} />
-                    <div className="absolute inset-0 bg-[repeating-linear-gradient(90deg,transparent,transparent_2px,#000_2px,#000_4px)] opacity-50" />
+                {/* PROGRESS BAR */}
+                <div className="w-full h-1 bg-surface-bright relative overflow-hidden z-10">
+                    <motion.div 
+                        className="absolute inset-y-0 left-0 bg-kinetik-lime shadow-[0_0_10px_#CCFF00]" 
+                        initial={{ width: "0%" }}
+                        animate={{ width: `${((currentFileIndex + 1) / totalFiles) * 100}%` }}
+                        transition={{ duration: 0.5 }}
+                    />
                 </div>
 
-                {/* CURRENT FILE STATUS */}
-                <div className="bg-matrix/10 p-3 border-l-2 border-matrix">
-                    <p className="text-[10px] text-matrix/60 uppercase tracking-widest mb-1">Target_File</p>
-                    <p className="text-sm font-mono text-white truncate">{currentFileName}</p>
+                {/* CURRENT TARGET STATUS */}
+                <div className="bg-surface-container-lowest p-4 border-l-4 border-kinetik-lime relative z-10">
+                    <div className="flex items-center gap-2 mb-1">
+                        <Target className="w-3 h-3 text-kinetik-lime" />
+                        <p className="text-[9px] text-on-surface-variant uppercase tracking-widest font-bold">Target_Payload</p>
+                    </div>
+                    <p className="text-sm font-mono text-on-surface truncate">{currentFileName}</p>
                 </div>
 
                 {/* THE AD - PROCESSING TAX */}
-                <div className="min-h-[250px] bg-black border border-matrix/30 flex flex-col justify-center relative overflow-hidden">
-                    {/* Scanline overlay for the ad container */}
-                    <div className="absolute inset-0 pointer-events-none z-20 bg-[linear-gradient(rgba(0,0,0,0)_50%,rgba(0,0,0,0.2)_50%)] bg-[length:100%_4px]" />
+                <div className="min-h-[280px] bg-surface-container-lowest border border-outline-variant/30 flex flex-col justify-center relative overflow-hidden z-10">
+                    <div className="absolute top-0 left-0 w-full bg-surface-container-high px-2 py-1 border-b border-outline-variant/20">
+                        <span className="text-[8px] text-on-surface-variant font-black uppercase tracking-widest">Validating_Sponsor_Handshake</span>
+                    </div>
                     <AdBanner key="processing-ad" refreshInterval={30} />
                 </div>
 
                 {/* ABORT BUTTON */}
                 <button
                     onClick={onAbort}
-                    className="self-center mt-4 text-xs font-bold text-red-500/50 hover:text-red-500 uppercase tracking-widest transition-colors flex items-center gap-2"
+                    className="self-center mt-2 text-[10px] font-black text-on-surface-variant/40 hover:text-error uppercase tracking-[0.4em] transition-all flex items-center gap-2 relative z-10"
                 >
                     <XCircle className="w-4 h-4" />
-                    Abort Sequence
+                    Terminate_Sequence
                 </button>
             </div>
         </div>

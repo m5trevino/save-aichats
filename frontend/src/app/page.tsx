@@ -5,14 +5,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Upload, Zap, Download, RefreshCcw,
   ShieldAlert, CheckCircle2, Terminal,
-  Layers, Lock, Unlock, ArrowRight, FileJson
+  Layers, Lock, Unlock, ArrowRight, FileJson,
+  Brain, Cpu, Activity, ShieldCheck, ChevronLeft, ChevronRight, Menu
 } from 'lucide-react';
 import axios from 'axios';
 import Script from 'next/script';
-import { SecurityBanner } from '@/components/SecurityBanner';
 import { TruncatedText } from '@/components/TruncatedText';
 import { ConversationDisplay } from '@/components/ConversationDisplay';
 import { AdBanner } from '@/components/AdBanner';
+import { ProcessingGateModal } from '@/components/ProcessingGateModal';
+import { useProcessingTime } from '@/hooks/useProcessingTime';
 import { Message } from '@/types';
 
 // --- TYPES ---
@@ -39,28 +41,6 @@ const DEFAULT_PERSONAS: Persona[] = [
   { id: 'forensic', name: 'FORENSIC_AUDITOR', instructions: 'Highlight security vulnerabilities, logic gaps, and edge cases.' }
 ];
 
-import { ProcessingGateModal } from '@/components/ProcessingGateModal';
-import { useProcessingTime } from '@/hooks/useProcessingTime';
-
-// GHOST TERMINAL (PORTED FROM PERSONAL EDITION)
-const GhostTerminal = ({ telemetry }: { telemetry: any[] }) => (
-  <div className="absolute inset-0 pointer-events-none opacity-[0.3] overflow-hidden z-0 select-none flex flex-col justify-end p-10">
-    <div className="flex flex-col-reverse gap-2">
-      {telemetry.slice(-20).map((log, i) => (
-        <motion.div
-          key={i}
-          initial={{ opacity: 0, x: -50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-matrix whitespace-nowrap font-bold tracking-widest uppercase text-4xl leading-relaxed opacity-60"
-        >
-          {log.msg.replace(/\[.*?\]/g, '').replace(/[\W_]+/g, ' ').trim()}
-        </motion.div>
-      ))}
-    </div>
-  </div>
-);
-
 export default function CommandDeck() {
   const [mounted, setMounted] = useState(false);
   const [phase, setPhase] = useState<Phase>('BREACH');
@@ -80,47 +60,18 @@ export default function CommandDeck() {
   const [refinedMessages, setRefinedMessages] = useState<Message[]>([]);
   const [startIndex, setStartIndex] = useState(0);
   const [tetherError, setTetherError] = useState<string | null>(null);
-  const [showAdGate, setShowAdGate] = useState(false);
   const [personality, setPersonality] = useState<'SIPHON' | 'TOLL'>('TOLL');
-  const [mountedTime, setMountedTime] = useState("");
   const [batchRanges, setBatchRanges] = useState<{ start: number, end: number }[]>([]);
-
   const [batchProgress, setBatchProgress] = useState<('IDLE' | 'PROCESSING' | 'COMPLETE')[]>(Array(20).fill('IDLE'));
-  const [processedFileNames, setProcessedFileNames] = useState<string[]>(Array(20).fill(""));
   const [batchNames, setBatchNames] = useState<string[]>(Array(20).fill("AWAITING_TAG..."));
-
-  const [adModalOpen, setAdModalOpen] = useState(false);
   const [processingGateOpen, setProcessingGateOpen] = useState(false);
-  const [uplinkKey, setUplinkKey] = useState(0);
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [hasVerifiedOnce, setHasVerifiedOnce] = useState(false);
-
-  // THE HUSTLE: Active Engagement Logic
-  const verifyUplink = () => {
-    setIsVerifying(true);
-    // Refresh the ad
-    setUplinkKey(prev => prev + 1);
-
-    setTimeout(() => {
-      setIsVerifying(false);
-      setHasVerifiedOnce(true);
-      // Optional: Play a sound or show success toast
-    }, 1500);
-  };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  // Calculate processing time based on file count
-  const processingTime = useProcessingTime(fileList.length);
-  const abortControllerRef = useRef<AbortController | null>(null);
   const logContainerRef = useRef<HTMLDivElement>(null);
-
-  // Use a state for API_BASE to avoid hydration mismatch
   const [apiBase, setApiBase] = useState("");
 
   useEffect(() => {
     setMounted(true);
-    setMountedTime(new Date().toISOString());
     const base = process.env.NEXT_PUBLIC_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:8000' : 'https://save-aichats-backend.onrender.com');
     setApiBase(base);
   }, []);
@@ -142,6 +93,7 @@ export default function CommandDeck() {
   }, [apiBase]);
 
   // --- TETHERING: REVENUE ENFORCEMENT ---
+  const abortControllerRef = useRef<AbortController | null>(null);
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden' && isProcessing && !isSiphon) {
@@ -158,8 +110,6 @@ export default function CommandDeck() {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [isProcessing, isSiphon]);
 
-
-
   const handleAbort = () => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -170,143 +120,74 @@ export default function CommandDeck() {
     }
   };
 
-  // --- SCROLL LOGS ---
-  useEffect(() => {
-    if (logContainerRef.current) {
-      logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
-    }
-  }, [telemetry]);
-
-  // --- HANDLERS ---
   const addTelemetry = (msg: string, type: 'info' | 'warn' | 'success' = 'info') => {
     setTelemetry(prev => [...prev, { msg, type }]);
   };
 
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
   const updateBatchInfo = (totalCount: number, names: string[] = []) => {
-    try {
-      const ranges = [];
-      const extractedNames: string[] = [...names];
-
-      for (let i = 0; i < Math.min(totalCount, 500); i += 20) {
-        ranges.push({ start: i, end: Math.min(i + 20, totalCount) });
-      }
-
-      // Fill rest with empty if < 20
-      while (extractedNames.length < 20) extractedNames.push("");
-
-      setBatchNames(extractedNames.slice(0, 20));
-      setBatchRanges(ranges);
-      setStartIndex(0);
-    } catch (e) {
-      setBatchRanges([{ start: 0, end: 20 }]);
-      setBatchNames(Array(20).fill("BINARY_STREAM"));
+    const ranges = [];
+    for (let i = 0; i < Math.min(totalCount, 500); i += 20) {
+      ranges.push({ start: i, end: Math.min(i + 20, totalCount) });
     }
+    const extractedNames = [...names];
+    while (extractedNames.length < 20) extractedNames.push("");
+    setBatchNames(extractedNames.slice(0, 20));
+    setBatchRanges(ranges);
+    setStartIndex(0);
   };
 
   const onDrop = useCallback(async (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    e.stopPropagation();
     const droppedFiles = Array.from(e.dataTransfer.files);
-
     if (droppedFiles.length > 0) {
-      setFile(droppedFiles[0]);
-      setFileList(droppedFiles);
-
-      // AGGREGATE COUNT LOGIC
-      let totalChats = 0;
-      let allNames: string[] = [];
-
-      for (const f of droppedFiles) {
-        try {
-          const text = await f.text();
-          if (droppedFiles.length === 1) setFileContent(text); // Only show text if single file
-          const data = JSON.parse(text);
-          if (Array.isArray(data)) {
-            totalChats += data.length;
-            data.forEach((c: any) => allNames.push(c.title || c.name || "Chat"));
-          } else if (data.chunkedPrompt) {
-            totalChats += 1;
-            allNames.push(f.name.replace('.json', '') || "Gemini Chat");
-          }
-        } catch (e) { console.error("Parse error on drop", e); }
-      }
-
-      updateBatchInfo(totalChats, allNames);
-
-      if ((window as any).show_monetag_vignette && !isSiphon) {
-        (window as any).show_monetag_vignette();
-      }
-
-      // ENTRY FEE LOGIC
-      if (!isSiphon) {
-        // We delay phase transition until they clear the Entry Ad
-        // We actually want to show the EntryAdModal here or ensure FileUpload triggers it.
-        // Since FileUpload handles the trigger, we just ensure state is ready.
-      } else {
-        setPhase('CALIBRATION');
-      }
+      processFiles(droppedFiles);
     }
   }, [isSiphon]);
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = e.target.files ? Array.from(e.target.files) : [];
     if (selectedFiles.length > 0) {
-      setFile(selectedFiles[0]);
-      setFileList(selectedFiles);
-
-      // AGGREGATE COUNT LOGIC
-      let totalChats = 0;
-      let allNames: string[] = [];
-
-      for (const f of selectedFiles) {
-        try {
-          const text = await f.text();
-          if (selectedFiles.length === 1) setFileContent(text);
-          const data = JSON.parse(text);
-          if (Array.isArray(data)) {
-            totalChats += data.length;
-            data.forEach((c: any) => allNames.push(c.title || c.name || "Chat"));
-          } else if (data.chunkedPrompt) {
-            totalChats += 1;
-            allNames.push(f.name.replace('.json', '') || "Gemini Chat");
-          }
-        } catch (e) { console.error("Parse error on select", e); }
-      }
-
-      updateBatchInfo(totalChats, allNames);
-
-      // THE HUSTLE: Entry Interstitial
-      if ((window as any).show_monetag_vignette && !isSiphon) {
-        (window as any).show_monetag_vignette();
-      }
-
-      setPhase('CALIBRATION');
+      processFiles(selectedFiles);
     }
+  };
+
+  const processFiles = async (files: File[]) => {
+    setFile(files[0]);
+    setFileList(files);
+    let totalChats = 0;
+    let allNames: string[] = [];
+    for (const f of files) {
+      try {
+        const text = await f.text();
+        if (files.length === 1) setFileContent(text);
+        const data = JSON.parse(text);
+        if (Array.isArray(data)) {
+          totalChats += data.length;
+          data.forEach((c: any) => allNames.push(c.title || c.name || "Chat"));
+        } else if (data.chunkedPrompt) {
+          totalChats += 1;
+          allNames.push(f.name.replace('.json', '') || "Gemini Chat");
+        }
+      } catch (e) { console.error("Parse error", e); }
+    }
+    updateBatchInfo(totalChats, allNames);
+    if ((window as any).show_monetag_vignette && !isSiphon) {
+      (window as any).show_monetag_vignette();
+    }
+    setPhase('CALIBRATION');
   };
 
   const initiateStrike = async () => {
     if (!file || !apiBase) return;
-
-    // THE HUSTLE: Start-Processing Interstitial
     if ((window as any).show_monetag_vignette && !isSiphon) {
       (window as any).show_monetag_vignette();
     }
-
     setPhase('REFINERY');
     setIsProcessing(true);
     setTelemetry([]);
     setProgress(0);
     setTetherError(null);
-    setShowAdGate(!isSiphon);
-    setProcessingGateOpen(!isSiphon); // Open the ad gate modal
-
-
-    setProcessedFileNames(Array(20).fill(""));
+    setProcessingGateOpen(!isSiphon);
     setBatchProgress(prev => {
       const next = [...prev];
       next[0] = 'PROCESSING';
@@ -314,19 +195,12 @@ export default function CommandDeck() {
     });
 
     abortControllerRef.current = new AbortController();
-
     addTelemetry(isSiphon ? "[📡] UPLINK_ESTABLISHED..." : "[📡] ESTABLISHING_SECURE_UPLINK...");
     addTelemetry(isSiphon ? "[⚙️] PREPARING_ARCHIVAL_STREAM..." : "[⚙️] INITIALIZING_REFINERY_ENGINE...");
 
-    const baseName = file.name.replace(/\.[^/.]+$/, "");
-    const strikeOptions = { ...options, base_filename: baseName };
-
     const formData = new FormData();
-    // MULTI-FILE PAYLOAD
-    fileList.forEach((f) => {
-      formData.append('files', f);
-    });
-    formData.append('options_json', JSON.stringify(strikeOptions));
+    fileList.forEach(f => formData.append('files', f));
+    formData.append('options_json', JSON.stringify({ ...options, base_filename: file.name.replace(/\.[^/.]+$/, "") }));
     formData.append('start_index', startIndex.toString());
 
     try {
@@ -335,90 +209,54 @@ export default function CommandDeck() {
         body: formData,
         signal: abortControllerRef.current.signal
       });
-
       if (!response.ok) throw new Error(`STRIKE_FAILED: ${response.statusText}`);
-
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
       const allMessages: Message[] = [];
-
       if (reader) {
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
-
           buffer += decoder.decode(value, { stream: true });
           const lines = buffer.split('\n\n');
           buffer = lines.pop() || "";
-
           for (const line of lines) {
             if (line.startsWith('data: ')) {
               try {
                 const data = JSON.parse(line.slice(6));
                 if (data.status === 'start') {
-                  // FORCE UPDATE NAMES FROM BACKEND TO FIX BLANK LIST
-                  if (data.batch_names && Array.isArray(data.batch_names)) {
-                    const incomingNames = [...data.batch_names];
-                    // Pad if needed
-                    while (incomingNames.length < 20) incomingNames.push("");
-                    setBatchNames(incomingNames);
-                  }
+                  if (data.batch_names) setBatchNames(data.batch_names.concat(Array(20).fill("")).slice(0, 20));
                   addTelemetry(isSiphon ? `[📡] EXTRACTION_STARTED: ${data.total} ASSETS` : `[📡] REFINERY_STRIKE_CONFIRMED: ${data.total} TARGETS_LOCKED`, "success");
                 } else if (data.status === 'welded') {
-                  const msg = isSiphon ? `PROCESSED: ${data.name.toUpperCase()}` : `WELDED: [${data.name.toUpperCase()}] // MSGS: ${data.msg_count}`;
-                  addTelemetry(msg, "success");
+                  addTelemetry(isSiphon ? `PROCESSED: ${data.name.toUpperCase()}` : `WELDED: [${data.name.toUpperCase()}] // MSGS: ${data.msg_count}`, "success");
                   allMessages.push(...data.messages);
                   setRefinedMessages([...allMessages]);
                   const currentProgress = Math.round((data.index / data.total) * 100);
                   setProgress(currentProgress);
-
-                  // THE HUSTLE: Mid-Point Interstitial (Hijack at 50%)
-                  if (currentProgress === 50 && (window as any).show_monetag_vignette && !isSiphon) {
-                    (window as any).show_monetag_vignette();
-                  }
-
                   setBatchProgress(prev => {
                     const next = [...prev];
                     const idx = data.index - 1;
                     if (idx >= 0 && idx < 20) {
                       next[idx] = 'COMPLETE';
-                      setProcessedFileNames(prevNames => {
-                        const nextNames = [...prevNames];
-                        nextNames[idx] = data.name;
-                        return nextNames;
-                      });
-                      if (idx + 1 < 20) {
-                        next[idx + 1] = 'PROCESSING';
-                        next[idx + 1] = 'PROCESSING';
-                      }
+                      if (idx + 1 < 20) next[idx + 1] = 'PROCESSING';
                     }
                     return next;
                   });
-
                 } else if (data.status === 'complete') {
                   addTelemetry(isSiphon ? "[✔️] ARCHIVAL_COMPLETE" : "[✔️] REFINERY_STRIKE_SUCCESSFUL", "success");
-                  addTelemetry(isSiphon ? "[📦] ASSETS_PERSISTED_IN_VAULT" : "[📦] PAYLOAD_COMPRESSED_AND_DELIVERED", "success");
                   setProgress(100);
                   setBatchProgress(prev => prev.map(s => s === 'PROCESSING' ? 'COMPLETE' : s));
-                } else if (data.status === 'error') {
-                  addTelemetry(`[❌] REFINERY_MALFUNCTION: ${data.message.toUpperCase()}`, "warn");
-                  setIsProcessing(false);
                 }
-              } catch (e) {
-                console.error("Parse error:", e);
-                addTelemetry("[⚠️] FRAGMENTED_PACKET_DROPPED", "warn");
-              }
+              } catch (e) { console.error("Parse error", e); }
             }
           }
         }
       }
-
       setRefinedMessages(allMessages);
       setPhase('EXTRACTION');
       setIsProcessing(false);
-      setProcessingGateOpen(false); // Close the gate when done
-
+      setProcessingGateOpen(false);
     } catch (error: any) {
       if (error.name !== 'AbortError') {
         setIsProcessing(false);
@@ -430,25 +268,18 @@ export default function CommandDeck() {
 
   const executePayloadDownload = async () => {
     if (!file || !apiBase) return;
-
-    // THE HUSTLE: Exit Interstitial on Download
     if ((window as any).show_monetag_vignette && !isSiphon) {
       (window as any).show_monetag_vignette();
     }
-
-    addTelemetry("[🚀] INITIATING_FINAL_DOWNLOAD...");
-
-    // BRANDED FILENAME ENFORCEMENT
     const rawBase = file.name.replace(/\.[^/.]+$/, "").toLowerCase().replace(/[^a-z0-9.]/g, '.');
     const brandedName = `save-aichats.com-${rawBase}`;
-
     const formData = new FormData();
     fileList.forEach(f => formData.append('files', f));
     formData.append('options_json', JSON.stringify({ ...options, base_filename: brandedName }));
     formData.append('start_index', startIndex.toString());
     try {
-      const zipResponse = await axios.post(`${apiBase}/refine`, formData, { responseType: 'blob' });
-      const url = window.URL.createObjectURL(new Blob([zipResponse.data]));
+      const resp = await axios.post(`${apiBase}/refine`, formData, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([resp.data]));
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', isSiphon ? `refined_chat_export.zip` : `${brandedName}.zip`);
@@ -456,9 +287,7 @@ export default function CommandDeck() {
       link.click();
       document.body.removeChild(link);
       addTelemetry("[🏁] MISSION_COMPLETE", "success");
-    } catch (e) {
-      addTelemetry("[❌] DOWNLOAD_FAILED", "warn");
-    }
+    } catch (e) { addTelemetry("[❌] DOWNLOAD_FAILED", "warn"); }
   };
 
   const resetConsole = () => {
@@ -467,587 +296,349 @@ export default function CommandDeck() {
     setFileList([]);
     setFileContent("");
     setProgress(0);
+    setBatchProgress(Array(20).fill('IDLE'));
     addTelemetry(isSiphon ? "[🧹] CACHE_CLEARED" : "[🧹] MEMORY_PURGED");
-    setShowAdGate(false);
-    setProcessingGateOpen(false);
   };
 
-  if (!mounted) return <div className="min-h-screen bg-void" />;
+  if (!mounted) return <div className="min-h-screen bg-background" />;
 
   return (
-    <main className={`min-h-screen ${isSiphon ? 'bg-slate-950 text-slate-200' : 'bg-void text-matrix'} font-mono selection:bg-matrix selection:text-void relative overflow-hidden transition-colors duration-1000 flex flex-col items-center`}>
-      {!isSiphon && <div className="absolute inset-0 pointer-events-none z-50 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,118,0.06))] bg-[length:100%_2px,3px_100%] pointer-events-none opacity-10" />}
+    <div className="flex flex-col h-screen overflow-hidden">
+      {/* TopAppBar */}
+      <header className="flex justify-between items-center w-full px-6 h-16 bg-surface-container-lowest border-b-2 border-surface-bright sticky top-0 z-50">
+        <div className="flex items-center gap-8">
+          <h1 className="text-xl font-black text-kinetik-lime tracking-tighter font-headline">KINETIK_EXTRACTION</h1>
+          <nav className="hidden md:flex gap-6">
+            <button onClick={() => setPhase('BREACH')} className={`font-label uppercase tracking-widest text-sm transition-all duration-75 border-b-2 pb-1 ${phase === 'BREACH' ? 'text-kinetik-lime border-kinetik-lime' : 'text-slate-500 border-transparent hover:text-kinetik-lime'}`}>Engine</button>
+            <button onClick={() => setPhase('CALIBRATION')} className={`font-label uppercase tracking-widest text-sm transition-all duration-75 border-b-2 pb-1 ${phase === 'CALIBRATION' ? 'text-kinetik-lime border-kinetik-lime' : 'text-slate-500 border-transparent hover:text-kinetik-lime'}`}>Calibration</button>
+            <button className="font-label uppercase tracking-widest text-sm text-slate-500 border-transparent hover:text-kinetik-lime transition-all duration-75">Security</button>
+            <button className="font-label uppercase tracking-widest text-sm text-slate-500 border-transparent hover:text-kinetik-lime transition-all duration-75">Protocols</button>
+          </nav>
+        </div>
+        <div className="flex items-center gap-4">
+          <span className="font-mono text-[10px] text-on-surface-variant tracking-widest uppercase">System_Stable: 99.4%</span>
+          <div className="w-2 h-2 bg-kinetik-lime rounded-full animate-pulse glow-primary"></div>
+        </div>
+      </header>
 
-      <div className={`${(phase === 'REFINERY' || phase === 'EXTRACTION') ? 'w-full' : 'max-w-7xl'} w-full mx-auto px-4 py-12 relative z-10 transition-all duration-700`}>
-        <header className={`mb-12 flex flex-col ${(phase === 'REFINERY' || phase === 'EXTRACTION') ? 'lg:flex-row' : 'md:flex-row'} md:items-end justify-between gap-6 border-b border-matrix/20 pb-8`}>
-          <div className={`space-y-2 ${(phase === 'REFINERY' || phase === 'EXTRACTION') ? 'bg-void border-2 border-matrix/40 p-6 grow-0 shrink-0 min-w-[320px] mb-0' : ''}`}>
-            {!isSiphon && <div className="text-[10px] text-matrix/40 mb-2 tracking-[0.5em] animate-pulse">[ ESTABLISHED_CONNECTION: 0xFF129 ]</div>}
-            <h1 className={`text-5xl md:text-7xl font-black ${isSiphon ? 'text-blue-500' : 'text-matrix'} tracking-tighter glow-text italic`}>
-              {isSiphon ? 'RefineAI' : 'save-aichats.com'}
-            </h1>
-            <p className={`text-xs ${isSiphon ? 'text-slate-500' : 'text-matrix/60'} tracking-[0.3em] font-bold uppercase`}>
-              {isSiphon ? 'PROPRIETARY_LOG_PROCESSOR.v2' : 'OFFICIAL_LOG_REFINERY_AND_EXTRACTION_TOOL // THE_WASHHOUSE'}
-            </p>
+      <main className="flex flex-1 overflow-hidden">
+        {/* SideNavBar */}
+        <aside className="flex flex-col h-full w-64 bg-surface-container border-r border-surface-bright overflow-hidden">
+          {/* PAYLOAD_DROP ZONE */}
+          <div 
+            onClick={() => fileInputRef.current?.click()}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={onDrop}
+            className="p-4 border-b border-surface-bright bg-surface-container-low group cursor-pointer"
+          >
+            <div className={`border-2 border-dashed p-4 flex flex-col items-center justify-center gap-2 transition-colors ${file ? 'border-kinetik-lime bg-kinetik-lime/5' : 'border-outline-variant group-hover:border-primary-fixed'}`}>
+              <Terminal className={`w-5 h-5 ${file ? 'text-kinetik-lime' : 'text-on-surface-variant'}`} />
+              <span className={`font-mono text-[10px] font-bold ${file ? 'text-kinetik-lime' : 'text-on-surface-variant'}`}>
+                {file ? 'PAYLOAD_LOCKED' : 'PAYLOAD_DROP'}
+              </span>
+              <span className="font-mono text-[8px] text-on-surface-variant uppercase tracking-tighter">
+                {file ? file.name : 'DRAG_AND_DROP_ZONE'}
+              </span>
+            </div>
+            <button 
+              onClick={(e) => { e.stopPropagation(); initiateStrike(); }}
+              disabled={!file || isProcessing}
+              className={`w-full mt-3 py-2 font-mono text-[10px] font-bold transition-all ${file && !isProcessing ? 'bg-kinetik-lime text-surface-container-lowest hover:scale-[0.98]' : 'bg-surface-bright text-on-surface-variant opacity-50 cursor-not-allowed'}`}
+            >
+              INITIATE_STRIKE
+            </button>
           </div>
 
-          {(phase === 'REFINERY' || phase === 'EXTRACTION') ? (
-            <div className="flex-grow flex items-center justify-center border-2 border-matrix/40 bg-void p-4">
-              <div className="scale-90 md:scale-110">
-                <AdBanner />
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center gap-6">
-              <SecurityBanner />
-              <div className={`h-12 w-[1px] ${isSiphon ? 'bg-slate-800' : 'bg-matrix/20'}`} />
-              <div className="text-right">
-                <div className={`text-[10px] ${isSiphon ? 'text-slate-500' : 'text-matrix/40'} tracking-widest font-black mb-1`}>{isSiphon ? 'SYSTEM_UPLINK' : 'SYSTEM_NODE'}</div>
-                <div className={`text-sm ${isSiphon ? 'text-blue-500' : 'text-matrix'} font-black tabular-nums`}>{isSiphon ? 'STABLE' : 'VOID_ALPHA_0.1'}</div>
-              </div>
-            </div>
-          )}
-        </header>
-
-        <div className={`w-full ${(phase === 'REFINERY' || phase === 'EXTRACTION') ? '' : 'max-w-7xl mx-auto'} ${isSiphon ? 'bg-slate-900/40 border-slate-800' : 'bg-void/40 border-matrix/10'} border backdrop-blur-xl rounded-sm shadow-2xl overflow-hidden relative`}>
-          <AnimatePresence mode="wait">
-            {phase === 'BREACH' && (
-              <motion.div key="breach" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-12">
-                <div className="flex items-center gap-4 mb-8">
-                  <Terminal className={`w-8 h-8 ${isSiphon ? 'text-blue-500' : 'text-matrix'}`} />
-                  <div>
-                    <h2 className={`text-2xl font-black ${isSiphon ? 'text-slate-100' : 'text-matrix'} tracking-tighter uppercase`}>{isSiphon ? 'UPLINK_PROTOCOL' : 'BREACH_INITIALIZED'}</h2>
-                    <p className={`text-xs ${isSiphon ? 'text-slate-500' : 'text-matrix/40'} font-bold uppercase tracking-widest`}>{isSiphon ? 'Awaiting source file...' : 'AWAITING_JSON_PAYLOAD...'}</p>
-                  </div>
-                </div>
-
-                <div
-                  onClick={() => fileInputRef.current?.click()} onDragOver={handleDragOver} onDrop={onDrop}
-                  className={`w-full h-[400px] border-2 border-dashed ${isSiphon ? 'border-slate-800 bg-slate-950/50 hover:border-blue-500/50' : 'border-matrix/20 bg-matrix/5 hover:border-matrix/40'} rounded-none transition-all cursor-pointer group flex flex-col items-center justify-center gap-6 shadow-inner mb-12`}
+          {/* LOG ENTRIES */}
+          <div className="flex-1 overflow-y-auto scrollbar-hide py-2">
+            <div className="space-y-0.5">
+              {batchNames.map((name, i) => (
+                <div 
+                  key={i} 
+                  className={`px-4 py-1.5 flex items-center gap-3 font-mono text-[10px] leading-tight transition-all duration-75 cursor-pointer
+                    ${batchProgress[i] === 'COMPLETE' ? 'text-kinetik-lime' : batchProgress[i] === 'PROCESSING' ? 'bg-kinetik-lime text-surface-container-lowest border-l-4 border-kinetik-lime font-bold' : 'text-slate-400 hover:text-kinetik-lime hover:bg-surface-bright'}
+                  `}
                 >
-                  <Upload className={`w-16 h-16 ${isSiphon ? 'text-blue-500' : 'text-matrix'} opacity-40 group-hover:opacity-100 transition-opacity`} />
-                  <div className="text-center">
-                    <p className={`text-2xl font-bold ${isSiphon ? 'text-slate-300' : 'text-matrix'}`}>{isSiphon ? 'Browse or drop log file' : 'DROP_JSON_OR_ZIP_PAYLOAD_HERE'}</p>
-                    <p className="text-xs text-slate-500 font-bold uppercase mt-4 tracking-widest">Validated Extraction for ChatGPT, Claude, Gemini</p>
-                    <p className="text-[10px] text-matrix/40 mt-2 uppercase tracking-[0.2em] group-hover:text-matrix/80 transition-colors">&gt;&gt; CLICK OR DRAG ANYWHERE IN ZONE &lt;&lt;</p>
-                  </div>
+                  <Terminal className="w-3.5 h-3.5" />
+                  <span className="truncate">{name || `LOG_IDX_${882 - i}`}</span>
                 </div>
+              ))}
+            </div>
+          </div>
 
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between border-b border-matrix/10 pb-2">
-                    <h3 className="text-[10px] font-black text-matrix/40 uppercase tracking-[0.4em]">SUPPORTED_ASSET_REGISTRY</h3>
-                    <div className="flex gap-4">
-                      <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-[#00FF41] rounded-full" /><span className="text-[8px] font-bold opacity-40">LIVE</span></div>
-                      <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-voltage rounded-full" /><span className="text-[8px] font-bold opacity-40">PIPELINE</span></div>
-                    </div>
-                  </div>
+          {/* Pagination */}
+          <div className="p-2 border-t border-surface-bright flex justify-between bg-surface-container-lowest">
+            <button className="flex items-center gap-1 text-kinetik-lime font-mono text-[9px] hover:bg-surface-bright px-2 py-1">
+              <ChevronLeft className="w-3 h-3" /> [1-20]
+            </button>
+            <button className="flex items-center gap-1 text-slate-400 font-mono text-[9px] hover:bg-surface-bright px-2 py-1">
+              <Menu className="w-3 h-3" /> [21-40]
+            </button>
+            <button className="flex items-center gap-1 text-slate-400 font-mono text-[9px] hover:bg-surface-bright px-2 py-1">
+              <ChevronRight className="w-3 h-3" /> [41-60]
+            </button>
+          </div>
+        </aside>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+        {/* Canvas Area */}
+        <section className="flex-1 overflow-y-auto p-8 relative scrollbar-hide bg-surface">
+          <div className="max-w-6xl mx-auto space-y-8 relative z-10">
+            <AnimatePresence mode="wait">
+              {phase === 'BREACH' && (
+                <motion.div key="breach" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                  <h2 className="font-mono text-[10px] text-on-surface-variant uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-kinetik-lime"></span> ACTIVE_AI_NODES
+                  </h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     {[
-                      { name: 'ChatGPT', status: 'LIVE' },
-                      { name: 'Claude', status: 'LIVE' },
-                      { name: 'Gemini', status: 'LIVE' },
-                      { name: 'Perplexity', status: 'DEV' },
-                      { name: 'DeepSeek', status: 'DEV' },
-                      { name: 'Grok', status: 'DEV' },
-                      { name: 'Mistral', status: 'DEV' },
-                      { name: 'Copilot', status: 'DEV' },
-                      { name: 'Poe', status: 'DEV' },
-                      { name: 'Kimi', status: 'DEV' }
-                    ].map((asset) => (
-                      <div key={asset.name} className={`p-3 border ${asset.status === 'LIVE' ? 'border-[#00FF41]/20 bg-[#00FF41]/5 text-[#00FF41]' : 'border-voltage/10 bg-voltage/5 text-voltage opacity-40'} rounded flex flex-col items-center gap-1 transition-all hover:scale-105`}>
-                        <span className="text-[10px] font-black tracking-tighter">{asset.name.toUpperCase()}</span>
-                        <span className="text-[7px] font-bold opacity-60 tracking-widest">{asset.status === 'LIVE' ? 'OPERATIONAL' : 'IN_PRODUCTION'}</span>
+                      { name: 'ChatGPT', version: 'v4.0.1', status: 'IDLE', icon: Brain },
+                      { name: 'Claude 3', version: 'v3.5.0', status: 'READY', icon: Cpu, active: true },
+                      { name: 'AI Studio', version: 'v2.1.9', status: 'SLEEP', icon: Activity },
+                      { name: 'Gemini CLI', version: 'v1.0.4', status: 'LISTENING', icon: Terminal }
+                    ].map((node) => (
+                      <div key={node.name} className={`bg-surface-container-low border p-5 group transition-all ${node.active ? 'border-kinetik-lime glow-primary' : 'border-outline-variant hover:border-primary-fixed'}`}>
+                        <div className="flex justify-between items-start mb-4">
+                          <node.icon className={`w-5 h-5 ${node.active ? 'text-kinetik-lime' : 'text-on-surface-variant group-hover:text-primary-fixed'}`} />
+                          <span className={`font-mono text-[10px] ${node.active ? 'text-kinetik-lime' : 'text-outline'}`}>{node.version}</span>
+                        </div>
+                        <h3 className="font-headline font-bold text-lg mb-1">{node.name}</h3>
+                        <p className={`font-mono text-[10px] uppercase ${node.active ? 'text-kinetik-lime' : 'text-on-surface-variant'}`}>STATUS: {node.status}</p>
                       </div>
                     ))}
                   </div>
-                </div>
-                <input type="file" multiple ref={fileInputRef} onChange={handleFileSelect} className="hidden" />
-              </motion.div>
-            )}
+                </motion.div>
+              )}
 
-            {phase === 'CALIBRATION' && (
-              <motion.div key="calibration" initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -20, opacity: 0 }} className="p-8 md:p-10 space-y-8">
-                <div className="flex items-center justify-between border-b border-matrix/10 pb-6">
-                  <div className="flex items-center gap-4">
-                    <Layers className={`w-8 h-8 ${isSiphon ? 'text-blue-500' : 'text-matrix'}`} />
-                    <h2 className={`text-2xl font-black tracking-tighter uppercase ${isSiphon ? 'text-slate-100' : 'text-matrix'}`}>{isSiphon ? 'PARAMETERS' : 'COMMAND_DECK'}</h2>
-                  </div>
-                  <button onClick={resetConsole} className="text-[10px] font-black underline uppercase opacity-40 hover:opacity-100">[ RESET ]</button>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-                  <div className="lg:col-span-4 space-y-6">
-                    <h3 className={`text-[9px] font-bold tracking-[0.4em] ${isSiphon ? 'text-blue-400' : 'text-voltage'}`}>OP_CONFIG</h3>
-                    <div className="space-y-3">
-                      {[{ id: 'include_user', label: 'USER_INPUT' }, { id: 'include_bot', label: 'BOT_RESPONSE' }, { id: 'include_thoughts', label: 'THOUGHTS' }].map((t) => (
-                        <button key={t.id} onClick={() => setRefineryOptions({ ...options, [t.id]: !(options as any)[t.id] })}
-                          className={`w-full flex items-center justify-between p-3 border transition-all ${(options as any)[t.id] ? (isSiphon ? 'border-blue-500/40 bg-blue-500/5 text-blue-400' : 'border-matrix/40 bg-matrix/5 text-matrix') : (isSiphon ? 'border-slate-800 text-slate-600' : 'border-matrix/5 text-matrix/20')}`}
-                        >
-                          <span className="text-[10px] font-bold tracking-widest">{t.label}</span>
-                          {(options as any)[t.id] ? <Unlock className="w-3 h-3" /> : <Lock className="w-3 h-3 opacity-20" />}
-                        </button>
-                      ))}
+              {phase === 'CALIBRATION' && (
+                <motion.div key="calibration" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className="bg-surface-container-lowest border-l-4 border-kinetik-lime p-6 relative overflow-hidden">
+                      <div className="scanline-overlay absolute inset-0 opacity-10"></div>
+                      <h2 className="font-mono text-[12px] text-kinetik-lime font-bold mb-6 flex items-center gap-2 uppercase">
+                        <Layers className="w-4 h-4" /> REFINERY_CONFIGURATION
+                      </h2>
+                      <div className="space-y-3 font-mono text-sm">
+                        {[{ id: 'include_user', label: 'USER_INPUT' }, { id: 'include_bot', label: 'BOT_RESPONSE' }, { id: 'include_thoughts', label: 'THOUGHTS' }].map((t) => (
+                          <div key={t.id} className="flex justify-between border-b border-outline-variant/20 pb-2 items-center">
+                            <span className="text-on-surface-variant text-xs">{t.label}:</span>
+                            <button 
+                              onClick={() => setRefineryOptions({ ...options, [t.id]: !(options as any)[t.id] })}
+                              className={`px-3 py-1 text-[10px] font-bold border transition-all ${(options as any)[t.id] ? 'bg-kinetik-lime text-surface-container-lowest border-kinetik-lime' : 'border-outline-variant text-on-surface-variant'}`}
+                            >
+                              {(options as any)[t.id] ? 'ENABLED' : 'DISABLED'}
+                            </button>
+                          </div>
+                        ))}
+                        <div className="flex justify-between items-center pt-2">
+                          <span className="text-on-surface-variant text-xs">OUTPUT_FORMAT:</span>
+                          <div className="flex gap-2">
+                            {['md', 'txt'].map((fmt) => (
+                              <button key={fmt} onClick={() => setRefineryOptions({ ...options, output_format: fmt as any })}
+                                className={`px-3 py-1 text-[10px] font-bold border transition-all ${options.output_format === fmt ? 'bg-kinetik-lime text-surface-container-lowest border-kinetik-lime' : 'border-outline-variant text-on-surface-variant'}`}
+                              >
+                                {fmt.toUpperCase()}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="lg:col-span-8 space-y-6">
-                    <div className="flex justify-between items-center mb-6">
-                      <h3 className={`text-[9px] font-bold tracking-[0.4em] ${isSiphon ? 'text-blue-400' : 'text-voltage'}`}>PERSONA_LOADOUT</h3>
-                      <div className="flex gap-2">
-                        {['md', 'txt'].map((fmt) => (
-                          <button key={fmt} onClick={() => setRefineryOptions({ ...options, output_format: fmt as any })}
-                            className={`px-4 py-1.5 border text-[9px] font-bold ${options.output_format === fmt ? (isSiphon ? 'bg-blue-600 border-blue-600' : 'bg-matrix text-void border-matrix') : (isSiphon ? 'border-slate-800 text-slate-500' : 'border-matrix/10 text-matrix/30')}`}
+                    <div className="bg-surface-container-lowest border border-outline-variant p-6">
+                      <h2 className="font-mono text-[12px] text-on-surface font-bold mb-4 flex items-center gap-2 uppercase">
+                        <Zap className="w-4 h-4 text-kinetik-lime" /> PERSONA_LOADOUT
+                      </h2>
+                      <div className="space-y-2">
+                        {DEFAULT_PERSONAS.map((p) => (
+                          <button key={p.id} onClick={() => setRefineryOptions({ ...options, persona_id: p.id })}
+                            className={`w-full text-left p-3 border transition-all ${options.persona_id === p.id ? 'border-kinetik-lime bg-kinetik-lime/5 text-kinetik-lime' : 'border-outline-variant text-on-surface-variant hover:bg-surface-bright'}`}
                           >
-                            .{fmt.toUpperCase()}
+                            <div className="flex justify-between text-[10px] font-bold mb-1">
+                              <span>{p.name}</span>
+                              {options.persona_id === p.id && <CheckCircle2 className="w-3 h-3" />}
+                            </div>
+                            <p className="text-[9px] opacity-60 leading-tight">{p.instructions}</p>
                           </button>
                         ))}
                       </div>
                     </div>
+                  </div>
 
-                    {!isSiphon && (
-                      <div className="space-y-4">
-                        <div className="flex justify-between items-center">
-                          <h3 className="text-[9px] font-bold tracking-[0.4em] text-voltage uppercase">BATCH_SELECTOR</h3>
-                          <span className="text-[8px] text-matrix/40 font-bold uppercase tracking-widest hidden md:inline">
-                            {file?.name.toLowerCase().includes('gemini')
-                              ? 'SINGLE_STREAM_DETECTED'
-                              : '20_TARGETS_PER_STRIKE'}
-                          </span>
-                        </div>
-
-                        {/* HEADER CONTEXT: Show filename and count logic */}
-                        {file && (
-                          <div className="mb-2 p-2 border border-dashed border-matrix/20 bg-matrix/5 text-[10px] font-bold text-matrix/80 uppercase tracking-widest">
-                            {file.name.toLowerCase().includes('gemini') ? (
-                              <>DETECTED: {file.name} // <span className="text-white">20 CHATS LOADED.</span> READY.</>
-                            ) : (
-                              <>DETECTED: {file.name} // TOTAL_CAPACITY: {batchRanges.length * 20}+ // <span className="text-voltage animate-pulse">PICK BATCH TO PROCESS</span></>
-                            )}
-                          </div>
-                        )}
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
-                          {batchRanges.map((range, idx) => (
-                            <button
-                              key={idx}
-                              onClick={() => setStartIndex(range.start)}
-                              className={`p-2 border text-[10px] font-black tracking-tighter transition-all ${startIndex === range.start ? 'bg-matrix text-void border-matrix' : 'bg-void border-matrix/10 text-matrix/40 hover:border-matrix/40 hover:text-matrix'}`}
-                            >
-                              {range.start + 1}-{range.end}
-                            </button>
-                          ))}
-                        </div>
-                        <div className="text-[8px] text-hazard font-bold uppercase tracking-widest italic opacity-60">
-                          * STRIKE RANGE LOCKED: {startIndex + 1} TO {startIndex + 20}
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="grid gap-2">
-                      {DEFAULT_PERSONAS.map((p) => (
-                        <button key={p.id} onClick={() => setRefineryOptions({ ...options, persona_id: p.id })}
-                          className={`text-left p-3 border transition-all ${options.persona_id === p.id ? (isSiphon ? 'border-blue-500/60 bg-blue-500/5 text-blue-400' : 'border-matrix/60 bg-matrix/[0.03] text-matrix') : (isSiphon ? 'border-slate-800 hover:border-slate-700 text-slate-600' : 'border-matrix/5 text-matrix/20')}`}
+                  <div className="bg-surface-container-low border border-outline-variant p-6">
+                    <h2 className="font-mono text-[12px] text-on-surface font-bold mb-4 flex items-center gap-2 uppercase">
+                      <Menu className="w-4 h-4 text-kinetik-lime" /> BATCH_SELECTION
+                    </h2>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-2">
+                      {batchRanges.map((range, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => setStartIndex(range.start)}
+                          className={`p-2 border font-mono text-[10px] font-black transition-all ${startIndex === range.start ? 'bg-kinetik-lime text-surface-container-lowest border-kinetik-lime' : 'border-outline-variant text-on-surface-variant hover:border-kinetik-lime'}`}
                         >
-                          <div className="flex justify-between text-[10px] font-bold mb-1">
-                            <span>{p.name}</span>
-                            {options.persona_id === p.id && <Zap className={`w-3 h-3 ${isSiphon ? 'text-blue-500' : 'text-voltage'} animate-pulse`} />}
-                          </div>
-                          <p className="text-[9px] opacity-60 leading-tight">{p.instructions}</p>
+                          [{range.start + 1}-{range.end}]
                         </button>
                       ))}
                     </div>
-
-                    <div className="mt-8">
-                      <button onClick={initiateStrike} disabled={isProcessing} className={`w-full py-4 font-black text-sm tracking-[0.4em] flex items-center justify-center gap-3 transition-all ${isSiphon ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-xl shadow-blue-900/40' : 'bg-void border-2 border-matrix/50 text-matrix hover:bg-matrix/10'}`}>
-                        {isSiphon ? 'EXECUTE_UPLINK' : 'CLEAN_SWEEP'} <ArrowRight className="w-4 h-4" />
-                      </button>
-                    </div>
                   </div>
-                </div>
 
-                <div className="pt-8 border-t border-matrix/5">
-                  <h3 className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.4em] mb-4">INGEST_PREVIEW</h3>
-                  <div className={`p-4 ${isSiphon ? 'bg-slate-950 border-slate-900' : 'bg-void border-matrix/5'} border`}><TruncatedText text={fileContent} limit={400} className="text-[10px] opacity-40 italic" /></div>
-                </div>
-              </motion.div>
-            )}
+                  <div className="flex justify-center pt-4">
+                    <button 
+                      onClick={initiateStrike}
+                      className="group relative bg-kinetik-lime text-surface-container-lowest px-12 py-4 font-headline font-black text-lg tracking-[0.3em] uppercase hover:scale-[1.02] active:scale-[0.98] transition-all glow-primary"
+                    >
+                      INITIATE_STRIKE
+                      <div className="absolute inset-0 border-2 border-kinetik-lime -m-1 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                    </button>
+                  </div>
+                </motion.div>
+              )}
 
-            {(phase === 'REFINERY' || phase === 'EXTRACTION') && (
-              <motion.div key="telemetry" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col lg:flex-row gap-4 relative min-h-[800px] w-full overflow-hidden bg-void">
-
-                {/* LEFT: FILE STACK + BATCH STATUS */}
-                <div className="w-full lg:w-[320px] shrink-0 flex flex-col gap-4">
-                  {/* FILE LIST */}
-                  <div className="flex-grow bg-void border-2 border-matrix/40 overflow-hidden flex flex-col">
-                    <div className="p-3 border-b-2 border-matrix/40 bg-matrix/5 flex justify-between items-center font-black text-[10px] tracking-[0.3em] text-matrix uppercase">
-                      <span>Forensic_Stack</span>
+              {phase === 'REFINERY' && (
+                <motion.div key="refinery" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+                  <div className="bg-surface-container-lowest border-2 border-kinetik-lime p-8 relative overflow-hidden min-h-[400px] flex flex-col">
+                    <div className="scanline-overlay absolute inset-0 opacity-20"></div>
+                    <div className="flex justify-between items-center mb-8 relative z-10">
+                      <div>
+                        <h2 className="text-2xl font-black text-kinetik-lime tracking-tighter uppercase font-headline italic">Refinery_Active</h2>
+                        <p className="text-[10px] text-on-surface-variant font-mono uppercase tracking-widest">Processing Data Stream // BATCH_{Math.floor(startIndex/20) + 1}</p>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-4xl font-black text-kinetik-lime tabular-nums font-mono">{progress}%</div>
+                        <div className="w-full bg-surface-bright h-1 mt-2">
+                          <motion.div className="bg-kinetik-lime h-full shadow-[0_0_10px_#CCFF00]" initial={{ width: 0 }} animate={{ width: `${progress}%` }} />
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex-grow overflow-y-auto scrollbar-hide bg-black/40">
-                      {batchNames.map((name, i) => (
-                        <div key={i} className={`relative p-3 border-b border-matrix/10 transition-colors ${batchProgress[i] === 'PROCESSING' ? 'bg-voltage/5' : batchProgress[i] === 'COMPLETE' ? 'bg-matrix/10' : ''}`}>
-                          {batchProgress[i] === 'PROCESSING' && (
-                            <motion.div
-                              initial={{ width: 0 }}
-                              animate={{ width: "100%" }}
-                              transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                              className="absolute inset-0 bg-voltage/10 z-0"
-                            />
-                          )}
-                          <div className="relative z-10 flex justify-between items-center">
-                            <div className="flex items-center gap-2">
-                              <span className={`text-[11px] font-black tabular-nums ${batchProgress[i] === 'COMPLETE' ? 'text-matrix' : batchProgress[i] === 'PROCESSING' ? 'text-voltage' : 'text-matrix/20'}`}>
-                                {String(i + 1).padStart(2, '0')}
-                              </span>
-                              <span className={`text-[10px] font-black uppercase tracking-tighter truncate max-w-[150px] ${batchProgress[i] === 'COMPLETE' ? 'text-matrix font-bold' : batchProgress[i] === 'PROCESSING' ? 'text-voltage animate-pulse' : 'text-matrix/40'}`}>
-                                {name}
-                              </span>
-                            </div>
-                            {batchProgress[i] === 'COMPLETE' && <CheckCircle2 className="w-3 h-3 text-matrix drop-shadow-[0_0_8px_rgba(0,255,65,0.4)]" />}
-                          </div>
+
+                    <div ref={logContainerRef} className="flex-1 overflow-y-auto font-mono text-sm space-y-2 relative z-10 scrollbar-hide max-h-[300px] border-t border-outline-variant/20 pt-4">
+                      {telemetry.map((log, i) => (
+                        <div key={i} className="flex gap-4 items-start py-1 border-l-2 border-transparent hover:border-kinetik-lime/40 pl-3 transition-all">
+                          <span className="text-on-surface-variant/30 text-[9px] pt-0.5">[{new Date().toLocaleTimeString([], { hour12: false })}]</span>
+                          <p className={`text-xs ${log.type === 'warn' ? 'text-error font-bold' : log.type === 'success' ? 'text-kinetik-lime font-bold' : 'text-on-surface-variant'}`}>
+                            {log.msg.toUpperCase()}
+                          </p>
                         </div>
                       ))}
-                    </div>
-                  </div>
-
-                  {/* BATCH STATUS BOX */}
-                  <div className="h-[180px] bg-void border-2 border-matrix/40 p-4 flex flex-col justify-between">
-                    <div className="flex justify-between items-start">
-                      <div className="flex flex-col">
-                        <span className="text-[10px] font-black text-matrix/40 tracking-[0.2em] uppercase mb-1">Batch_Progress</span>
-                        <span className="text-4xl font-black text-matrix tabular-nums tracking-tighter">
-                          {Math.floor((progress / 100) * 20)} / 20
-                        </span>
-                      </div>
-                      <div className="scale-[0.5] origin-top-right">
-                        <AnalogCycle progress={progress} />
-                      </div>
-                    </div>
-
-                    <AnimatePresence>
-                      {progress === 100 && (
-                        <motion.button
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          id="collect-payload-btn"
-                          onClick={async () => {
-                            if ((window as any).show_monetag_vignette) {
-                              (window as any).show_monetag_vignette();
-                            }
-                            setShowAdGate(false);
-                            executePayloadDownload();
-                          }}
-                          className="w-full py-3 bg-matrix text-void font-black text-xs tracking-[0.4em] uppercase hover:bg-[#00FF41] transition-all border-b-4 border-matrix/50 active:border-b-0 active:translate-y-1"
-                        >
-                          COLLECT_STRIKE
-                        </motion.button>
-                      )}
-                    </AnimatePresence>
-
-                    <div className="flex justify-between items-center text-[8px] font-black opacity-30 tracking-widest uppercase mt-2">
-                      <span>Status: {progress === 100 ? 'SUCCESS' : 'ACTIVE_REFINEMENT'}</span>
-                      <div className={`w-2 h-2 rounded-full ${progress === 100 ? 'bg-matrix' : 'bg-voltage animate-pulse'}`} />
-                    </div>
-                  </div>
-                </div>
-
-                {/* PROCESSING GATE MODAL (THE HOSTAGE SYSTEM) */}
-                <ProcessingGateModal
-                  isOpen={processingGateOpen}
-                  chatNames={batchNames}
-                  batchProgress={batchProgress}
-                  overallProgress={progress}
-                  isProcessing={isProcessing}
-                  onAbort={handleAbort}
-                  onDownload={executePayloadDownload}
-                />
-
-                {/* RIGHT: TERMINAL AREA + FOOTER AD */}
-                <div className="flex-grow flex flex-col gap-4 overflow-hidden relative">
-                  {showAdGate && !isSiphon && <GhostTerminal telemetry={telemetry} />}
-                  <AnimatePresence>
-                    {adModalOpen && (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="absolute inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-8"
-                      >
-                        <div className="bg-void border-2 border-matrix p-6 max-w-md w-full shadow-[0_0_50px_rgba(0,255,65,0.1)] flex flex-col items-center gap-6 relative overflow-hidden">
-                          {/* BG EFFECTS */}
-                          <div className="absolute inset-0 bg-matrix/5 pointer-events-none" />
-                          <div className="absolute top-0 left-0 w-full h-[2px] bg-matrix/20 animate-scanline" />
-
-                          <div className="z-10 text-center space-y-2">
-                            <h3 className="text-2xl font-black text-matrix uppercase tracking-widest drop-shadow-[0_0_10px_rgba(0,255,65,0.6)]">
-                              Security Warning
-                            </h3>
-                            <p className="text-[10px] text-matrix/60 font-bold uppercase tracking-[0.2em]">
-                              Unverified Uplink Detected
-                            </p>
-                          </div>
-
-                          {/* 300x250 VIDEO CONTAINER PLACEHOLDER */}
-                          <div className="w-[300px] h-[250px] bg-black border-2 border-matrix/30 shadow-inner relative flex items-center justify-center group overflow-hidden">
-                            {/* SCANLINES */}
-                            <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] z-20 pointer-events-none background-size-[100%_2px,3px_100%]" />
-
-                            {/* THE AD UNIT - Controlled by uplinkKey for forced refresh */}
-                            <div className="w-full h-full relative z-10">
-                              <AdBanner key={uplinkKey} refreshInterval={60} />
-                            </div>
-
-                            {/* CORNER MARKERS */}
-                            <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-matrix z-20" />
-                            <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-matrix z-20" />
-                            <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-matrix z-20" />
-                            <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-matrix z-20" />
-                          </div>
-
-                          <div className="z-10 flex flex-col items-center gap-4 w-full">
-                            <p className="text-[9px] text-matrix/40 uppercase tracking-widest text-center max-w-[280px]">
-                              Establish visual confirmation of sponsor transmission to enable secure tunnel.
-                            </p>
-
-                            <button
-                              onClick={verifyUplink}
-                              className="group relative px-8 py-4 bg-void border border-matrix text-matrix font-black text-xs tracking-[0.3em] uppercase transition-all hover:bg-matrix hover:text-void shadow-[0_0_20px_rgba(0,255,65,0.2)] hover:shadow-[0_0_40px_rgba(0,255,65,0.6)] active:scale-95"
-                            >
-                              <span className={isVerifying ? "animate-pulse" : ""}>
-                                {isVerifying ? "VERIFYING_SIGNAL..." : "VERIFY_UPLINK"}
-                              </span>
-                              {/* Button Glitch Effect */}
-                              <div className="absolute inset-0 bg-white/20 translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
-                            </button>
-
-                            {hasVerifiedOnce && (
-                              <button onClick={() => setAdModalOpen(false)} className="text-[9px] text-matrix/30 hover:text-matrix/80 uppercase tracking-widest underline decoration-dotted underline-offset-4">
-                                Dismiss Warning (Unsafe)
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-
-                  {showAdGate && !isSiphon ? (
-                    <div className="flex-grow flex flex-col gap-4 overflow-hidden">
-                      {/* THE TERMINAL */}
-                      <div className="flex-grow relative bg-black border-2 border-matrix/40 flex flex-col overflow-hidden">
-                        <div className="p-3 border-b border-matrix/10 bg-matrix/5 flex justify-between items-center z-20">
-                          <div className="text-[10px] text-matrix font-black uppercase tracking-[0.3em]">
-                            Terminal_Location
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="w-1.5 h-1.5 bg-matrix rounded-full animate-pulse shadow-[0_0_8px_#00FF41]" />
-                            <span className="text-[8px] font-bold text-matrix/40 uppercase tracking-widest">Live_Feed_Active</span>
-                          </div>
-                        </div>
-
-                        <div ref={logContainerRef} className="flex-grow overflow-y-auto font-mono text-base md:text-xl space-y-4 p-8 scrollbar-hide">
-                          {telemetry.slice(-30).map((log, i) => (
-                            <div key={i} className="flex gap-4 leading-relaxed border-l-4 border-transparent hover:border-matrix/40 pl-4 transition-all">
-                              <span className="text-matrix/20 text-[10px] whitespace-nowrap pt-1 bg-void/20 px-1.5 rounded font-black">[{new Date().toLocaleTimeString([], { hour12: false })}]</span>
-                              <p className={`${log.type === 'warn' ? 'text-hazard font-black' : log.type === 'success' ? 'text-[#00FF41] font-bold drop-shadow-[0_0_15px_rgba(0,255,65,0.5)]' : 'text-matrix/50'}`}>
-                                {log.msg.toUpperCase()}
-                              </p>
-                            </div>
-                          ))}
-                          {progress < 100 && (
-                            <div className="flex items-center gap-4 pt-4">
-                              <motion.div animate={{ opacity: [0, 1] }} transition={{ repeat: Infinity, duration: 0.5 }} className="w-4 h-6 bg-matrix opacity-40 shadow-[0_0_10px_rgba(0,255,65,0.4)]" />
-                              <span className="text-base text-matrix/20 animate-pulse font-black tracking-widest uppercase">Syncing...</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* SYSTEM SPONSOR (FOOTER AD) */}
-                      <div className="h-[200px] border-2 border-matrix/40 bg-void flex flex-col items-center justify-center p-4">
-                        <div className="text-[10px] font-black text-matrix/40 tracking-[0.3em] uppercase mb-4 w-full text-center border-b border-matrix/10 pb-2">
-                          System_Sponsor
-                        </div>
-                        <div className="flex-grow flex items-center justify-center w-full">
-                          <div className="scale-90 md:scale-110">
-                            <AdBanner />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex-grow flex flex-col gap-4 overflow-hidden">
-                      {/* Fallback display for Extraction phase when gate is closed */}
-                      {phase === 'EXTRACTION' && (
-                        <div className="flex-grow flex flex-col overflow-hidden bg-void border-2 border-matrix/40">
-                          <header className="p-4 border-b border-matrix/10 flex justify-between items-center text-[10px] font-black opacity-30 uppercase tracking-[0.3em] bg-matrix/5">
-                            <div className="flex items-center gap-2"><CheckCircle2 className="w-3 h-3 text-matrix" /> DATA_VAULT_OPEN</div>
-                            <div className="tabular-nums">STRIKE_SUCCESS // {startIndex + 1}-{startIndex + 20}</div>
-                          </header>
-                          <div className="flex-grow overflow-y-auto p-4 scrollbar-hide bg-black/20">
-                            <ConversationDisplay messages={refinedMessages} fileName={file?.name || "payload.json"} selectedPrompt={null} globalOptions={{ includeCode: true, includeThoughts: options.include_thoughts }} />
-                          </div>
-                          <div className="p-8 border-t border-matrix/20 bg-matrix/5 backdrop-blur-md">
-                            <div className="max-w-3xl mx-auto flex flex-col md:flex-row items-center justify-between gap-10">
-                              <div className="space-y-4 text-left">
-                                <h2 className="text-3xl font-black italic tracking-tighter text-matrix uppercase">Payload_Extracted</h2>
-                                <div className="bg-void border border-matrix/20 p-4 rounded shadow-inner">
-                                  <p className="text-[11px] text-matrix/60 font-bold uppercase tracking-widest leading-loose">
-                                    BATCH_SUCCESS: {startIndex + 1}-{startIndex + 20} // READY_FOR_EXPORT
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="flex flex-col gap-4 min-w-[300px]">
-                                <button onClick={executePayloadDownload}
-                                  className="py-6 bg-matrix text-void font-black text-xl tracking-[0.5em] uppercase hover:bg-[#00FF41] shadow-[0_0_30px_rgba(0,255,65,0.2)] transition-all">
-                                  <Download className="inline-block mr-3 w-8 h-8" /> DOWNLOAD EXPORT
-                                </button>
-                                <button onClick={resetConsole} className="text-[10px] font-black opacity-40 hover:opacity-100 uppercase tracking-[0.5em] underline underline-offset-8">INIT_NEW_MISSION</button>
-                              </div>
-                            </div>
-                          </div>
+                      {progress < 100 && (
+                        <div className="flex items-center gap-3 py-2">
+                          <motion.div animate={{ opacity: [0, 1] }} transition={{ repeat: Infinity, duration: 0.5 }} className="w-2 h-4 bg-kinetik-lime opacity-60" />
+                          <span className="text-xs text-kinetik-lime/40 animate-pulse font-black tracking-widest uppercase">Syncing...</span>
                         </div>
                       )}
                     </div>
-                  )}
-                </div>
+                  </div>
+                </motion.div>
+              )}
 
-                {tetherError && <div className="fixed inset-0 z-[200] bg-void/90 flex items-center justify-center p-10"><div className="bg-hazard/20 border-2 border-hazard/40 p-12 text-hazard font-black text-2xl text-center animate-shake uppercase shadow-[0_0_100px_rgba(255,36,0,0.3)]">{tetherError}</div></div>}
-              </motion.div>
+              {phase === 'EXTRACTION' && (
+                <motion.div key="extraction" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="space-y-6">
+                  <div className="bg-surface-container-lowest border-2 border-kinetik-lime overflow-hidden flex flex-col min-h-[600px]">
+                    <header className="p-4 border-b border-surface-bright flex justify-between items-center bg-surface-container-low relative overflow-hidden">
+                      <div className="scanline-overlay absolute inset-0 opacity-5"></div>
+                      <div className="flex items-center gap-3 relative z-10">
+                        <CheckCircle2 className="w-5 h-5 text-kinetik-lime" />
+                        <h2 className="text-lg font-black text-kinetik-lime tracking-tighter uppercase font-headline">EXTRACTION_SUCCESSFUL</h2>
+                      </div>
+                      <div className="font-mono text-[10px] text-on-surface-variant relative z-10">
+                        TARGETS: {startIndex + 1}-{startIndex + 20} // SHA256_VERIFIED
+                      </div>
+                    </header>
+                    
+                    <div className="flex-1 overflow-y-auto p-6 scrollbar-hide bg-surface-container-lowest">
+                      <ConversationDisplay 
+                        messages={refinedMessages} 
+                        fileName={file?.name || "payload.json"} 
+                        selectedPrompt={null} 
+                        globalOptions={{ includeCode: true, includeThoughts: options.include_thoughts }} 
+                      />
+                    </div>
+
+                    <div className="p-8 border-t border-surface-bright bg-surface-container-low">
+                      <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
+                        <div className="text-center md:text-left">
+                          <h3 className="text-3xl font-black italic tracking-tighter text-on-surface uppercase mb-2">Payload_Ready</h3>
+                          <p className="text-[10px] text-on-surface-variant font-mono uppercase tracking-[0.2em]">Batch secure and formatted for deployment.</p>
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-4">
+                          <button 
+                            onClick={executePayloadDownload}
+                            className="bg-kinetik-lime text-surface-container-lowest px-8 py-4 font-headline font-black text-lg tracking-widest uppercase hover:scale-[1.02] active:scale-[0.98] transition-all glow-primary flex items-center gap-3"
+                          >
+                            <Download className="w-6 h-6" /> DOWNLOAD
+                          </button>
+                          <button onClick={resetConsole} className="px-8 py-4 border border-outline-variant text-on-surface-variant font-mono text-xs font-bold uppercase hover:bg-surface-bright transition-all">
+                            NEW_MISSION
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* AD_GATED_STRIKE_AREA (Visual placeholder for the aesthetic) */}
+            {(phase === 'BREACH' || phase === 'CALIBRATION') && (
+              <div className="mt-12 border-t border-surface-bright pt-8 opacity-40 grayscale hover:opacity-100 hover:grayscale-0 transition-all duration-700">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-mono text-[9px] text-on-surface-variant uppercase tracking-[0.3em] flex items-center gap-2">
+                    <ShieldAlert className="w-3 h-3" /> AD_GATED_STRIKE_PROTOCOL
+                  </h3>
+                  <span className="bg-error-container text-error px-2 py-0.5 font-mono text-[8px] font-bold border border-error uppercase">Restricted</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="h-32 bg-surface-container-low border border-outline-variant flex items-center justify-center relative overflow-hidden">
+                    <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center">
+                      <span className="font-mono text-[10px] font-bold text-white/40 italic">STRIKE_PATH_BLOCKER: ON</span>
+                    </div>
+                  </div>
+                  <div className="h-32 bg-surface-container-low border border-outline-variant flex items-center justify-center relative overflow-hidden">
+                    <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center">
+                      <span className="font-mono text-[10px] font-bold text-white/40 italic">STRIKE_PATH_BLOCKER: ON</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             )}
-          </AnimatePresence>
-        </div>
-      </div>
-
-      {/* STICKY REVENUE BAR - FIXED TO BOTTOM */}
-      {!isSiphon && (
-        <div className="fixed bottom-0 left-0 w-full z-[100] bg-void/90 backdrop-blur-md border-t-2 border-matrix/40 p-1 flex flex-col items-center shadow-[0_-10px_50px_rgba(0,0,0,0.8)]">
-          <div className="w-full flex justify-between px-4 mb-0.5">
-            <span className="text-[7px] text-matrix/40 font-black uppercase tracking-[0.4em]">Proprietary_Ad_Stream // 0xCC12</span>
-            <span className="text-[7px] text-matrix/40 font-black uppercase tracking-[0.4em]">save-aichats.com // REVENUE_NODE</span>
           </div>
-          <div className="w-full max-w-4xl h-[60px] md:h-[90px] overflow-hidden flex items-center justify-center scale-90 md:scale-100 origin-bottom">
-            <AdBanner refreshInterval={25} />
-          </div>
-        </div>
-      )}
+        </section>
+      </main>
 
-      {/* FOOTER METADATA (NUDGED UP TO AVOID CLASH) */}
-      <footer className={`fixed bottom-[75px] md:bottom-[105px] w-full p-4 flex justify-between text-[8px] font-bold uppercase opacity-10 pointer-events-none z-0`}>
-        <div>ID: {isSiphon ? 'SILENT_SIPHON_2.1' : 'ASH_UNIT_0.1'}</div>
-        <div>{mountedTime} // STOCKTON_SEC</div>
+      {/* Bottom Status Bar */}
+      <footer className="h-8 bg-surface-container-lowest border-t border-surface-bright flex items-center px-6 justify-between text-[9px] font-mono text-outline-variant z-50">
+        <div className="flex gap-6">
+          <span className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-kinetik-lime"></span> KINETIK_CORE_STABLE</span>
+          <span className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-kinetik-lime"></span> ENCRYPTION_ACTIVE</span>
+        </div>
+        <div className="flex gap-4">
+          <span className="hidden sm:inline">MEM: 4.2GB/16.0GB</span>
+          <span className="hidden sm:inline">LATENCY: 12ms</span>
+          <span className="text-on-surface-variant uppercase">User: ADMIN_STRIKE_AUTH</span>
+        </div>
       </footer>
 
-      {
-        !isSiphon && (
-          <>
-            <Script
-              id="monetag-in-page-push"
-              strategy="lazyOnload"
-              src="https://nap5k.com/tag.min.js"
-              data-zone="10498610"
-              onError={(e) => console.warn("MONETAG_PUSH_LOAD_FAILED")}
-            />
-            <Script
-              id="monetag-vignette"
-              strategy="lazyOnload"
-              src="https://gizokraijaw.net/vignette.min.js"
-              data-zone="10498617"
-              onError={(e) => console.warn("MONETAG_VIGNETTE_LOAD_FAILED")}
-            />
-          </>
-        )
-      }
-    </main >
-  );
-}
+      {/* Hidden processing gate */}
+      <ProcessingGateModal
+        isOpen={processingGateOpen}
+        chatNames={batchNames}
+        batchProgress={batchProgress}
+        overallProgress={progress}
+        isProcessing={isProcessing}
+        onAbort={handleAbort}
+        onDownload={executePayloadDownload}
+      />
 
-function AnalogCycle({ progress }: { progress: number }) {
-  const radius = 45;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (progress / 100) * circumference;
+      {tetherError && <div className="fixed inset-0 z-[300] bg-black/90 backdrop-blur-md flex items-center justify-center p-10"><div className="bg-error-container border-2 border-error p-12 text-error font-black text-2xl text-center animate-pulse uppercase shadow-[0_0_100px_rgba(255,0,0,0.3)] font-headline">{tetherError}</div></div>}
 
-  return (
-    <div className="relative w-32 h-32 flex items-center justify-center">
-      <svg className="w-full h-full -rotate-90">
-        <circle
-          cx="64" cy="64" r={radius}
-          stroke="currentColor"
-          strokeWidth="2"
-          fill="transparent"
-          className="text-matrix/5"
-        />
-        <circle
-          cx="64" cy="64" r={radius}
-          stroke="currentColor"
-          strokeWidth="4"
-          fill="transparent"
-          strokeDasharray={circumference}
-          style={{ strokeDashoffset, transition: 'stroke-dashoffset 1s linear' }}
-          className="text-voltage shadow-[0_0_15px_#FFD700]"
-        />
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-[8px] font-black text-matrix/40 uppercase tracking-tighter">CYCLE</span>
-        <span className="text-lg font-black text-voltage tabular-nums">{Math.ceil((progress / 100) * 15)}S</span>
-      </div>
-    </div>
-  );
-}
-
-function TacticalIcon({ state, index, name, timer, isSiphon }: { state: any, index: number, name: string, timer: number | null, isSiphon: boolean }) {
-  return (
-    <div className="flex flex-col items-center gap-1 group">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className={`w-16 h-16 lg:w-20 lg:h-20 chasing-border border border-matrix/10 flex items-center justify-center shrink-0 transition-shadow duration-500 ${state === 'PROCESSING' ? (isSiphon ? 'chasing-border-active chasing-border-blue shadow-[0_0_30px_rgba(37,99,235,0.2)]' : 'chasing-border-active chasing-border-voltage shadow-[0_0_30px_rgba(255,215,0,0.3)]') : state === 'COMPLETE' ? (isSiphon ? 'chasing-border-active chasing-border-blue shadow-[0_0_30px_rgba(37,99,235,0.1)]' : 'chasing-border-active shadow-[0_0_30px_rgba(0,255,65,0.1)]') : 'opacity-10'}`}
-      >
-        <div className="inner-icon flex items-center justify-center relative bg-void overflow-hidden">
-          {state === 'PROCESSING' && (
-            <motion.div
-              animate={{ y: ["-100%", "100%"] }}
-              transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
-              className="absolute inset-0 bg-gradient-to-b from-transparent via-voltage/20 to-transparent z-10 pointer-events-none"
-            />
-          )}
-
-          <FileJson className={`w-8 h-8 lg:w-10 lg:h-10 ${state === 'COMPLETE' ? (isSiphon ? 'text-blue-500' : 'text-matrix') : state === 'PROCESSING' ? (isSiphon ? 'text-blue-400' : 'text-voltage') : (isSiphon ? 'text-slate-800' : 'text-matrix/20')}`} />
-
-          {state === 'COMPLETE' && (
-            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute inset-0 bg-matrix/20 flex items-center justify-center">
-              <CheckCircle2 className={`w-8 h-8 lg:w-10 lg:h-10 ${isSiphon ? 'text-blue-500 shadow-[0_0_15px_#2563eb]' : 'text-matrix shadow-[0_0_15px_#00FF41]'} rounded-full`} />
-            </motion.div>
-          )}
-
-          {state === 'PROCESSING' && timer !== null && (
-            <div className="absolute inset-x-2 bottom-2 h-1.5 bg-void border border-matrix/20 overflow-hidden z-20">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${((15 - timer) / 15) * 100}%` }}
-                className={`h-full ${isSiphon ? 'bg-blue-400' : 'bg-voltage shadow-[0_0_10px_#FFD700]'}`}
-              />
-            </div>
-          )}
-
-          {state === 'PROCESSING' && (
-            <div className="absolute top-1 left-2 text-[7px] font-black uppercase tracking-tighter text-voltage z-20 animate-pulse">WELDING...</div>
-          )}
-        </div>
-      </motion.div>
-
-      <div className="flex flex-col items-center justify-center overflow-hidden w-full max-w-[80px] lg:max-w-[100px]">
-        <span className={`text-[7px] font-black uppercase tracking-[0.2em] ${state === 'PROCESSING' ? (isSiphon ? 'text-blue-400' : 'text-voltage animate-pulse') : 'opacity-20'}`}>UT_{index + 1}</span>
-        {state === 'COMPLETE' && name && (
-          <motion.div
-            initial={{ y: 5, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            className={`mt-0.5 bg-matrix/5 border border-matrix/30 px-1 py-0.5 w-full text-center`}
-          >
-            <span className={`text-[8px] font-black ${isSiphon ? 'text-blue-300' : 'text-matrix'} truncate block tracking-tighter`}>
-              {name.toUpperCase()}
-            </span>
-          </motion.div>
-        )}
-      </div>
+      {/* Background Assets */}
+      <input type="file" multiple ref={fileInputRef} onChange={handleFileSelect} className="hidden" />
+      
+      {!isSiphon && (
+        <>
+          <Script id="monetag-in-page-push" strategy="lazyOnload" src="https://nap5k.com/tag.min.js" data-zone="10498610" />
+          <Script id="monetag-vignette" strategy="lazyOnload" src="https://gizokraijaw.net/vignette.min.js" data-zone="10498617" />
+        </>
+      )}
     </div>
   );
 }

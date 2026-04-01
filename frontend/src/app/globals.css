@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 :root {
-  --background: #050505;
-  --foreground: #00FF41;
+  --background: #131313;
+  --foreground: #e5e2e1;
 }
 
 body {
@@ -13,31 +13,26 @@ body {
   overflow-x: hidden;
 }
 
-/* CRT Scanline Effect */
-.scanline {
-  width: 100%;
-  height: 100px;
-  z-index: 10;
-  background: linear-gradient(0deg,
-      rgba(0, 0, 0, 0) 0%,
-      rgba(0, 255, 65, 0.05) 50%,
-      rgba(0, 0, 0, 0) 100%);
-  opacity: 0.1;
-  position: absolute;
-  bottom: 100%;
+/* Kinetik Scanline Effect */
+.scanline-overlay {
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+  background-size: 100% 2px, 3px 100%;
   pointer-events: none;
 }
 
-/* Background Grid */
-.matrix-grid {
-  background-image: linear-gradient(rgba(0, 255, 65, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 255, 65, 0.05) 1px, transparent 1px);
-  background-size: 40px 40px;
+/* Micro Grid Background */
+.micro-grid {
+  background-image: radial-gradient(circle, #444933 1px, transparent 1px);
+  background-size: 24px 24px;
 }
 
 /* Text Glow */
-.glow-text {
-  text-shadow: 0 0 5px #00FF41, 0 0 10px #00FF41;
+.glow-primary {
+  box-shadow: 0 0 15px rgba(204, 255, 0, 0.4);
+}
+
+.glow-text-lime {
+  text-shadow: 0 0 5px #CCFF00, 0 0 10px rgba(204, 255, 0, 0.4);
 }
 
 /* tactical scrollbar */
@@ -46,14 +41,18 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #050505;
+  background: #0e0e0e;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #00FF41;
+  background: #3a3939;
 }
 
-/* CHASING BORDERS */
+::-webkit-scrollbar-thumb:hover {
+  background: #CCFF00;
+}
+
+/* CHASING BORDERS (Keeping for active states) */
 .chasing-border {
   position: relative;
   overflow: hidden;
@@ -67,7 +66,7 @@ body {
   width: 200%;
   height: 200%;
   background: conic-gradient(transparent,
-      rgba(0, 255, 65, 0.3),
+      rgba(204, 255, 0, 0.3),
       transparent 30%);
   animation: rotate 2s linear infinite;
   z-index: 0;
@@ -81,28 +80,27 @@ body {
 
 .chasing-border-active::before {
   background: conic-gradient(transparent,
-      #00FF41,
+      #CCFF00,
       transparent 30%);
   animation: rotate 1s linear infinite;
-}
-
-.chasing-border-blue::before {
-  background: conic-gradient(transparent,
-      #2563eb,
-      transparent 30%);
-}
-
-.chasing-border-voltage::before {
-  background: conic-gradient(transparent,
-      #FFD700,
-      transparent 30%);
 }
 
 .inner-icon {
   position: relative;
   z-index: 1;
-  background: #050505;
+  background: #0e0e0e;
   width: calc(100% - 2px);
   height: calc(100% - 2px);
   margin: 1px;
+}
+
+/* Custom Utilities */
+@layer utilities {
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }

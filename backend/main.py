@@ -186,6 +186,33 @@ def handle_gemini(data: Dict[str, Any], options: RefineryOptions, raw: bool = Fa
             refiner.push_or_merge(role, text, is_thought)
     return refiner.get_refined_messages() if raw else refiner.get_refined_content()
 
+def handle_gemini_cli(session: Dict[str, Any], options: RefineryOptions, raw: bool = False) -> Any:
+    refiner = LogRefiner("Gemini_CLI", options)
+    for m in session.get("messages", []):
+        m_type = m.get("type")
+        content = m.get("content", "")
+        
+        # Extract text from content
+        text = ""
+        if isinstance(content, str):
+            text = content
+        elif isinstance(content, list):
+            text = "".join([item.get("text", "") for item in content if isinstance(item, dict)])
+            
+        role = "user" if m_type == "user" else "model"
+        
+        # Handle thoughts if present and requested
+        thoughts = m.get("thoughts", [])
+        if options.include_thoughts and thoughts:
+            thought_text = "\n".join([f"[{t.get('subject', 'THOUGHT')}] {t.get('description', '')}" for t in thoughts if isinstance(t, dict)])
+            if thought_text.strip():
+                refiner.push_or_merge(role, thought_text, is_thought=True)
+        
+        if text.strip():
+            refiner.push_or_merge(role, text)
+            
+    return refiner.get_refined_messages() if raw else refiner.get_refined_content()
+
 # --- ENDPOINTS ---
 
 @app.get("/config")
@@ -215,40 +242,36 @@ async def refine_stream(request: Request, files: List[UploadFile] = File(...), o
                     f.write(content)
 
             try:
-                # Try parsing as JSON (even if no extension)
-                # Robust decoding: replace invalid UTF-8 bytes to prevent crash
                 decoded_content = content.decode('utf-8', errors='replace')
-                if '' in decoded_content:
-                    print(f"WARN: Invalid UTF-8 detected in {file.filename}, characters replaced.")
                 raw_data = json.loads(decoded_content)
                 
                 # Identify & Aggregate
                 if isinstance(raw_data, list) and len(raw_data) > 0 and "mapping" in raw_data[0]:
-                    # ChatGPT: It's a list of conversations
                     all_chats.extend(raw_data)
                     brand_name = "ChatGPT"
                     brand_handler = handle_chatgpt
                 elif isinstance(raw_data, list) and len(raw_data) > 0 and "chat_messages" in raw_data[0]:
-                    # Claude: List of conversations
                     all_chats.extend(raw_data)
                     brand_name = "Claude"
                     brand_handler = handle_claude
                 elif isinstance(raw_data, dict) and "chunkedPrompt" in raw_data:
-                    # Gemini: Single conversation per file
-                    # We treat the file dict as one "chat item"
-                    # Add a title if missing for UI niceness
                     if "title" not in raw_data:
                         raw_data["title"] = file.filename or "Gemini Chat"
                     all_chats.append(raw_data)
                     brand_name = "Gemini"
                     brand_handler = handle_gemini
+                elif isinstance(raw_data, dict) and "sessionId" in raw_data and "messages" in raw_data:
+                    # Gemini CLI Session
+                    if "title" not in raw_data:
+                        raw_data["title"] = file.filename or f"Session_{raw_data.get('sessionId', 'unknown')[:8]}"
+                    all_chats.append(raw_data)
+                    brand_name = "Gemini_CLI"
+                    brand_handler = handle_gemini_cli
             except json.JSONDecodeError:
-                print(f"WARN: Failed to parse file {file.filename}")
                 continue
 
         if not all_chats:
-             # Yield error but don't crash connection immediately so UI can handle it
-            async def error_gen():
+             async def error_gen():
                 yield f"data: {json.dumps({'status': 'error', 'message': 'NO_VALID_PAYLOAD_FOUND'})}\n\n"
             return StreamingResponse(error_gen(), media_type="text/event-stream")
 
@@ -353,6 +376,12 @@ async def refine_payload(files: List[UploadFile] = File(...), options_json: str 
                     all_chats.append(raw_data)
                     brand_handler = handle_gemini
                     brand_name = "Gemini"
+                elif isinstance(raw_data, dict) and "sessionId" in raw_data and "messages" in raw_data:
+                    if "title" not in raw_data:
+                        raw_data["title"] = file.filename or f"Session_{raw_data.get('sessionId', 'unknown')[:8]}"
+                    all_chats.append(raw_data)
+                    brand_handler = handle_gemini_cli
+                    brand_name = "Gemini_CLI"
             except:
                  continue
 

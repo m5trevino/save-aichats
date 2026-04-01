@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>KINETIK_EXTRACTION // TERMINAL</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;600&amp;family=JetBrains+Mono:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "surface-container-low": "#1c1b1b",
+                "secondary-fixed-dim": "#b8c8da",
+                "secondary-fixed": "#d4e4f6",
+                "on-secondary": "#223240",
+                "on-surface-variant": "#c4c9ac",
+                "background": "#131313",
+                "on-surface": "#e5e2e1",
+                "secondary": "#b8c8da",
+                "surface-tint": "#abd600",
+                "tertiary-fixed-dim": "#bbc3ff",
+                "on-tertiary": "#112286",
+                "on-primary-container": "#556d00",
+                "inverse-surface": "#e5e2e1",
+                "on-tertiary-container": "#4d5cbc",
+                "tertiary": "#ffffff",
+                "surface-variant": "#353534",
+                "primary-fixed": "#c3f400",
+                "on-error-container": "#ffdad6",
+                "on-secondary-container": "#a7b7c8",
+                "primary-fixed-dim": "#abd600",
+                "on-error": "#690005",
+                "surface-container": "#201f1f",
+                "on-tertiary-fixed": "#000d5f",
+                "inverse-primary": "#506600",
+                "outline": "#8e9379",
+                "on-background": "#e5e2e1",
+                "surface-container-lowest": "#0e0e0e",
+                "tertiary-container": "#dfe0ff",
+                "surface-bright": "#3a3939",
+                "secondary-container": "#394857",
+                "surface-dim": "#131313",
+                "on-secondary-fixed": "#0d1d2a",
+                "primary-container": "#c3f400",
+                "outline-variant": "#444933",
+                "on-primary-fixed": "#161e00",
+                "on-primary": "#283500",
+                "on-secondary-fixed-variant": "#394857",
+                "primary": "#ffffff",
+                "inverse-on-surface": "#313030",
+                "tertiary-fixed": "#dfe0ff",
+                "surface-container-high": "#2a2a2a",
+                "on-tertiary-fixed-variant": "#2d3c9c",
+                "surface-container-highest": "#353534",
+                "on-primary-fixed-variant": "#3c4d00",
+                "surface": "#131313",
+                "error": "#ffb4ab",
+                "error-container": "#93000a"
+              },
+              fontFamily: {
+                "headline": ["Space Grotesk"],
+                "body": ["Inter"],
+                "label": ["Space Grotesk"],
+                "mono": ["JetBrains Mono"]
+              },
+              borderRadius: {"DEFAULT": "0px", "lg": "0px", "xl": "0px", "full": "9999px"},
+            },
+          },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .scanline-overlay {
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+        .micro-grid {
+            background-image: radial-gradient(circle, #444933 1px, transparent 1px);
+            background-size: 24px 24px;
+            opacity: 0.05;
+        }
+        .glow-primary {
+            box-shadow: 0 0 15px rgba(204, 255, 0, 0.4);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body overflow-hidden selection:bg-primary-fixed selection:text-on-primary-fixed">
+<div class="fixed inset-0 micro-grid pointer-events-none"></div>
+<!-- TopAppBar -->
+<header class="flex justify-between items-center w-full px-6 h-16 bg-[#0E0E0E] border-b-2 border-[#3A3939] sticky top-0 z-50">
+<div class="flex items-center gap-8">
+<h1 class="text-xl font-black text-[#CCFF00] tracking-tighter font-headline">KINETIK_EXTRACTION</h1>
+<nav class="hidden md:flex gap-6">
+<a class="font-['Space_Grotesk'] uppercase tracking-widest text-sm text-[#CCFF00] border-b-2 border-[#CCFF00] pb-1 hover:text-[#CCFF00] hover:bg-[#3A3939] transition-all duration-75" href="#">Engine</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-widest text-sm text-slate-500 font-mono hover:text-[#CCFF00] hover:bg-[#3A3939] transition-all duration-75" href="#">Logs</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-widest text-sm text-slate-500 font-mono hover:text-[#CCFF00] hover:bg-[#3A3939] transition-all duration-75" href="#">Security</a>
+<a class="font-['Space_Grotesk'] uppercase tracking-widest text-sm text-slate-500 font-mono hover:text-[#CCFF00] hover:bg-[#3A3939] transition-all duration-75" href="#">Protocols</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<span class="font-mono text-[10px] text-on-surface-variant tracking-widest">SYSTEM_STABLE: 99.4%</span>
+<div class="w-2 h-2 bg-[#CCFF00] rounded-full animate-pulse glow-primary"></div>
+</div>
+</header>
+<main class="flex h-[calc(100vh-4rem)]">
+<!-- SideNavBar -->
+<aside class="flex flex-col h-full w-64 bg-[#1A1A1A] border-r border-[#3A3939] overflow-hidden">
+<!-- PAYLOAD_DROP ZONE -->
+<div class="p-4 border-b border-[#3A3939] bg-surface-container-low group cursor-pointer">
+<div class="border-2 border-dashed border-outline-variant p-4 flex flex-col items-center justify-center gap-2 group-hover:border-primary-fixed transition-colors">
+<span class="material-symbols-outlined text-primary-fixed">terminal</span>
+<span class="font-mono text-[10px] font-bold text-[#CCFF00]">PAYLOAD_DROP</span>
+<span class="font-mono text-[8px] text-on-surface-variant uppercase tracking-tighter">DRAG_AND_DROP_ZONE</span>
+</div>
+<button class="w-full mt-3 py-2 bg-[#CCFF00] text-[#0E0E0E] font-mono text-[10px] font-bold hover:scale-[0.98] transition-transform">
+                    INITIATE_UPLOAD
+                </button>
+</div>
+<!-- LOG ENTRIES (20) -->
+<div class="flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide py-2">
+<div class="space-y-0.5">
+<!-- Active Item -->
+<div class="px-4 py-1.5 flex items-center gap-3 bg-[#CCFF00] text-[#0E0E0E] border-l-4 border-[#CCFF00] font-bold font-mono text-[10px] leading-tight cursor-pointer">
+<span class="material-symbols-outlined text-[14px]" data-icon="terminal">terminal</span>
+                        LOG_IDX_882
+                    </div>
+<!-- Inactive Items -->
+<div class="px-4 py-1.5 flex items-center gap-3 text-slate-400 hover:text-[#CCFF00] hover:bg-[#3A3939] font-mono text-[10px] leading-tight transition-all duration-75 cursor-pointer">
+<span class="material-symbols-outlined text-[14px]" data-icon="terminal">terminal</span>
+                        LOG_IDX_881
+                    </div>
+<div class="px-4 py-1.5 flex items-center gap-3 text-slate-400 hover:text-[#CCFF00] hover:bg-[#3A3939] font-mono text-[10px] leading-tight transition-all duration-75 cursor-pointer">
+<span class="material-symbols-outlined text-[14px]" data-icon="terminal">terminal</span>
+                        LOG_IDX_880
+                    </div>
+<!-- Repeated items for density -->
+<div class="px-4 py-1.5 flex items-center gap-3 text-slate-400 hover:text-[#CCFF00] hover:bg-[#3A3939] font-mono text-[10px] leading-tight cursor-pointer">
+<span class="material-symbols-outlined text-[14px]" data-icon="terminal">terminal</span>
+                        LOG_IDX_879
+                    </div>
+<div class="px-4 py-1.5 flex items-center gap-3 text-slate-400 hover:text-[#CCFF00] hover:bg-[#3A3939] font-mono text-[10px] leading-tight cursor-pointer">
+<span class="material-symbols-outlined text-[14px]" data-icon="terminal">terminal</span>
+                        LOG_IDX_878
+                    </div>
+<div class="px-4 py-1.5 flex items-center gap-3 text-slate-400 hover:text-[#CCFF00] hover:bg-[#3A3939] font-mono text-[10px] leading-tight cursor-pointer">
+<span class="material-symbols-outlined text-[14px]" data-icon="terminal">terminal</span>
+                        LOG_IDX_877
+                    </div>
+<div class="px-4 py-1.5 flex items-center gap-3 text-slate-400 hover:text-[#CCFF00] hover:bg-[#3A3939] font-mono text-[10px] leading-tight cursor-pointer">
+<span class="material-symbols-outlined text-[14px]" data-icon="terminal">terminal</span>
+                        LOG_IDX_876
+                    </div>
+<div class="px-4 py-1.5 flex items-center gap-3 text-slate-400 hover:text-[#CCFF00] hover:bg-[#3A3939] font-mono text-[10px] leading-tight cursor-pointer">
+<span class="material-symbols-outlined text-[14px]" data-icon="terminal">terminal</span>
+                        LOG_IDX_875
+                    </div>
+<div class="px-4 py-1.5 flex items-center gap-3 text-slate-400 hover:text-[#CCFF00] hover:bg-[#3A3939] font-mono text-[10px] leading-tight cursor-pointer">
+<span class="material-symbols-outlined text-[14px]" data-icon="terminal">terminal</span>
+                        LOG_IDX_874
+                    </div>
+<div class="px-4 py-1.5 flex items-center gap-3 text-slate-400 hover:text-[#CCFF00] hover:bg-[#3A3939] font-mono text-[10px] leading-tight cursor-pointer">
+<span class="material-symbols-outlined text-[14px]" data-icon="terminal">terminal</span>
+                        LOG_IDX_873
+                    </div>
+<div class="px-4 py-1.5 flex items-center gap-3 text-slate-400 hover:text-[#CCFF00] hover:bg-[#3A3939] font-mono text-[10px] leading-tight cursor-pointer">
+<span class="material-symbols-outlined text-[14px]" data-icon="terminal">terminal</span>
+                        LOG_IDX_872
+                    </div>
+<div class="px-4 py-1.5 flex items-center gap-3 text-slate-400 hover:text-[#CCFF00] hover:bg-[#3A3939] font-mono text-[10px] leading-tight cursor-pointer">
+<span class="material-symbols-outlined text-[14px]" data-icon="terminal">terminal</span>
+                        LOG_IDX_871
+                    </div>
+<div class="px-4 py-1.5 flex items-center gap-3 text-slate-400 hover:text-[#CCFF00] hover:bg-[#3A3939] font-mono text-[10px] leading-tight cursor-pointer">
+<span class="material-symbols-outlined text-[14px]" data-icon="terminal">terminal</span>
+                        LOG_IDX_870
+                    </div>
+<div class="px-4 py-1.5 flex items-center gap-3 text-slate-400 hover:text-[#CCFF00] hover:bg-[#3A3939] font-mono text-[10px] leading-tight cursor-pointer">
+<span class="material-symbols-outlined text-[14px]" data-icon="terminal">terminal</span>
+                        LOG_IDX_869
+                    </div>
+<div class="px-4 py-1.5 flex items-center gap-3 text-slate-400 hover:text-[#CCFF00] hover:bg-[#3A3939] font-mono text-[10px] leading-tight cursor-pointer">
+<span class="material-symbols-outlined text-[14px]" data-icon="terminal">terminal</span>
+                        LOG_IDX_868
+                    </div>
+<div class="px-4 py-1.5 flex items-center gap-3 text-slate-400 hover:text-[#CCFF00] hover:bg-[#3A3939] font-mono text-[10px] leading-tight cursor-pointer">
+<span class="material-symbols-outlined text-[14px]" data-icon="terminal">terminal</span>
+                        LOG_IDX_867
+                    </div>
+<div class="px-4 py-1.5 flex items-center gap-3 text-slate-400 hover:text-[#CCFF00] hover:bg-[#3A3939] font-mono text-[10px] leading-tight cursor-pointer">
+<span class="material-symbols-outlined text-[14px]" data-icon="terminal">terminal</span>
+                        LOG_IDX_866
+                    </div>
+<div class="px-4 py-1.5 flex items-center gap-3 text-slate-400 hover:text-[#CCFF00] hover:bg-[#3A3939] font-mono text-[10px] leading-tight cursor-pointer">
+<span class="material-symbols-outlined text-[14px]" data-icon="terminal">terminal</span>
+                        LOG_IDX_865
+                    </div>
+<div class="px-4 py-1.5 flex items-center gap-3 text-slate-400 hover:text-[#CCFF00] hover:bg-[#3A3939] font-mono text-[10px] leading-tight cursor-pointer">
+<span class="material-symbols-outlined text-[14px]" data-icon="terminal">terminal</span>
+                        LOG_IDX_864
+                    </div>
+<div class="px-4 py-1.5 flex items-center gap-3 text-slate-400 hover:text-[#CCFF00] hover:bg-[#3A3939] font-mono text-[10px] leading-tight cursor-pointer">
+<span class="material-symbols-outlined text-[14px]" data-icon="terminal">terminal</span>
+                        LOG_IDX_863
+                    </div>
+</div>
+</div>
+<!-- Footer Pagination -->
+<div class="p-2 border-t border-[#3A3939] flex justify-between bg-surface-container-lowest">
+<button class="flex items-center gap-1 text-[#CCFF00] font-mono text-[9px] hover:bg-[#3A3939] px-2 py-1">
+<span class="material-symbols-outlined text-[12px]">chevron_left</span>
+                    [1-20]
+                </button>
+<button class="flex items-center gap-1 text-slate-400 font-mono text-[9px] hover:bg-[#3A3939] px-2 py-1">
+<span class="material-symbols-outlined text-[12px]">drag_handle</span>
+                    [21-40]
+                </button>
+<button class="flex items-center gap-1 text-slate-400 font-mono text-[9px] hover:bg-[#3A3939] px-2 py-1">
+<span class="material-symbols-outlined text-[12px]">chevron_right</span>
+                    [41-60]
+                </button>
+</div>
+</aside>
+<!-- Canvas Area -->
+<section class="flex-1 overflow-y-auto p-8 relative">
+<div class="max-w-6xl mx-auto space-y-8">
+<!-- Section 1: Active AI Nodes -->
+<div>
+<h2 class="font-mono text-[10px] text-on-surface-variant uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+<span class="w-1.5 h-1.5 bg-[#CCFF00]"></span> ACTIVE_AI_NODES
+                    </h2>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+<!-- Node 1 -->
+<div class="bg-surface-container-low border border-outline-variant p-5 group hover:border-primary-fixed transition-all">
+<div class="flex justify-between items-start mb-4">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary-fixed">neurology</span>
+<span class="font-mono text-[10px] text-outline">v4.0.1</span>
+</div>
+<h3 class="font-headline font-bold text-lg mb-1">ChatGPT</h3>
+<p class="font-mono text-[10px] text-on-surface-variant uppercase">STATUS: IDLE</p>
+</div>
+<!-- Node 2: Highlighted Claude -->
+<div class="bg-surface-container-low border-2 border-[#CCFF00] p-5 relative overflow-hidden glow-primary">
+<div class="absolute top-0 right-0 bg-[#CCFF00] text-[#0E0E0E] px-2 py-0.5 font-mono text-[9px] font-bold">
+                                DETECTED
+                            </div>
+<div class="flex justify-between items-start mb-4">
+<span class="material-symbols-outlined text-[#CCFF00]">psychology</span>
+<span class="font-mono text-[10px] text-[#CCFF00]">v3.5.0</span>
+</div>
+<h3 class="font-headline font-bold text-lg mb-1 text-on-surface">Claude 3</h3>
+<p class="font-mono text-[10px] text-[#CCFF00] uppercase animate-pulse">STATUS: PROCESSING_STREAM</p>
+</div>
+<!-- Node 3 -->
+<div class="bg-surface-container-low border border-outline-variant p-5 group hover:border-primary-fixed transition-all">
+<div class="flex justify-between items-start mb-4">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary-fixed">code</span>
+<span class="font-mono text-[10px] text-outline">v2.1.9</span>
+</div>
+<h3 class="font-headline font-bold text-lg mb-1">AI Studio</h3>
+<p class="font-mono text-[10px] text-on-surface-variant uppercase">STATUS: SLEEP</p>
+</div>
+<!-- Node 4 -->
+<div class="bg-surface-container-low border border-outline-variant p-5 group hover:border-primary-fixed transition-all">
+<div class="flex justify-between items-start mb-4">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary-fixed">terminal</span>
+<span class="font-mono text-[10px] text-outline">v1.0.4</span>
+</div>
+<h3 class="font-headline font-bold text-lg mb-1">Gemini CLI</h3>
+<p class="font-mono text-[10px] text-on-surface-variant uppercase">STATUS: LISTENING</p>
+</div>
+</div>
+</div>
+<!-- Section 2: Data Readouts (Data Terminals) -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+<!-- CHAT_METADATA -->
+<div class="bg-surface-container-lowest border-l-4 border-primary-fixed p-6 relative overflow-hidden">
+<div class="scanline-overlay absolute inset-0 opacity-10"></div>
+<h2 class="font-mono text-[12px] text-primary-fixed font-bold mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">data_array</span> CHAT_METADATA
+                        </h2>
+<div class="space-y-3 font-mono text-sm">
+<div class="flex justify-between border-b border-outline-variant/20 pb-1">
+<span class="text-on-surface-variant">TOKEN_COUNT:</span>
+<span class="text-primary-fixed font-bold">14,282</span>
+</div>
+<div class="flex justify-between border-b border-outline-variant/20 pb-1">
+<span class="text-on-surface-variant">SOURCE_BOT:</span>
+<span class="text-on-surface">CLAUDE_3</span>
+</div>
+<div class="flex justify-between border-b border-outline-variant/20 pb-1">
+<span class="text-on-surface-variant">TIMESTAMP:</span>
+<span class="text-on-surface">2077.04.12</span>
+</div>
+<div class="flex justify-between">
+<span class="text-on-surface-variant">ENTROPY:</span>
+<span class="text-error font-bold uppercase">CRITICAL</span>
+</div>
+</div>
+</div>
+<!-- PROTOCOL_OVERVIEW -->
+<div class="bg-surface-container-lowest border border-outline-variant p-6">
+<h2 class="font-mono text-[12px] text-on-surface font-bold mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">security</span> PROTOCOL_OVERVIEW
+                        </h2>
+<div class="space-y-4">
+<p class="font-body text-sm text-on-surface-variant leading-relaxed">
+                                The humanization engine utilizes a <span class="text-primary-fixed font-mono text-xs">SYNTAX_RECONSTRUCTION</span> layer to mask algorithmic patterns. By injecting rhythmic variance and semantic noise, the output achieves a <span class="text-on-surface font-bold">0.99 SIMULATION_COEFFICIENT</span>.
+                            </p>
+<div class="flex gap-2">
+<span class="bg-surface-container-highest px-2 py-1 font-mono text-[9px] border border-outline-variant">RELIANCE_BYPASS: ON</span>
+<span class="bg-surface-container-highest px-2 py-1 font-mono text-[9px] border border-outline-variant">LINGUISTIC_DRIFT: 14%</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Section 3: The Ad-Gated Strike Area -->
+<div class="relative pt-12 pb-24">
+<!-- Urgent Badge -->
+<div class="absolute top-0 left-1/2 -translate-x-1/2 z-20 bg-error-container text-error px-4 py-1.5 border border-error font-mono text-[10px] font-black tracking-widest uppercase">
+                        [ URGENT ] CLOSE OR CLICK ADS TO ACCESS STRIKE PROTOCOL
+                    </div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto opacity-90">
+<!-- AD_STREAM_V01 -->
+<div class="relative bg-surface-container border border-[#3A3939]">
+<div class="p-2 border-b border-[#3A3939] flex justify-between items-center">
+<span class="font-mono text-[8px] text-outline">AD_STREAM_V01</span>
+<button class="material-symbols-outlined text-[14px] text-outline hover:text-error">close</button>
+</div>
+<div class="h-32 bg-surface-container-highest flex items-center justify-center relative overflow-hidden">
+<img class="w-full h-full object-cover grayscale opacity-50 hover:grayscale-0 transition-all duration-500" data-alt="vibrant abstract digital rendering of flowing neon data streams in cyan and magenta against a dark grid background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDk7h1BAVMOuN5dNR41ZiulscCYNF3GKLZWCIFRQ0jyuynDC25bTFDbjyIxPgh6yVTom8aPvHtxM35QJutX4HVjvagZeFlngI3XWc2MEH4nXpS6s7szsahPp9PtgrOSKcW26wH54_rwI4NJsYHWMXKAe_RJoJ4kZzWgI89vvyWF_O_QkNGkKh0c7vh-ioQZdtHd6mi_9zp8cTCqJ-W9adNTJPqtErTJWB-de27mBUyFB9MJ9iTyCoPiyFpiVOjT-Q2xn_d-O-7QMMSK"/>
+<div class="absolute inset-0 flex flex-col items-center justify-center bg-black/40 p-4 text-center">
+<span class="font-mono text-[10px] font-bold text-white mb-1">UPGRADE_NEURAL_LINK</span>
+<span class="font-mono text-[8px] text-white/60">CLICK TO VIEW OFFER</span>
+</div>
+</div>
+<!-- EXT_03 -->
+<div class="bg-surface-container-high border-t border-[#3A3939] p-3 animate-pulse">
+<div class="flex justify-between items-center">
+<span class="font-mono text-[9px] text-[#CCFF00]">EXT_03_OVERLAY_ACTIVE</span>
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant cursor-pointer">close</span>
+</div>
+<div class="mt-2 text-[10px] font-mono text-on-surface-variant">STRIKE_PATH_BLOCKER: VIEW_REQUIRED</div>
+</div>
+</div>
+<!-- AD_STREAM_V02 -->
+<div class="relative bg-surface-container border border-[#3A3939]">
+<div class="p-2 border-b border-[#3A3939] flex justify-between items-center">
+<span class="font-mono text-[8px] text-outline">AD_STREAM_V02</span>
+<button class="material-symbols-outlined text-[14px] text-outline hover:text-error">close</button>
+</div>
+<div class="h-32 bg-surface-container-highest flex items-center justify-center relative overflow-hidden">
+<img class="w-full h-full object-cover grayscale opacity-50 hover:grayscale-0 transition-all duration-500" data-alt="futuristic industrial city landscape with glowing yellow lights and hazy atmosphere at night in a detailed matte painting style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC5YhQ-1-51psgDfvQMshAJgT9KJMeeM_MjVfmsoVnPkFolczt-3VKvq6Oc-hJ7_Qr8TsqA8-kPR6WYz6a0i1TQxaVQPWZqx34JA1cWawimRIX6PCuJSdtLWEKhhyKBS9FSP5Qco7bZPhvSaEOocUANIgNI8NzWPxvgPJ563PjNj8KoFAtaup3Gv5XAhw0D8ZnumwtWH-FipdRgi7Pfk_TlXcCUPkTqny9LFqz4k8zFlL7QpaMveJxckTfqXlQImzwSs3JCW1Pqaf8Y"/>
+<div class="absolute inset-0 flex flex-col items-center justify-center bg-black/40 p-4 text-center">
+<span class="font-mono text-[10px] font-bold text-white mb-1">DATA_HARVEST_ACCESS</span>
+<span class="font-mono text-[8px] text-white/60">CLICK TO VIEW OFFER</span>
+</div>
+</div>
+<!-- EXT_04 -->
+<div class="bg-surface-container-high border-t border-[#3A3939] p-3">
+<div class="flex justify-between items-center">
+<span class="font-mono text-[9px] text-[#CCFF00]">EXT_04_OVERLAY_ACTIVE</span>
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant cursor-pointer">close</span>
+</div>
+<div class="mt-2 text-[10px] font-mono text-on-surface-variant">STRIKE_PATH_BLOCKER: VIEW_REQUIRED</div>
+</div>
+</div>
+</div>
+<!-- Hidden INITIATE_STRIKE Button (Partially covered by the layout design) -->
+<div class="mt-8 flex justify-center">
+<button class="relative bg-[#CCFF00] text-[#0E0E0E] px-12 py-6 font-headline font-black text-2xl tracking-[0.3em] uppercase opacity-40 cursor-not-allowed group">
+                            INITIATE_STRIKE
+                            <div class="absolute inset-0 border-4 border-[#CCFF00] -m-2 opacity-50"></div>
+<span class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-mono text-[10px] tracking-normal text-error bg-[#0E0E0E] px-2 py-1 w-max">
+                                [ LOCKED: CLEAR_AD_OVERLAYS ]
+                            </span>
+</button>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Contextual System Status Bar (Bottom) -->
+<footer class="h-8 bg-surface-container-lowest border-t border-[#3A3939] flex items-center px-6 justify-between text-[9px] font-mono text-outline-variant">
+<div class="flex gap-6">
+<span class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-[#CCFF00]"></span> KINETIK_CORE_STABLE</span>
+<span class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-[#CCFF00]"></span> ENCRYPTION_SHA256_ACTIVE</span>
+</div>
+<div class="flex gap-4">
+<span>MEM: 4.2GB/16.0GB</span>
+<span>LATENCY: 12ms</span>
+<span class="text-on-surface-variant uppercase">User: ADMIN_STRIKE_AUTH</span>
+</div>
+</footer>
+</body></html>
