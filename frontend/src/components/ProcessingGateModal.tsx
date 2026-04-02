@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { XCircle, Download, CheckCircle2, FileText, Terminal, Activity } from 'lucide-react';
 import { AdBanner } from './AdBanner';
+import { motion } from 'framer-motion';
 
 interface ProcessingGateModalProps {
   isOpen: boolean;

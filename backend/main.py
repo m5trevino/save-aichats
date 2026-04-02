@@ -271,7 +271,7 @@ async def refine_stream(request: Request, files: List[UploadFile] = File(...), o
                 continue
 
         if not all_chats:
-             async def error_gen():
+            async def error_gen():
                 yield f"data: {json.dumps({'status': 'error', 'message': 'NO_VALID_PAYLOAD_FOUND'})}\n\n"
             return StreamingResponse(error_gen(), media_type="text/event-stream")
 
@@ -279,12 +279,14 @@ async def refine_stream(request: Request, files: List[UploadFile] = File(...), o
         # We process a slice of all_chats based on start_index
         # Default batch size is 20
         batch = all_chats[start_index : start_index + 20]
+
         total_in_batch = len(batch)
-        
+
         if total_in_batch == 0:
-             async def empty_gen():
+            async def empty_gen():
                 yield f"data: {json.dumps({'status': 'error', 'message': 'BATCH_EMPTY'})}\n\n"
-             return StreamingResponse(empty_gen(), media_type="text/event-stream")
+            return StreamingResponse(empty_gen(), media_type="text/event-stream")
+
 
         async def event_generator():
             print(f"DEBUG: STARTING_STREAM | BRAND={brand_name} | COUNT={total_in_batch}")
