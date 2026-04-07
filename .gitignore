@@ -30,16 +30,9 @@ yarn-error.log*
 *.log
 .DS_Store
 Thumbs.db
+save-aichats-legacy.zip
 
 # --- SYSTEM SPECIFIC ---
 .idea/
 .vscode/
-ngrok-to-saveaichats.sh
-ngrok-to-saveaichats.sh
-ngrok-to-saveaichats.sh
-ngrok-to-saveaichats.sh
-ngrok-to-saveaichats.sh
-ngrok-to-saveaichats.sh
-ngrok-to-saveaichats.sh
-ngrok-to-saveaichats.sh
 ngrok-to-saveaichats.sh
